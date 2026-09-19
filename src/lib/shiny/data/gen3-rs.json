@@ -1,0 +1,2535 @@
+{
+ "source": "RNG-Solution tools/rs-dead-battery-harness (rs_harness.py on mGBA 0.10.5 via libmgx; byte-exact pret/pokeruby symbol maps); structural argument and every measurement in RS_DEAD_BATTERY.md",
+ "generated": "2026-09-10",
+ "lcrng": {
+  "mult": "0x41C64E6D",
+  "add": "0x6073",
+  "output": "hi16"
+ },
+ "gba_fps_expression": "16777216/280896",
+ "frame_convention": "frame 0 = the first frame of game code (after the BIOS); a frame ends at the start of VBlank; P is the frame whose pad read carries the press",
+ "live_battery_seed": {
+  "formula": "S = fold(1440 * dayCount(y, m, d) + 60 * BCD(hour) + BCD(minute)); dayCount(y, m, d) = sum over i = 1 .. (y - 2000 - 1) of (isLeap(i) ? 366 : 365) + days of months 1 .. m-1 + (m > 2 and isLeap(y - 2000) ? 1 : 0) + d; isLeap(i) = (i % 4 == 0 and i % 100 != 0) or i % 400 == 0 on the two-digit year; fold(x) = ((x >> 16) ^ (x & 0xFFFF)) & 0xFFFF; seconds do not enter; hour and minute are the S3511's raw BCD bytes (12:26 enters as 0x12 * 60 + 0x26)",
+  "javascript": "function rsSeed(y, m, d, hh, mm) { const leap = i => (i % 4 === 0 && i % 100 !== 0) || i % 400 === 0; const dim = [31,28,31,30,31,30,31,31,30,31,30,31]; let days = 0; for (let i = y - 2000 - 1; i > 0; i--) days += leap(i) ? 366 : 365; for (let i = 0; i < m - 1; i++) days += dim[i]; if (m > 2 && leap(y - 2000)) days++; days += d; const bcd = v => ((v / 10) | 0) * 16 + v % 10; const mc = 1440 * days + 60 * bcd(hh) + bcd(mm); return ((mc >>> 16) ^ (mc & 0xFFFF)) & 0xFFFF; }",
+  "examples": [
+   {
+    "clock": "2000-01-01 00:00",
+    "day_count": 1,
+    "minute_count": 1440,
+    "seed": 1440
+   },
+   {
+    "clock": "2005-06-15 12:26",
+    "day_count": 1627,
+    "minute_count": 2343998,
+    "seed": 50205
+   },
+   {
+    "clock": "2024-02-29 23:59",
+    "day_count": 8460,
+    "minute_count": 12184589,
+    "seed": 60596
+   },
+   {
+    "clock": "2026-09-10 20:56",
+    "day_count": 9384,
+    "minute_count": 13514966,
+    "seed": 14360
+   }
+  ],
+  "emulator_checks": "every live / fixed-clock run in games.*.clock_model_checks: the game's seed equalled this formula's value for the clock it booted under"
+ },
+ "defaults": {
+  "correction_ms": null,
+  "correction_ms_note": "no measured default: the harness measures frame counts on mGBA, not a human reaction offset on hardware; the page applies no correction until a sample is recorded or an override is set"
+ },
+ "games": {
+  "ruby": {
+   "rom_sha1": "f28b6ffc97847e94a6c21a63cacf633ee5c8df1e",
+   "rom": "pokeruby.gba",
+   "dead_battery_seed": 1440,
+   "seed_citation": "pokeruby src/main.c:115 AgbMain calls SeedRngWithRtc(); src/main.c:201-206 SeedRngWithRtc: seed = RtcGetMinuteCount(); seed = (seed >> 16) ^ (seed & 0xFFFF); SeedRng(seed). src/rtc.c:367-371 RtcGetMinuteCount: RtcGetInfo(&sRtc); return (24 * 60) * RtcGetDayCount(&sRtc) + 60 * sRtc.hour + sRtc.minute. src/rtc.c:134-139 RtcGetInfo: if (sErrorStatus & RTC_ERR_FLAG_MASK) *rtc = sRtcDummy; src/rtc.c:13 sRtcDummy = {0, MONTH_JAN, 1} (2000 Jan 1); src/rtc.c:169-170 RtcCheckInfo sets RTC_ERR_POWER_FAILURE (include/rtc.h:10, 0x0020) from the S3511 POWER flag; src/rtc.c:62-95 ConvertDateToDayCount gives 1 January 2000 day count 1 (the year loop runs i = year-1 .. 1, then + day), so minute count 1440 and seed 1440 = 0x5A0.",
+   "model": {
+    "formula": "Let S be the boot seed: S = 1440 (0x5A0) when the cartridge battery is dead (RtcGetInfo hands back 2000-01-01 00:00 every boot), otherwise S = fold(minuteCount) where minuteCount = 1440 * dayCount(year, month, day) + 60 * BCD(hour) + BCD(minute), dayCount as pokeruby ConvertDateToDayCount (years 2001..year-1 at 365/366 each, the year 2000 contributing nothing, plus the days of the earlier months, plus 1 when past February of a leap year, plus the day of the month), BCD(v) = (v div 10) * 16 + (v mod 10), and fold(x) = (x >> 16) XOR (x AND 0xFFFF). Let P be the 0-based index, counted from the first frame the game code runs (frame 0), of the frame on which the game reads the A press that ends the last page of Birch's last box ('Well, I'll be expecting you later. Come see me in my POKeMON LAB.'). The game's RNG word is S at the end of frame F_SEED = 4, then advances once per frame (VBlankIntr's Random(), src/main.c:328) plus X = 1 extra advance on the intro's first frame (src/intro.c:949 Task_IntroLoadPart1Graphics: Random() & 1), the ID is written C = 74 frames after P by InitPlayerTrainerId (src/new_game.c:78: (Random() << 16) | Random(): the FIRST call is the Secret ID, the SECOND the Trainer ID), and on the write frame the VBlank advance (A_WRITE = 1) precedes the two roll calls. So with n = P + C + X + A_WRITE - F_SEED = P + 72: x = S; repeat n times: x = (0x41C64E6D * x + 0x6073) mod 2^32; SID = x >> 16; then x = (0x41C64E6D * x + 0x6073) mod 2^32; TID = x >> 16. Pseudo-code: function pair(S, P) { let x = S >>> 0; for (let i = 0; i < P + 72; i++) x = (Math.imul(0x41C64E6D, x) + 0x6073) >>> 0; const sid = x >>> 16; x = (Math.imul(0x41C64E6D, x) + 0x6073) >>> 0; const tid = x >>> 16; return {tid, sid}; }. Every frame the last page waits adds exactly one advance, so P = P_min + (frames waited past the earliest accepting frame). A press is read on the frame the pad is sampled; the frame counter P is the read frame.",
+    "seed_frame": 4,
+    "extra_advances_before_press": 1,
+    "extra_advance_frame_in_mash8_recording": [
+     195
+    ],
+    "press_to_write_frames": 74,
+    "vblank_advances_before_roll_on_write_frame": 1,
+    "lcrng_steps_on_write_frame": 3,
+    "steps_to_sid_minus_press_frame": 72,
+    "p_min_frames": 4351,
+    "p_min_frames_notes": {
+     "dead-battery, battery-dry box shown, preset name, A one frame in 8": 4351,
+     "dead-battery, battery-dry box shown, preset name, A one frame in 2": 3552,
+     "dead-battery, battery-dry box shown, NEW NAME with 7 letters, A one frame in 8": 4519,
+     "live battery (no box), preset name, A one frame in 8": 4063,
+     "live battery (no box), preset name, A one frame in 2": 3338,
+     "live battery (no box), NEW NAME with 7 letters, A one frame in 8": 4231,
+     "battery-dry box cost in frames (mash 8)": 288
+    },
+    "anchor": {
+     "first_game_frame_to_copyright_visible": 4,
+     "first_game_frame_to_copyright_text_fully_visible": 21,
+     "first_game_frame_to_copyright_fade_to_black_begins": 148,
+     "first_game_frame_to_black_after_copyright": 162,
+     "poweron_to_first_game_frame": null,
+     "bios_measured": false,
+     "notes": "Frame 0 is the first frame of game code (mGBA skipBios; libmgx pins useBios=0/skipBios=1 in mgx_pin_boot_config, so the shim cannot boot a BIOS at all). Frames 1..3 render uniform white; frame 4 is the first frame with non-white pixels (the palette fade from white starts, BeginNormalPaletteFade(0xFFFFFFFF, 0, 16, 0, FADE_COLOR_WHITE) in SetUpCopyrightScreen state 0); the copyright text is faintly readable from frame 7 and fully black-on-white from frame 21; the fade to black starts on frame 148 and the screen is black from frame 162. No GBA BIOS image (sha1 300c20df...) exists on this machine, so the frames the real BIOS logo takes before frame 0 are not measured; anchor on the copyright screen."
+    },
+    "opening_path": "A one frame in every 8 from power-on (Gen3BirchOpening's mash): copyright screen (no input taken, 141 states), intro (any new key ends it once its fade is done), title screen (A), main menu NEW GAME (A; with a dead battery the 'The internal clock's battery has run dry' box comes first and takes one A), Birch's boxes (A each), gender box BOY (A), name menu: DOWN then A one frame apart pick the first preset name (c6bbc8bec9c8ffff) and skip the naming screen, 'So it's NAME?' YES (A), 'Ah, okay!' box (A), then Birch's last box (Task_NewGameSpeech30, five pages: 'All right, are you ready?' / 'Your very own adventure is about to unfold.' / 'Take courage...' / 'Well, I'll be expecting you later. Come see me in my POKeMON LAB.'): the A that ends its last page is the timed press P; 74 frames later CB2_NewGame writes the ID (Task_NewGameSpeech31-33: the shrink, the white fade, SetMainCallback2(CB2_NewGame), main_menu.c:1300-1320).",
+    "text_speed": "MID (SetDefaultOptions, src/new_game.c:84; the main menu's OPTION entry can change it; the text speed changes P_min only, not the (P -> TID, SID) map)",
+    "name": "preset name 1 from the name menu (DOWN, A); a NEW NAME of seven letters was also run (variant newname7) and follows the same map with a larger P_min",
+    "box_exit_latency_frames": 1
+   },
+   "vectors": [
+    {
+     "seed": 1440,
+     "press_frame": 3338,
+     "tid": 37153,
+     "sid": 28239,
+     "write_frame": 3412,
+     "lcrng_steps_to_sid": 3410,
+     "run": "ruby-dead-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3339,
+     "tid": 45944,
+     "sid": 37153,
+     "write_frame": 3413,
+     "lcrng_steps_to_sid": 3411,
+     "run": "ruby-dead-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3340,
+     "tid": 50301,
+     "sid": 45944,
+     "write_frame": 3414,
+     "lcrng_steps_to_sid": 3412,
+     "run": "ruby-dead-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3341,
+     "tid": 5798,
+     "sid": 50301,
+     "write_frame": 3415,
+     "lcrng_steps_to_sid": 3413,
+     "run": "ruby-dead-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3342,
+     "tid": 54690,
+     "sid": 5798,
+     "write_frame": 3416,
+     "lcrng_steps_to_sid": 3414,
+     "run": "ruby-dead-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3343,
+     "tid": 15680,
+     "sid": 54690,
+     "write_frame": 3417,
+     "lcrng_steps_to_sid": 3415,
+     "run": "ruby-dead-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3348,
+     "tid": 22802,
+     "sid": 27220,
+     "write_frame": 3422,
+     "lcrng_steps_to_sid": 3420,
+     "run": "ruby-dead-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3368,
+     "tid": 1002,
+     "sid": 61207,
+     "write_frame": 3442,
+     "lcrng_steps_to_sid": 3440,
+     "run": "ruby-dead-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3398,
+     "tid": 63966,
+     "sid": 38031,
+     "write_frame": 3472,
+     "lcrng_steps_to_sid": 3470,
+     "run": "ruby-dead-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3458,
+     "tid": 37814,
+     "sid": 27757,
+     "write_frame": 3532,
+     "lcrng_steps_to_sid": 3530,
+     "run": "ruby-dead-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3552,
+     "tid": 27349,
+     "sid": 42387,
+     "write_frame": 3626,
+     "lcrng_steps_to_sid": 3624,
+     "run": "ruby-dead-box-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3553,
+     "tid": 62547,
+     "sid": 27349,
+     "write_frame": 3627,
+     "lcrng_steps_to_sid": 3625,
+     "run": "ruby-dead-box-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3554,
+     "tid": 16637,
+     "sid": 62547,
+     "write_frame": 3628,
+     "lcrng_steps_to_sid": 3626,
+     "run": "ruby-dead-box-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3555,
+     "tid": 47926,
+     "sid": 16637,
+     "write_frame": 3629,
+     "lcrng_steps_to_sid": 3627,
+     "run": "ruby-dead-box-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3556,
+     "tid": 60982,
+     "sid": 47926,
+     "write_frame": 3630,
+     "lcrng_steps_to_sid": 3628,
+     "run": "ruby-dead-box-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3557,
+     "tid": 22670,
+     "sid": 60982,
+     "write_frame": 3631,
+     "lcrng_steps_to_sid": 3629,
+     "run": "ruby-dead-box-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3562,
+     "tid": 61304,
+     "sid": 2395,
+     "write_frame": 3636,
+     "lcrng_steps_to_sid": 3634,
+     "run": "ruby-dead-box-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3582,
+     "tid": 16433,
+     "sid": 36808,
+     "write_frame": 3656,
+     "lcrng_steps_to_sid": 3654,
+     "run": "ruby-dead-box-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3612,
+     "tid": 51328,
+     "sid": 10737,
+     "write_frame": 3686,
+     "lcrng_steps_to_sid": 3684,
+     "run": "ruby-dead-box-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3624,
+     "tid": 35047,
+     "sid": 46483,
+     "write_frame": 3698,
+     "lcrng_steps_to_sid": 3696,
+     "run": "ruby-dead-box-preset-mash4",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3625,
+     "tid": 58050,
+     "sid": 35047,
+     "write_frame": 3699,
+     "lcrng_steps_to_sid": 3697,
+     "run": "ruby-dead-box-preset-mash4",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3626,
+     "tid": 10354,
+     "sid": 58050,
+     "write_frame": 3700,
+     "lcrng_steps_to_sid": 3698,
+     "run": "ruby-dead-box-preset-mash4",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3627,
+     "tid": 8537,
+     "sid": 10354,
+     "write_frame": 3701,
+     "lcrng_steps_to_sid": 3699,
+     "run": "ruby-dead-box-preset-mash4",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3628,
+     "tid": 51254,
+     "sid": 8537,
+     "write_frame": 3702,
+     "lcrng_steps_to_sid": 3700,
+     "run": "ruby-dead-box-preset-mash4",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3629,
+     "tid": 18069,
+     "sid": 51254,
+     "write_frame": 3703,
+     "lcrng_steps_to_sid": 3701,
+     "run": "ruby-dead-box-preset-mash4",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3634,
+     "tid": 21928,
+     "sid": 23481,
+     "write_frame": 3708,
+     "lcrng_steps_to_sid": 3706,
+     "run": "ruby-dead-box-preset-mash4",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3654,
+     "tid": 58171,
+     "sid": 17807,
+     "write_frame": 3728,
+     "lcrng_steps_to_sid": 3726,
+     "run": "ruby-dead-box-preset-mash4",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3672,
+     "tid": 12686,
+     "sid": 42283,
+     "write_frame": 3746,
+     "lcrng_steps_to_sid": 3744,
+     "run": "ruby-dead-box-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3684,
+     "tid": 57670,
+     "sid": 20667,
+     "write_frame": 3758,
+     "lcrng_steps_to_sid": 3756,
+     "run": "ruby-dead-box-preset-mash4",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3744,
+     "tid": 34558,
+     "sid": 48456,
+     "write_frame": 3818,
+     "lcrng_steps_to_sid": 3816,
+     "run": "ruby-dead-box-preset-mash4",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4063,
+     "tid": 16146,
+     "sid": 41773,
+     "write_frame": 4137,
+     "lcrng_steps_to_sid": 4135,
+     "run": "ruby-dead-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4064,
+     "tid": 42780,
+     "sid": 16146,
+     "write_frame": 4138,
+     "lcrng_steps_to_sid": 4136,
+     "run": "ruby-dead-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4065,
+     "tid": 39608,
+     "sid": 42780,
+     "write_frame": 4139,
+     "lcrng_steps_to_sid": 4137,
+     "run": "ruby-dead-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4066,
+     "tid": 57469,
+     "sid": 39608,
+     "write_frame": 4140,
+     "lcrng_steps_to_sid": 4138,
+     "run": "ruby-dead-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4067,
+     "tid": 35581,
+     "sid": 57469,
+     "write_frame": 4141,
+     "lcrng_steps_to_sid": 4139,
+     "run": "ruby-dead-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4068,
+     "tid": 243,
+     "sid": 35581,
+     "write_frame": 4142,
+     "lcrng_steps_to_sid": 4140,
+     "run": "ruby-dead-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4073,
+     "tid": 26011,
+     "sid": 47886,
+     "write_frame": 4147,
+     "lcrng_steps_to_sid": 4145,
+     "run": "ruby-dead-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4093,
+     "tid": 24443,
+     "sid": 25557,
+     "write_frame": 4167,
+     "lcrng_steps_to_sid": 4165,
+     "run": "ruby-dead-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4123,
+     "tid": 33979,
+     "sid": 46062,
+     "write_frame": 4197,
+     "lcrng_steps_to_sid": 4195,
+     "run": "ruby-dead-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4183,
+     "tid": 11043,
+     "sid": 51367,
+     "write_frame": 4257,
+     "lcrng_steps_to_sid": 4255,
+     "run": "ruby-dead-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4351,
+     "tid": 36770,
+     "sid": 41212,
+     "write_frame": 4425,
+     "lcrng_steps_to_sid": 4423,
+     "run": "ruby-dead-box-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4352,
+     "tid": 24609,
+     "sid": 36770,
+     "write_frame": 4426,
+     "lcrng_steps_to_sid": 4424,
+     "run": "ruby-dead-box-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4353,
+     "tid": 33258,
+     "sid": 24609,
+     "write_frame": 4427,
+     "lcrng_steps_to_sid": 4425,
+     "run": "ruby-dead-box-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4354,
+     "tid": 7995,
+     "sid": 33258,
+     "write_frame": 4428,
+     "lcrng_steps_to_sid": 4426,
+     "run": "ruby-dead-box-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4355,
+     "tid": 10458,
+     "sid": 7995,
+     "write_frame": 4429,
+     "lcrng_steps_to_sid": 4427,
+     "run": "ruby-dead-box-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4356,
+     "tid": 2885,
+     "sid": 10458,
+     "write_frame": 4430,
+     "lcrng_steps_to_sid": 4428,
+     "run": "ruby-dead-box-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4361,
+     "tid": 39763,
+     "sid": 12237,
+     "write_frame": 4435,
+     "lcrng_steps_to_sid": 4433,
+     "run": "ruby-dead-box-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4381,
+     "tid": 52797,
+     "sid": 33534,
+     "write_frame": 4455,
+     "lcrng_steps_to_sid": 4453,
+     "run": "ruby-dead-box-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4411,
+     "tid": 51217,
+     "sid": 42024,
+     "write_frame": 4485,
+     "lcrng_steps_to_sid": 4483,
+     "run": "ruby-dead-box-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4471,
+     "tid": 35479,
+     "sid": 5386,
+     "write_frame": 4545,
+     "lcrng_steps_to_sid": 4543,
+     "run": "ruby-dead-box-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4519,
+     "tid": 48886,
+     "sid": 40041,
+     "write_frame": 4593,
+     "lcrng_steps_to_sid": 4591,
+     "run": "ruby-dead-box-newname7-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4520,
+     "tid": 16842,
+     "sid": 48886,
+     "write_frame": 4594,
+     "lcrng_steps_to_sid": 4592,
+     "run": "ruby-dead-box-newname7-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4521,
+     "tid": 58753,
+     "sid": 16842,
+     "write_frame": 4595,
+     "lcrng_steps_to_sid": 4593,
+     "run": "ruby-dead-box-newname7-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4522,
+     "tid": 965,
+     "sid": 58753,
+     "write_frame": 4596,
+     "lcrng_steps_to_sid": 4594,
+     "run": "ruby-dead-box-newname7-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4523,
+     "tid": 26665,
+     "sid": 965,
+     "write_frame": 4597,
+     "lcrng_steps_to_sid": 4595,
+     "run": "ruby-dead-box-newname7-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4524,
+     "tid": 16298,
+     "sid": 26665,
+     "write_frame": 4598,
+     "lcrng_steps_to_sid": 4596,
+     "run": "ruby-dead-box-newname7-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4529,
+     "tid": 45368,
+     "sid": 51634,
+     "write_frame": 4603,
+     "lcrng_steps_to_sid": 4601,
+     "run": "ruby-dead-box-newname7-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4549,
+     "tid": 11895,
+     "sid": 8465,
+     "write_frame": 4623,
+     "lcrng_steps_to_sid": 4621,
+     "run": "ruby-dead-box-newname7-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4579,
+     "tid": 16212,
+     "sid": 56526,
+     "write_frame": 4653,
+     "lcrng_steps_to_sid": 4651,
+     "run": "ruby-dead-box-newname7-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4639,
+     "tid": 5715,
+     "sid": 60885,
+     "write_frame": 4713,
+     "lcrng_steps_to_sid": 4711,
+     "run": "ruby-dead-box-newname7-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 14358,
+     "press_frame": 4231,
+     "tid": 17578,
+     "sid": 40172,
+     "write_frame": 4305,
+     "lcrng_steps_to_sid": 4303,
+     "run": "ruby-live-newname7-mash8",
+     "clock": "host local 2026-09-10 20:58:49"
+    },
+    {
+     "seed": 14358,
+     "press_frame": 4232,
+     "tid": 41357,
+     "sid": 17578,
+     "write_frame": 4306,
+     "lcrng_steps_to_sid": 4304,
+     "run": "ruby-live-newname7-mash8",
+     "clock": "host local 2026-09-10 20:58:49"
+    },
+    {
+     "seed": 14358,
+     "press_frame": 4233,
+     "tid": 22561,
+     "sid": 41357,
+     "write_frame": 4307,
+     "lcrng_steps_to_sid": 4305,
+     "run": "ruby-live-newname7-mash8",
+     "clock": "host local 2026-09-10 20:58:49"
+    },
+    {
+     "seed": 14358,
+     "press_frame": 4234,
+     "tid": 25226,
+     "sid": 22561,
+     "write_frame": 4308,
+     "lcrng_steps_to_sid": 4306,
+     "run": "ruby-live-newname7-mash8",
+     "clock": "host local 2026-09-10 20:58:49"
+    },
+    {
+     "seed": 14358,
+     "press_frame": 4235,
+     "tid": 48443,
+     "sid": 25226,
+     "write_frame": 4309,
+     "lcrng_steps_to_sid": 4307,
+     "run": "ruby-live-newname7-mash8",
+     "clock": "host local 2026-09-10 20:58:49"
+    },
+    {
+     "seed": 14358,
+     "press_frame": 4236,
+     "tid": 58021,
+     "sid": 48443,
+     "write_frame": 4310,
+     "lcrng_steps_to_sid": 4308,
+     "run": "ruby-live-newname7-mash8",
+     "clock": "host local 2026-09-10 20:58:49"
+    },
+    {
+     "seed": 14358,
+     "press_frame": 4241,
+     "tid": 49157,
+     "sid": 31725,
+     "write_frame": 4315,
+     "lcrng_steps_to_sid": 4313,
+     "run": "ruby-live-newname7-mash8",
+     "clock": "host local 2026-09-10 20:58:49"
+    },
+    {
+     "seed": 14358,
+     "press_frame": 4261,
+     "tid": 62156,
+     "sid": 51000,
+     "write_frame": 4335,
+     "lcrng_steps_to_sid": 4333,
+     "run": "ruby-live-newname7-mash8",
+     "clock": "host local 2026-09-10 20:58:49"
+    },
+    {
+     "seed": 14358,
+     "press_frame": 4291,
+     "tid": 41205,
+     "sid": 22272,
+     "write_frame": 4365,
+     "lcrng_steps_to_sid": 4363,
+     "run": "ruby-live-newname7-mash8",
+     "clock": "host local 2026-09-10 20:58:49"
+    },
+    {
+     "seed": 14358,
+     "press_frame": 4351,
+     "tid": 47519,
+     "sid": 24473,
+     "write_frame": 4425,
+     "lcrng_steps_to_sid": 4423,
+     "run": "ruby-live-newname7-mash8",
+     "clock": "host local 2026-09-10 20:58:49"
+    },
+    {
+     "seed": 14361,
+     "press_frame": 4063,
+     "tid": 45139,
+     "sid": 36486,
+     "write_frame": 4137,
+     "lcrng_steps_to_sid": 4135,
+     "run": "ruby-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:57:48"
+    },
+    {
+     "seed": 14361,
+     "press_frame": 4064,
+     "tid": 28753,
+     "sid": 45139,
+     "write_frame": 4138,
+     "lcrng_steps_to_sid": 4136,
+     "run": "ruby-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:57:48"
+    },
+    {
+     "seed": 14361,
+     "press_frame": 4065,
+     "tid": 56215,
+     "sid": 28753,
+     "write_frame": 4139,
+     "lcrng_steps_to_sid": 4137,
+     "run": "ruby-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:57:48"
+    },
+    {
+     "seed": 14361,
+     "press_frame": 4066,
+     "tid": 52768,
+     "sid": 56215,
+     "write_frame": 4140,
+     "lcrng_steps_to_sid": 4138,
+     "run": "ruby-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:57:48"
+    },
+    {
+     "seed": 14361,
+     "press_frame": 4067,
+     "tid": 14351,
+     "sid": 52768,
+     "write_frame": 4141,
+     "lcrng_steps_to_sid": 4139,
+     "run": "ruby-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:57:48"
+    },
+    {
+     "seed": 14361,
+     "press_frame": 4068,
+     "tid": 28369,
+     "sid": 14351,
+     "write_frame": 4142,
+     "lcrng_steps_to_sid": 4140,
+     "run": "ruby-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:57:48"
+    },
+    {
+     "seed": 14361,
+     "press_frame": 4073,
+     "tid": 56304,
+     "sid": 27123,
+     "write_frame": 4147,
+     "lcrng_steps_to_sid": 4145,
+     "run": "ruby-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:57:48"
+    },
+    {
+     "seed": 14361,
+     "press_frame": 4093,
+     "tid": 2052,
+     "sid": 38969,
+     "write_frame": 4167,
+     "lcrng_steps_to_sid": 4165,
+     "run": "ruby-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:57:48"
+    },
+    {
+     "seed": 14361,
+     "press_frame": 4123,
+     "tid": 46823,
+     "sid": 59387,
+     "write_frame": 4197,
+     "lcrng_steps_to_sid": 4195,
+     "run": "ruby-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:57:48"
+    },
+    {
+     "seed": 14361,
+     "press_frame": 4183,
+     "tid": 4366,
+     "sid": 7874,
+     "write_frame": 4257,
+     "lcrng_steps_to_sid": 4255,
+     "run": "ruby-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:57:48"
+    },
+    {
+     "seed": 50205,
+     "press_frame": 4063,
+     "tid": 1665,
+     "sid": 55053,
+     "write_frame": 4137,
+     "lcrng_steps_to_sid": 4135,
+     "run": "ruby-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26"
+    },
+    {
+     "seed": 50205,
+     "press_frame": 4064,
+     "tid": 58802,
+     "sid": 1665,
+     "write_frame": 4138,
+     "lcrng_steps_to_sid": 4136,
+     "run": "ruby-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26"
+    },
+    {
+     "seed": 50205,
+     "press_frame": 4065,
+     "tid": 9618,
+     "sid": 58802,
+     "write_frame": 4139,
+     "lcrng_steps_to_sid": 4137,
+     "run": "ruby-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26"
+    },
+    {
+     "seed": 50205,
+     "press_frame": 4066,
+     "tid": 52721,
+     "sid": 9618,
+     "write_frame": 4140,
+     "lcrng_steps_to_sid": 4138,
+     "run": "ruby-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26"
+    },
+    {
+     "seed": 50205,
+     "press_frame": 4067,
+     "tid": 43085,
+     "sid": 52721,
+     "write_frame": 4141,
+     "lcrng_steps_to_sid": 4139,
+     "run": "ruby-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26"
+    },
+    {
+     "seed": 50205,
+     "press_frame": 4068,
+     "tid": 32778,
+     "sid": 43085,
+     "write_frame": 4142,
+     "lcrng_steps_to_sid": 4140,
+     "run": "ruby-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26"
+    },
+    {
+     "seed": 50205,
+     "press_frame": 4073,
+     "tid": 44095,
+     "sid": 4019,
+     "write_frame": 4147,
+     "lcrng_steps_to_sid": 4145,
+     "run": "ruby-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26"
+    },
+    {
+     "seed": 50205,
+     "press_frame": 4093,
+     "tid": 64147,
+     "sid": 4613,
+     "write_frame": 4167,
+     "lcrng_steps_to_sid": 4165,
+     "run": "ruby-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26"
+    },
+    {
+     "seed": 50205,
+     "press_frame": 4123,
+     "tid": 2143,
+     "sid": 29081,
+     "write_frame": 4197,
+     "lcrng_steps_to_sid": 4195,
+     "run": "ruby-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26"
+    },
+    {
+     "seed": 50205,
+     "press_frame": 4183,
+     "tid": 47817,
+     "sid": 4706,
+     "write_frame": 4257,
+     "lcrng_steps_to_sid": 4255,
+     "run": "ruby-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26"
+    },
+    {
+     "seed": 60596,
+     "press_frame": 4063,
+     "tid": 13838,
+     "sid": 23341,
+     "write_frame": 4137,
+     "lcrng_steps_to_sid": 4135,
+     "run": "ruby-fixed2024-preset-mash8",
+     "clock": "fixed 2024-02-29 23:59"
+    },
+    {
+     "seed": 60596,
+     "press_frame": 4064,
+     "tid": 5743,
+     "sid": 13838,
+     "write_frame": 4138,
+     "lcrng_steps_to_sid": 4136,
+     "run": "ruby-fixed2024-preset-mash8",
+     "clock": "fixed 2024-02-29 23:59"
+    },
+    {
+     "seed": 60596,
+     "press_frame": 4065,
+     "tid": 16364,
+     "sid": 5743,
+     "write_frame": 4139,
+     "lcrng_steps_to_sid": 4137,
+     "run": "ruby-fixed2024-preset-mash8",
+     "clock": "fixed 2024-02-29 23:59"
+    },
+    {
+     "seed": 60596,
+     "press_frame": 4066,
+     "tid": 22799,
+     "sid": 16364,
+     "write_frame": 4140,
+     "lcrng_steps_to_sid": 4138,
+     "run": "ruby-fixed2024-preset-mash8",
+     "clock": "fixed 2024-02-29 23:59"
+    },
+    {
+     "seed": 60596,
+     "press_frame": 4067,
+     "tid": 45924,
+     "sid": 22799,
+     "write_frame": 4141,
+     "lcrng_steps_to_sid": 4139,
+     "run": "ruby-fixed2024-preset-mash8",
+     "clock": "fixed 2024-02-29 23:59"
+    },
+    {
+     "seed": 60596,
+     "press_frame": 4068,
+     "tid": 50010,
+     "sid": 45924,
+     "write_frame": 4142,
+     "lcrng_steps_to_sid": 4140,
+     "run": "ruby-fixed2024-preset-mash8",
+     "clock": "fixed 2024-02-29 23:59"
+    },
+    {
+     "seed": 60596,
+     "press_frame": 4073,
+     "tid": 53540,
+     "sid": 58822,
+     "write_frame": 4147,
+     "lcrng_steps_to_sid": 4145,
+     "run": "ruby-fixed2024-preset-mash8",
+     "clock": "fixed 2024-02-29 23:59"
+    },
+    {
+     "seed": 60596,
+     "press_frame": 4093,
+     "tid": 48230,
+     "sid": 41742,
+     "write_frame": 4167,
+     "lcrng_steps_to_sid": 4165,
+     "run": "ruby-fixed2024-preset-mash8",
+     "clock": "fixed 2024-02-29 23:59"
+    },
+    {
+     "seed": 60596,
+     "press_frame": 4123,
+     "tid": 53348,
+     "sid": 58635,
+     "write_frame": 4197,
+     "lcrng_steps_to_sid": 4195,
+     "run": "ruby-fixed2024-preset-mash8",
+     "clock": "fixed 2024-02-29 23:59"
+    },
+    {
+     "seed": 60596,
+     "press_frame": 4183,
+     "tid": 28225,
+     "sid": 51754,
+     "write_frame": 4257,
+     "lcrng_steps_to_sid": 4255,
+     "run": "ruby-fixed2024-preset-mash8",
+     "clock": "fixed 2024-02-29 23:59"
+    }
+   ],
+   "clock_model_checks": [
+    {
+     "run": "ruby-fixed2000-preset-mash8",
+     "clock": "fixed 2000-01-01 00:00",
+     "day_count": 1,
+     "minute_count": 1440,
+     "seed_expected": 1440,
+     "seed_observed": 1440
+    },
+    {
+     "run": "ruby-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26",
+     "day_count": 1627,
+     "minute_count": 2343998,
+     "seed_expected": 50205,
+     "seed_observed": 50205
+    },
+    {
+     "run": "ruby-fixed2024-preset-mash8",
+     "clock": "fixed 2024-02-29 23:59",
+     "day_count": 8460,
+     "minute_count": 12184589,
+     "seed_expected": 60596,
+     "seed_observed": 60596
+    },
+    {
+     "run": "ruby-live-newname7-mash8",
+     "clock": "host local 2026-09-10 20:58:49",
+     "day_count": 9384,
+     "minute_count": 13514968,
+     "seed_expected": 14358,
+     "seed_observed": 14358
+    },
+    {
+     "run": "ruby-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:57:48",
+     "day_count": 9384,
+     "minute_count": 13514967,
+     "seed_expected": 14361,
+     "seed_observed": 14361
+    }
+   ],
+   "dead_battery_checks": [
+    {
+     "run": "ruby-dead-box-newname7-mash8",
+     "natural_seed_before_overwrite": 14358,
+     "overwrite_after_frame": 4,
+     "read_back": 1440,
+     "battery_box": true,
+     "battery_box_seen": true,
+     "p_min": 4519,
+     "pairs_P_min_to_plus5": [
+      [
+       4519,
+       48886,
+       40041
+      ],
+      [
+       4520,
+       16842,
+       48886
+      ],
+      [
+       4521,
+       58753,
+       16842
+      ],
+      [
+       4522,
+       965,
+       58753
+      ],
+      [
+       4523,
+       26665,
+       965
+      ],
+      [
+       4524,
+       16298,
+       26665
+      ]
+     ]
+    },
+    {
+     "run": "ruby-dead-box-preset-mash2",
+     "natural_seed_before_overwrite": 14358,
+     "overwrite_after_frame": 4,
+     "read_back": 1440,
+     "battery_box": true,
+     "battery_box_seen": true,
+     "p_min": 3552,
+     "pairs_P_min_to_plus5": [
+      [
+       3552,
+       27349,
+       42387
+      ],
+      [
+       3553,
+       62547,
+       27349
+      ],
+      [
+       3554,
+       16637,
+       62547
+      ],
+      [
+       3555,
+       47926,
+       16637
+      ],
+      [
+       3556,
+       60982,
+       47926
+      ],
+      [
+       3557,
+       22670,
+       60982
+      ]
+     ]
+    },
+    {
+     "run": "ruby-dead-box-preset-mash4",
+     "natural_seed_before_overwrite": 14358,
+     "overwrite_after_frame": 4,
+     "read_back": 1440,
+     "battery_box": true,
+     "battery_box_seen": true,
+     "p_min": 3624,
+     "pairs_P_min_to_plus5": [
+      [
+       3624,
+       35047,
+       46483
+      ],
+      [
+       3625,
+       58050,
+       35047
+      ],
+      [
+       3626,
+       10354,
+       58050
+      ],
+      [
+       3627,
+       8537,
+       10354
+      ],
+      [
+       3628,
+       51254,
+       8537
+      ],
+      [
+       3629,
+       18069,
+       51254
+      ]
+     ]
+    },
+    {
+     "run": "ruby-dead-box-preset-mash8",
+     "natural_seed_before_overwrite": 14358,
+     "overwrite_after_frame": 4,
+     "read_back": 1440,
+     "battery_box": true,
+     "battery_box_seen": true,
+     "p_min": 4351,
+     "pairs_P_min_to_plus5": [
+      [
+       4351,
+       36770,
+       41212
+      ],
+      [
+       4352,
+       24609,
+       36770
+      ],
+      [
+       4353,
+       33258,
+       24609
+      ],
+      [
+       4354,
+       7995,
+       33258
+      ],
+      [
+       4355,
+       10458,
+       7995
+      ],
+      [
+       4356,
+       2885,
+       10458
+      ]
+     ]
+    },
+    {
+     "run": "ruby-dead-preset-mash2",
+     "natural_seed_before_overwrite": 14358,
+     "overwrite_after_frame": 4,
+     "read_back": 1440,
+     "battery_box": false,
+     "battery_box_seen": false,
+     "p_min": 3338,
+     "pairs_P_min_to_plus5": [
+      [
+       3338,
+       37153,
+       28239
+      ],
+      [
+       3339,
+       45944,
+       37153
+      ],
+      [
+       3340,
+       50301,
+       45944
+      ],
+      [
+       3341,
+       5798,
+       50301
+      ],
+      [
+       3342,
+       54690,
+       5798
+      ],
+      [
+       3343,
+       15680,
+       54690
+      ]
+     ]
+    },
+    {
+     "run": "ruby-dead-preset-mash8",
+     "natural_seed_before_overwrite": 14358,
+     "overwrite_after_frame": 4,
+     "read_back": 1440,
+     "battery_box": false,
+     "battery_box_seen": false,
+     "p_min": 4063,
+     "pairs_P_min_to_plus5": [
+      [
+       4063,
+       16146,
+       41773
+      ],
+      [
+       4064,
+       42780,
+       16146
+      ],
+      [
+       4065,
+       39608,
+       42780
+      ],
+      [
+       4066,
+       57469,
+       39608
+      ],
+      [
+       4067,
+       35581,
+       57469
+      ],
+      [
+       4068,
+       243,
+       35581
+      ]
+     ]
+    }
+   ],
+   "status": "emulator-derived (mGBA 0.10.5 headless), no hardware sample",
+   "citations": [
+    "pokeruby src/main.c:115 (AgbMain: SeedRngWithRtc()), :201-206 (SeedRngWithRtc), :328 (VBlankIntr: Random()), :131-170 (the main loop: ReadKeys, callbacks, WaitForVBlank)",
+    "pokeruby src/rtc.c:13 (sRtcDummy 2000 Jan 1), :62-95 (ConvertDateToDayCount, BUGFIX_BERRY undefined), :97-103 (RtcGetDayCount), :134-139 (RtcGetInfo), :162-170 (RtcCheckInfo, RTC_ERR_POWER_FAILURE), :367-371 (RtcGetMinuteCount); include/rtc.h:10,17 (RTC_ERR_POWER_FAILURE 0x0020, RTC_ERR_FLAG_MASK 0x0FF0)",
+    "pokeruby src/random.c:9-18 (Random: gRngValue = 1103515245 * gRngValue + 24691; return gRngValue >> 16; SeedRng(u16)); include/random.h",
+    "pokeruby src/new_game.c:76-79 (InitPlayerTrainerId: write_word_to_mem((Random() << 16) | Random(), gSaveBlock2.playerTrainerId)), :160-175 (NewGameInitData)",
+    "pokeruby src/overworld.c:1272-1277 (CB2_NewGame -> NewGameInitData), src/main_menu.c:1300-1320 (Task_NewGameSpeech32/33 -> SetMainCallback2(CB2_NewGame)), :1211-1300 (Task_NewGameSpeech23-31), :334-372 (Task_MainMenuCheckRtc / WaitForRtcErrorAck: the battery-dry box), :1073-1108 (name menu: presets 1-4 skip the naming screen)",
+    "pokeruby src/intro.c:826-836 (MainCB2_Intro: any new key ends the intro), :946-949 (Task_IntroLoadPart1Graphics: Random() & 1), :858-926 (SetUpCopyrightScreen: state 0 fade from white, state 140 fade to black, 141 -> intro)",
+    "pokeruby src/text.c:2403-2438 (UpdateWindowText: WIN_STATE_WAIT_BUTTON takes JOY_NEW(A|B) and returns FALSE that frame; holding A|B skips character delays), :437 (sTextSpeedDelays {6,3,1}); src/new_game.c:82-90 (SetDefaultOptions: MID)",
+    "pokeruby include/global.h:841-846 (struct SaveBlock2 at 0x02024EA4: playerTrainerId at +0x0A, TID u16 then SID u16 little-endian); byte-exact agbcc builds of pret/pokeruby ruby and sapphire (sha1 as above): gRngValue 0x03004818, gSaveBlock2 0x02024EA4, gTasks 0x03004B20, gMain 0x03001770, sErrorStatus 0x03000458",
+    "isleep2late-Files src/Services/Manip/RsRtcSeed.cs (the same fold, BCD and berry-glitch day count, DeadBatterySeed 0x5A0), Gen3BootSeedGame.cs, Gen3BirchOpening.cs (the mash-8 opening and the last-box probe), Gen3BootSeedTidRunner.cs (MeasureRoll)",
+    "mGBA 0.10.5 src/gba/cart/gpio.c:101 (the emulated S3511 control byte starts 0x40: 24-hour, POWER flag never set, so a dead battery cannot be emulated through the clock; hence the gRngValue overwrite), :273-300 (_rtcUpdateClock: localtime_r of the RTC source); libmgx mgx.c mgx_pin_boot_config (useBios=0, skipBios=1 pinned)",
+    "RNG-Solution tools/gba-sid-harness/RESULTS.md (Emerald / FRLG measured the same way; frame-boundary convention)"
+   ],
+   "methodology": {
+    "id": "ruby/gba/dead-battery-v1",
+    "name": "Pokemon Ruby (GBA, retail rev 0): choose the Trainer ID / Secret ID pair by timing the last Birch press from a dead-battery boot",
+    "protocol": [
+     "Use a cartridge whose clock battery is dead: the main menu shows 'The internal clock's battery has run dry. The game can be played, however clock-based events will no longer occur.' on every power-on. That message is the proof the game seeded 0x5A0 (RtcGetInfo returns 2000-01-01 00:00 whenever the power-failure flag is set).",
+     "Have no save file, or clear it first (UP + B + SELECT on the title screen, then YES): NEW GAME must be what A selects on the main menu.",
+     "Pick a target (TID, or TID+SID pair) in the app; it names the press frame P (>= P_min) and the wait on the last box.",
+     "Power on. Start the app's frame timer on the anchor: the copyright screen fading in (frame 4 after the first game frame; the text is fully black-on-white from frame 21, and it starts fading to black on frame 148). The app maps timer frames to P by adding the anchor offset it was started on.",
+     "Go through the opening as fast as you like (mashing A is fine; every press only changes when the boxes end, never the RNG): intro (any button), title (A), the battery-dry box (A), NEW GAME (A), Birch's boxes (A), BOY (A), name menu: DOWN then A (first preset name) or NEW NAME, 'So it's NAME?' YES (A), 'Ah, okay!' box (A), the first four pages of 'All right, are you ready?' (A each).",
+     "On the last page ('Come see me in my POKeMON LAB.') wait for the cue and press A on frame P. The game reads the press on the frame it is pressed; the ID is written 74 frames later, inside the white fade before the truck.",
+     "Verify: the Trainer ID is on the Trainer Card (START > the card). Read it back into the app; the SID follows from the same P (the app shows the neighbours P-1, P+1 in case the press was read a frame off)."
+    ],
+    "validity": [
+     "Retail USA rev 0 image (sha1 f28b6ffc97847e94a6c21a63cacf633ee5c8df1e); other revisions and languages are unmeasured.",
+     "Dead battery (the battery-dry box shows) so S = 0x5A0; with a live battery the same map holds with S = fold(minuteCount) of the clock minute at boot (the branch the app can offer when the clock is known).",
+     "Frame counts are mGBA 0.10.5 (libmgx fingerprint 5b96375cabe3920a) counts: F_SEED = 4 assumes SeedRngWithRtc finishes inside frame 4 on hardware too (the RTC probe and the flash detection run before it; a slower probe on a real cartridge would shift every n by one, which the TID read-back would show as the P+1 neighbour); C = 74 and X = 1 are set by the game's own counters and fades and are expected to transfer.",
+     "No BIOS boot was measured (no GBA BIOS on this machine and libmgx cannot load one), so power-on is not an anchor: use the copyright screen.",
+     "Nothing else on the path calls Random(): 4128+ frames of every run stepped gRngValue exactly once per frame except the intro's first frame (2) and the write frame (3); do not open menus that roll (none exist before the truck).",
+     "P_min is the earliest read frame for the mash-8 opening with the preset name and MID text; a faster mash (one frame in 2) reaches P_min = 3552 with the box; any slower human opening simply means a larger P, and the wait on the last box absorbs the difference."
+    ]
+   }
+  },
+  "sapphire": {
+   "rom_sha1": "3ccbbd45f8553c36463f13b938e833f652b793e4",
+   "rom": "pokesapphire.gba",
+   "dead_battery_seed": 1440,
+   "seed_citation": "pokeruby src/main.c:115 AgbMain calls SeedRngWithRtc(); src/main.c:201-206 SeedRngWithRtc: seed = RtcGetMinuteCount(); seed = (seed >> 16) ^ (seed & 0xFFFF); SeedRng(seed). src/rtc.c:367-371 RtcGetMinuteCount: RtcGetInfo(&sRtc); return (24 * 60) * RtcGetDayCount(&sRtc) + 60 * sRtc.hour + sRtc.minute. src/rtc.c:134-139 RtcGetInfo: if (sErrorStatus & RTC_ERR_FLAG_MASK) *rtc = sRtcDummy; src/rtc.c:13 sRtcDummy = {0, MONTH_JAN, 1} (2000 Jan 1); src/rtc.c:169-170 RtcCheckInfo sets RTC_ERR_POWER_FAILURE (include/rtc.h:10, 0x0020) from the S3511 POWER flag; src/rtc.c:62-95 ConvertDateToDayCount gives 1 January 2000 day count 1 (the year loop runs i = year-1 .. 1, then + day), so minute count 1440 and seed 1440 = 0x5A0.",
+   "model": {
+    "formula": "Let S be the boot seed: S = 1440 (0x5A0) when the cartridge battery is dead (RtcGetInfo hands back 2000-01-01 00:00 every boot), otherwise S = fold(minuteCount) where minuteCount = 1440 * dayCount(year, month, day) + 60 * BCD(hour) + BCD(minute), dayCount as pokeruby ConvertDateToDayCount (years 2001..year-1 at 365/366 each, the year 2000 contributing nothing, plus the days of the earlier months, plus 1 when past February of a leap year, plus the day of the month), BCD(v) = (v div 10) * 16 + (v mod 10), and fold(x) = (x >> 16) XOR (x AND 0xFFFF). Let P be the 0-based index, counted from the first frame the game code runs (frame 0), of the frame on which the game reads the A press that ends the last page of Birch's last box ('Well, I'll be expecting you later. Come see me in my POKeMON LAB.'). The game's RNG word is S at the end of frame F_SEED = 4, then advances once per frame (VBlankIntr's Random(), src/main.c:328) plus X = 1 extra advance on the intro's first frame (src/intro.c:949 Task_IntroLoadPart1Graphics: Random() & 1), the ID is written C = 74 frames after P by InitPlayerTrainerId (src/new_game.c:78: (Random() << 16) | Random(): the FIRST call is the Secret ID, the SECOND the Trainer ID), and on the write frame the VBlank advance (A_WRITE = 1) precedes the two roll calls. So with n = P + C + X + A_WRITE - F_SEED = P + 72: x = S; repeat n times: x = (0x41C64E6D * x + 0x6073) mod 2^32; SID = x >> 16; then x = (0x41C64E6D * x + 0x6073) mod 2^32; TID = x >> 16. Pseudo-code: function pair(S, P) { let x = S >>> 0; for (let i = 0; i < P + 72; i++) x = (Math.imul(0x41C64E6D, x) + 0x6073) >>> 0; const sid = x >>> 16; x = (Math.imul(0x41C64E6D, x) + 0x6073) >>> 0; const tid = x >>> 16; return {tid, sid}; }. Every frame the last page waits adds exactly one advance, so P = P_min + (frames waited past the earliest accepting frame). A press is read on the frame the pad is sampled; the frame counter P is the read frame.",
+    "seed_frame": 4,
+    "extra_advances_before_press": 1,
+    "extra_advance_frame_in_mash8_recording": [
+     194
+    ],
+    "press_to_write_frames": 74,
+    "vblank_advances_before_roll_on_write_frame": 1,
+    "lcrng_steps_on_write_frame": 3,
+    "steps_to_sid_minus_press_frame": 72,
+    "p_min_frames": 4343,
+    "p_min_frames_notes": {
+     "dead-battery, battery-dry box shown, preset name, A one frame in 8": 4343,
+     "dead-battery, battery-dry box shown, preset name, A one frame in 2": 3520,
+     "dead-battery, battery-dry box shown, NEW NAME with 7 letters, A one frame in 8": 4519,
+     "live battery (no box), preset name, A one frame in 8": 4055,
+     "live battery (no box), preset name, A one frame in 2": 3306,
+     "live battery (no box), NEW NAME with 7 letters, A one frame in 8": 4231,
+     "battery-dry box cost in frames (mash 8)": 288
+    },
+    "anchor": {
+     "first_game_frame_to_copyright_visible": 4,
+     "first_game_frame_to_copyright_text_fully_visible": 21,
+     "first_game_frame_to_copyright_fade_to_black_begins": 148,
+     "first_game_frame_to_black_after_copyright": 162,
+     "poweron_to_first_game_frame": null,
+     "bios_measured": false,
+     "notes": "Frame 0 is the first frame of game code (mGBA skipBios; libmgx pins useBios=0/skipBios=1 in mgx_pin_boot_config, so the shim cannot boot a BIOS at all). Frames 1..3 render uniform white; frame 4 is the first frame with non-white pixels (the palette fade from white starts, BeginNormalPaletteFade(0xFFFFFFFF, 0, 16, 0, FADE_COLOR_WHITE) in SetUpCopyrightScreen state 0); the copyright text is faintly readable from frame 7 and fully black-on-white from frame 21; the fade to black starts on frame 148 and the screen is black from frame 162. No GBA BIOS image (sha1 300c20df...) exists on this machine, so the frames the real BIOS logo takes before frame 0 are not measured; anchor on the copyright screen."
+    },
+    "opening_path": "A one frame in every 8 from power-on (Gen3BirchOpening's mash): copyright screen (no input taken, 141 states), intro (any new key ends it once its fade is done), title screen (A), main menu NEW GAME (A; with a dead battery the 'The internal clock's battery has run dry' box comes first and takes one A), Birch's boxes (A each), gender box BOY (A), name menu: DOWN then A one frame apart pick the first preset name (cdbfbbc8ffcebfff) and skip the naming screen, 'So it's NAME?' YES (A), 'Ah, okay!' box (A), then Birch's last box (Task_NewGameSpeech30, five pages: 'All right, are you ready?' / 'Your very own adventure is about to unfold.' / 'Take courage...' / 'Well, I'll be expecting you later. Come see me in my POKeMON LAB.'): the A that ends its last page is the timed press P; 74 frames later CB2_NewGame writes the ID (Task_NewGameSpeech31-33: the shrink, the white fade, SetMainCallback2(CB2_NewGame), main_menu.c:1300-1320).",
+    "text_speed": "MID (SetDefaultOptions, src/new_game.c:84; the main menu's OPTION entry can change it; the text speed changes P_min only, not the (P -> TID, SID) map)",
+    "name": "preset name 1 from the name menu (DOWN, A); a NEW NAME of seven letters was also run (variant newname7) and follows the same map with a larger P_min",
+    "box_exit_latency_frames": 1
+   },
+   "vectors": [
+    {
+     "seed": 1440,
+     "press_frame": 3306,
+     "tid": 290,
+     "sid": 43840,
+     "write_frame": 3380,
+     "lcrng_steps_to_sid": 3378,
+     "run": "sapphire-dead-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3307,
+     "tid": 18056,
+     "sid": 290,
+     "write_frame": 3381,
+     "lcrng_steps_to_sid": 3379,
+     "run": "sapphire-dead-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3308,
+     "tid": 29225,
+     "sid": 18056,
+     "write_frame": 3382,
+     "lcrng_steps_to_sid": 3380,
+     "run": "sapphire-dead-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3309,
+     "tid": 30057,
+     "sid": 29225,
+     "write_frame": 3383,
+     "lcrng_steps_to_sid": 3381,
+     "run": "sapphire-dead-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3310,
+     "tid": 46729,
+     "sid": 30057,
+     "write_frame": 3384,
+     "lcrng_steps_to_sid": 3382,
+     "run": "sapphire-dead-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3311,
+     "tid": 38038,
+     "sid": 46729,
+     "write_frame": 3385,
+     "lcrng_steps_to_sid": 3383,
+     "run": "sapphire-dead-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3316,
+     "tid": 20535,
+     "sid": 34493,
+     "write_frame": 3390,
+     "lcrng_steps_to_sid": 3388,
+     "run": "sapphire-dead-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3336,
+     "tid": 3243,
+     "sid": 32969,
+     "write_frame": 3410,
+     "lcrng_steps_to_sid": 3408,
+     "run": "sapphire-dead-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3366,
+     "tid": 28454,
+     "sid": 3834,
+     "write_frame": 3440,
+     "lcrng_steps_to_sid": 3438,
+     "run": "sapphire-dead-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3426,
+     "tid": 40093,
+     "sid": 57836,
+     "write_frame": 3500,
+     "lcrng_steps_to_sid": 3498,
+     "run": "sapphire-dead-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3520,
+     "tid": 38997,
+     "sid": 19018,
+     "write_frame": 3594,
+     "lcrng_steps_to_sid": 3592,
+     "run": "sapphire-dead-box-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3521,
+     "tid": 24408,
+     "sid": 38997,
+     "write_frame": 3595,
+     "lcrng_steps_to_sid": 3593,
+     "run": "sapphire-dead-box-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3522,
+     "tid": 31038,
+     "sid": 24408,
+     "write_frame": 3596,
+     "lcrng_steps_to_sid": 3594,
+     "run": "sapphire-dead-box-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3523,
+     "tid": 38693,
+     "sid": 31038,
+     "write_frame": 3597,
+     "lcrng_steps_to_sid": 3595,
+     "run": "sapphire-dead-box-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3524,
+     "tid": 8690,
+     "sid": 38693,
+     "write_frame": 3598,
+     "lcrng_steps_to_sid": 3596,
+     "run": "sapphire-dead-box-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3525,
+     "tid": 54358,
+     "sid": 8690,
+     "write_frame": 3599,
+     "lcrng_steps_to_sid": 3597,
+     "run": "sapphire-dead-box-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3530,
+     "tid": 10313,
+     "sid": 35307,
+     "write_frame": 3604,
+     "lcrng_steps_to_sid": 3602,
+     "run": "sapphire-dead-box-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3550,
+     "tid": 50049,
+     "sid": 308,
+     "write_frame": 3624,
+     "lcrng_steps_to_sid": 3622,
+     "run": "sapphire-dead-box-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3580,
+     "tid": 32565,
+     "sid": 33734,
+     "write_frame": 3654,
+     "lcrng_steps_to_sid": 3652,
+     "run": "sapphire-dead-box-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 3640,
+     "tid": 30732,
+     "sid": 57545,
+     "write_frame": 3714,
+     "lcrng_steps_to_sid": 3712,
+     "run": "sapphire-dead-box-preset-mash2",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4055,
+     "tid": 37184,
+     "sid": 61534,
+     "write_frame": 4129,
+     "lcrng_steps_to_sid": 4127,
+     "run": "sapphire-dead-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4056,
+     "tid": 25805,
+     "sid": 37184,
+     "write_frame": 4130,
+     "lcrng_steps_to_sid": 4128,
+     "run": "sapphire-dead-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4057,
+     "tid": 2088,
+     "sid": 25805,
+     "write_frame": 4131,
+     "lcrng_steps_to_sid": 4129,
+     "run": "sapphire-dead-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4058,
+     "tid": 47104,
+     "sid": 2088,
+     "write_frame": 4132,
+     "lcrng_steps_to_sid": 4130,
+     "run": "sapphire-dead-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4059,
+     "tid": 38718,
+     "sid": 47104,
+     "write_frame": 4133,
+     "lcrng_steps_to_sid": 4131,
+     "run": "sapphire-dead-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4060,
+     "tid": 56277,
+     "sid": 38718,
+     "write_frame": 4134,
+     "lcrng_steps_to_sid": 4132,
+     "run": "sapphire-dead-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4065,
+     "tid": 39608,
+     "sid": 42780,
+     "write_frame": 4139,
+     "lcrng_steps_to_sid": 4137,
+     "run": "sapphire-dead-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4085,
+     "tid": 62283,
+     "sid": 49756,
+     "write_frame": 4159,
+     "lcrng_steps_to_sid": 4157,
+     "run": "sapphire-dead-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4115,
+     "tid": 11332,
+     "sid": 22794,
+     "write_frame": 4189,
+     "lcrng_steps_to_sid": 4187,
+     "run": "sapphire-dead-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4175,
+     "tid": 46909,
+     "sid": 7482,
+     "write_frame": 4249,
+     "lcrng_steps_to_sid": 4247,
+     "run": "sapphire-dead-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4343,
+     "tid": 42443,
+     "sid": 15456,
+     "write_frame": 4417,
+     "lcrng_steps_to_sid": 4415,
+     "run": "sapphire-dead-box-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4344,
+     "tid": 33810,
+     "sid": 42443,
+     "write_frame": 4418,
+     "lcrng_steps_to_sid": 4416,
+     "run": "sapphire-dead-box-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4345,
+     "tid": 27518,
+     "sid": 33810,
+     "write_frame": 4419,
+     "lcrng_steps_to_sid": 4417,
+     "run": "sapphire-dead-box-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4346,
+     "tid": 21359,
+     "sid": 27518,
+     "write_frame": 4420,
+     "lcrng_steps_to_sid": 4418,
+     "run": "sapphire-dead-box-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4347,
+     "tid": 17294,
+     "sid": 21359,
+     "write_frame": 4421,
+     "lcrng_steps_to_sid": 4419,
+     "run": "sapphire-dead-box-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4348,
+     "tid": 64996,
+     "sid": 17294,
+     "write_frame": 4422,
+     "lcrng_steps_to_sid": 4420,
+     "run": "sapphire-dead-box-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4353,
+     "tid": 33258,
+     "sid": 24609,
+     "write_frame": 4427,
+     "lcrng_steps_to_sid": 4425,
+     "run": "sapphire-dead-box-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4373,
+     "tid": 10764,
+     "sid": 42090,
+     "write_frame": 4447,
+     "lcrng_steps_to_sid": 4445,
+     "run": "sapphire-dead-box-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4403,
+     "tid": 65270,
+     "sid": 28464,
+     "write_frame": 4477,
+     "lcrng_steps_to_sid": 4475,
+     "run": "sapphire-dead-box-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4463,
+     "tid": 26152,
+     "sid": 35183,
+     "write_frame": 4537,
+     "lcrng_steps_to_sid": 4535,
+     "run": "sapphire-dead-box-preset-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4519,
+     "tid": 48886,
+     "sid": 40041,
+     "write_frame": 4593,
+     "lcrng_steps_to_sid": 4591,
+     "run": "sapphire-dead-box-newname7-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4520,
+     "tid": 16842,
+     "sid": 48886,
+     "write_frame": 4594,
+     "lcrng_steps_to_sid": 4592,
+     "run": "sapphire-dead-box-newname7-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4521,
+     "tid": 58753,
+     "sid": 16842,
+     "write_frame": 4595,
+     "lcrng_steps_to_sid": 4593,
+     "run": "sapphire-dead-box-newname7-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4522,
+     "tid": 965,
+     "sid": 58753,
+     "write_frame": 4596,
+     "lcrng_steps_to_sid": 4594,
+     "run": "sapphire-dead-box-newname7-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4523,
+     "tid": 26665,
+     "sid": 965,
+     "write_frame": 4597,
+     "lcrng_steps_to_sid": 4595,
+     "run": "sapphire-dead-box-newname7-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4524,
+     "tid": 16298,
+     "sid": 26665,
+     "write_frame": 4598,
+     "lcrng_steps_to_sid": 4596,
+     "run": "sapphire-dead-box-newname7-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4529,
+     "tid": 45368,
+     "sid": 51634,
+     "write_frame": 4603,
+     "lcrng_steps_to_sid": 4601,
+     "run": "sapphire-dead-box-newname7-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4549,
+     "tid": 11895,
+     "sid": 8465,
+     "write_frame": 4623,
+     "lcrng_steps_to_sid": 4621,
+     "run": "sapphire-dead-box-newname7-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4579,
+     "tid": 16212,
+     "sid": 56526,
+     "write_frame": 4653,
+     "lcrng_steps_to_sid": 4651,
+     "run": "sapphire-dead-box-newname7-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 1440,
+     "press_frame": 4639,
+     "tid": 5715,
+     "sid": 60885,
+     "write_frame": 4713,
+     "lcrng_steps_to_sid": 4711,
+     "run": "sapphire-dead-box-newname7-mash8",
+     "clock": "dead (gRngValue := 0x5A0 after the seed frame)"
+    },
+    {
+     "seed": 14348,
+     "press_frame": 4231,
+     "tid": 32765,
+     "sid": 58751,
+     "write_frame": 4305,
+     "lcrng_steps_to_sid": 4303,
+     "run": "sapphire-live-newname7-mash8",
+     "clock": "host local 2026-09-10 21:06:44"
+    },
+    {
+     "seed": 14348,
+     "press_frame": 4232,
+     "tid": 16987,
+     "sid": 32765,
+     "write_frame": 4306,
+     "lcrng_steps_to_sid": 4304,
+     "run": "sapphire-live-newname7-mash8",
+     "clock": "host local 2026-09-10 21:06:44"
+    },
+    {
+     "seed": 14348,
+     "press_frame": 4233,
+     "tid": 11060,
+     "sid": 16987,
+     "write_frame": 4307,
+     "lcrng_steps_to_sid": 4305,
+     "run": "sapphire-live-newname7-mash8",
+     "clock": "host local 2026-09-10 21:06:44"
+    },
+    {
+     "seed": 14348,
+     "press_frame": 4234,
+     "tid": 59066,
+     "sid": 11060,
+     "write_frame": 4308,
+     "lcrng_steps_to_sid": 4306,
+     "run": "sapphire-live-newname7-mash8",
+     "clock": "host local 2026-09-10 21:06:44"
+    },
+    {
+     "seed": 14348,
+     "press_frame": 4235,
+     "tid": 411,
+     "sid": 59066,
+     "write_frame": 4309,
+     "lcrng_steps_to_sid": 4307,
+     "run": "sapphire-live-newname7-mash8",
+     "clock": "host local 2026-09-10 21:06:44"
+    },
+    {
+     "seed": 14348,
+     "press_frame": 4236,
+     "tid": 22595,
+     "sid": 411,
+     "write_frame": 4310,
+     "lcrng_steps_to_sid": 4308,
+     "run": "sapphire-live-newname7-mash8",
+     "clock": "host local 2026-09-10 21:06:44"
+    },
+    {
+     "seed": 14348,
+     "press_frame": 4241,
+     "tid": 65335,
+     "sid": 4471,
+     "write_frame": 4315,
+     "lcrng_steps_to_sid": 4313,
+     "run": "sapphire-live-newname7-mash8",
+     "clock": "host local 2026-09-10 21:06:44"
+    },
+    {
+     "seed": 14348,
+     "press_frame": 4261,
+     "tid": 63753,
+     "sid": 16444,
+     "write_frame": 4335,
+     "lcrng_steps_to_sid": 4333,
+     "run": "sapphire-live-newname7-mash8",
+     "clock": "host local 2026-09-10 21:06:44"
+    },
+    {
+     "seed": 14348,
+     "press_frame": 4291,
+     "tid": 56855,
+     "sid": 29017,
+     "write_frame": 4365,
+     "lcrng_steps_to_sid": 4363,
+     "run": "sapphire-live-newname7-mash8",
+     "clock": "host local 2026-09-10 21:06:44"
+    },
+    {
+     "seed": 14348,
+     "press_frame": 4351,
+     "tid": 11095,
+     "sid": 14563,
+     "write_frame": 4425,
+     "lcrng_steps_to_sid": 4423,
+     "run": "sapphire-live-newname7-mash8",
+     "clock": "host local 2026-09-10 21:06:44"
+    },
+    {
+     "seed": 14358,
+     "press_frame": 4055,
+     "tid": 34072,
+     "sid": 21838,
+     "write_frame": 4129,
+     "lcrng_steps_to_sid": 4127,
+     "run": "sapphire-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:58:51"
+    },
+    {
+     "seed": 14358,
+     "press_frame": 4056,
+     "tid": 643,
+     "sid": 34072,
+     "write_frame": 4130,
+     "lcrng_steps_to_sid": 4128,
+     "run": "sapphire-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:58:51"
+    },
+    {
+     "seed": 14358,
+     "press_frame": 4057,
+     "tid": 13060,
+     "sid": 643,
+     "write_frame": 4131,
+     "lcrng_steps_to_sid": 4129,
+     "run": "sapphire-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:58:51"
+    },
+    {
+     "seed": 14358,
+     "press_frame": 4058,
+     "tid": 9715,
+     "sid": 13060,
+     "write_frame": 4132,
+     "lcrng_steps_to_sid": 4130,
+     "run": "sapphire-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:58:51"
+    },
+    {
+     "seed": 14358,
+     "press_frame": 4059,
+     "tid": 38898,
+     "sid": 9715,
+     "write_frame": 4133,
+     "lcrng_steps_to_sid": 4131,
+     "run": "sapphire-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:58:51"
+    },
+    {
+     "seed": 14358,
+     "press_frame": 4060,
+     "tid": 41493,
+     "sid": 38898,
+     "write_frame": 4134,
+     "lcrng_steps_to_sid": 4132,
+     "run": "sapphire-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:58:51"
+    },
+    {
+     "seed": 14358,
+     "press_frame": 4065,
+     "tid": 47629,
+     "sid": 12932,
+     "write_frame": 4139,
+     "lcrng_steps_to_sid": 4137,
+     "run": "sapphire-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:58:51"
+    },
+    {
+     "seed": 14358,
+     "press_frame": 4085,
+     "tid": 53648,
+     "sid": 24168,
+     "write_frame": 4159,
+     "lcrng_steps_to_sid": 4157,
+     "run": "sapphire-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:58:51"
+    },
+    {
+     "seed": 14358,
+     "press_frame": 4115,
+     "tid": 11201,
+     "sid": 45071,
+     "write_frame": 4189,
+     "lcrng_steps_to_sid": 4187,
+     "run": "sapphire-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:58:51"
+    },
+    {
+     "seed": 14358,
+     "press_frame": 4175,
+     "tid": 61167,
+     "sid": 20017,
+     "write_frame": 4249,
+     "lcrng_steps_to_sid": 4247,
+     "run": "sapphire-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:58:51"
+    },
+    {
+     "seed": 50205,
+     "press_frame": 4055,
+     "tid": 62025,
+     "sid": 27049,
+     "write_frame": 4129,
+     "lcrng_steps_to_sid": 4127,
+     "run": "sapphire-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26"
+    },
+    {
+     "seed": 50205,
+     "press_frame": 4056,
+     "tid": 29853,
+     "sid": 62025,
+     "write_frame": 4130,
+     "lcrng_steps_to_sid": 4128,
+     "run": "sapphire-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26"
+    },
+    {
+     "seed": 50205,
+     "press_frame": 4057,
+     "tid": 39307,
+     "sid": 29853,
+     "write_frame": 4131,
+     "lcrng_steps_to_sid": 4129,
+     "run": "sapphire-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26"
+    },
+    {
+     "seed": 50205,
+     "press_frame": 4058,
+     "tid": 60320,
+     "sid": 39307,
+     "write_frame": 4132,
+     "lcrng_steps_to_sid": 4130,
+     "run": "sapphire-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26"
+    },
+    {
+     "seed": 50205,
+     "press_frame": 4059,
+     "tid": 48195,
+     "sid": 60320,
+     "write_frame": 4133,
+     "lcrng_steps_to_sid": 4131,
+     "run": "sapphire-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26"
+    },
+    {
+     "seed": 50205,
+     "press_frame": 4060,
+     "tid": 24926,
+     "sid": 48195,
+     "write_frame": 4134,
+     "lcrng_steps_to_sid": 4132,
+     "run": "sapphire-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26"
+    },
+    {
+     "seed": 50205,
+     "press_frame": 4065,
+     "tid": 9618,
+     "sid": 58802,
+     "write_frame": 4139,
+     "lcrng_steps_to_sid": 4137,
+     "run": "sapphire-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26"
+    },
+    {
+     "seed": 50205,
+     "press_frame": 4085,
+     "tid": 21667,
+     "sid": 27877,
+     "write_frame": 4159,
+     "lcrng_steps_to_sid": 4157,
+     "run": "sapphire-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26"
+    },
+    {
+     "seed": 50205,
+     "press_frame": 4115,
+     "tid": 3242,
+     "sid": 58766,
+     "write_frame": 4189,
+     "lcrng_steps_to_sid": 4187,
+     "run": "sapphire-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26"
+    },
+    {
+     "seed": 50205,
+     "press_frame": 4175,
+     "tid": 29125,
+     "sid": 24255,
+     "write_frame": 4249,
+     "lcrng_steps_to_sid": 4247,
+     "run": "sapphire-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26"
+    }
+   ],
+   "clock_model_checks": [
+    {
+     "run": "sapphire-fixed2000-preset-mash8",
+     "clock": "fixed 2000-01-01 00:00",
+     "day_count": 1,
+     "minute_count": 1440,
+     "seed_expected": 1440,
+     "seed_observed": 1440
+    },
+    {
+     "run": "sapphire-fixed2005-preset-mash8",
+     "clock": "fixed 2005-06-15 12:26",
+     "day_count": 1627,
+     "minute_count": 2343998,
+     "seed_expected": 50205,
+     "seed_observed": 50205
+    },
+    {
+     "run": "sapphire-live-newname7-mash8",
+     "clock": "host local 2026-09-10 21:06:44",
+     "day_count": 9384,
+     "minute_count": 13514946,
+     "seed_expected": 14348,
+     "seed_observed": 14348
+    },
+    {
+     "run": "sapphire-live-preset-mash8",
+     "clock": "host local 2026-09-10 20:58:51",
+     "day_count": 9384,
+     "minute_count": 13514968,
+     "seed_expected": 14358,
+     "seed_observed": 14358
+    }
+   ],
+   "dead_battery_checks": [
+    {
+     "run": "sapphire-dead-box-newname7-mash8",
+     "natural_seed_before_overwrite": 14359,
+     "overwrite_after_frame": 4,
+     "read_back": 1440,
+     "battery_box": true,
+     "battery_box_seen": true,
+     "p_min": 4519,
+     "pairs_P_min_to_plus5": [
+      [
+       4519,
+       48886,
+       40041
+      ],
+      [
+       4520,
+       16842,
+       48886
+      ],
+      [
+       4521,
+       58753,
+       16842
+      ],
+      [
+       4522,
+       965,
+       58753
+      ],
+      [
+       4523,
+       26665,
+       965
+      ],
+      [
+       4524,
+       16298,
+       26665
+      ]
+     ]
+    },
+    {
+     "run": "sapphire-dead-box-preset-mash2",
+     "natural_seed_before_overwrite": 14358,
+     "overwrite_after_frame": 4,
+     "read_back": 1440,
+     "battery_box": true,
+     "battery_box_seen": true,
+     "p_min": 3520,
+     "pairs_P_min_to_plus5": [
+      [
+       3520,
+       38997,
+       19018
+      ],
+      [
+       3521,
+       24408,
+       38997
+      ],
+      [
+       3522,
+       31038,
+       24408
+      ],
+      [
+       3523,
+       38693,
+       31038
+      ],
+      [
+       3524,
+       8690,
+       38693
+      ],
+      [
+       3525,
+       54358,
+       8690
+      ]
+     ]
+    },
+    {
+     "run": "sapphire-dead-box-preset-mash8",
+     "natural_seed_before_overwrite": 14358,
+     "overwrite_after_frame": 4,
+     "read_back": 1440,
+     "battery_box": true,
+     "battery_box_seen": true,
+     "p_min": 4343,
+     "pairs_P_min_to_plus5": [
+      [
+       4343,
+       42443,
+       15456
+      ],
+      [
+       4344,
+       33810,
+       42443
+      ],
+      [
+       4345,
+       27518,
+       33810
+      ],
+      [
+       4346,
+       21359,
+       27518
+      ],
+      [
+       4347,
+       17294,
+       21359
+      ],
+      [
+       4348,
+       64996,
+       17294
+      ]
+     ]
+    },
+    {
+     "run": "sapphire-dead-preset-mash2",
+     "natural_seed_before_overwrite": 14359,
+     "overwrite_after_frame": 4,
+     "read_back": 1440,
+     "battery_box": false,
+     "battery_box_seen": false,
+     "p_min": 3306,
+     "pairs_P_min_to_plus5": [
+      [
+       3306,
+       290,
+       43840
+      ],
+      [
+       3307,
+       18056,
+       290
+      ],
+      [
+       3308,
+       29225,
+       18056
+      ],
+      [
+       3309,
+       30057,
+       29225
+      ],
+      [
+       3310,
+       46729,
+       30057
+      ],
+      [
+       3311,
+       38038,
+       46729
+      ]
+     ]
+    },
+    {
+     "run": "sapphire-dead-preset-mash8",
+     "natural_seed_before_overwrite": 14358,
+     "overwrite_after_frame": 4,
+     "read_back": 1440,
+     "battery_box": false,
+     "battery_box_seen": false,
+     "p_min": 4055,
+     "pairs_P_min_to_plus5": [
+      [
+       4055,
+       37184,
+       61534
+      ],
+      [
+       4056,
+       25805,
+       37184
+      ],
+      [
+       4057,
+       2088,
+       25805
+      ],
+      [
+       4058,
+       47104,
+       2088
+      ],
+      [
+       4059,
+       38718,
+       47104
+      ],
+      [
+       4060,
+       56277,
+       38718
+      ]
+     ]
+    }
+   ],
+   "status": "emulator-derived (mGBA 0.10.5 headless), no hardware sample",
+   "citations": [
+    "pokeruby src/main.c:115 (AgbMain: SeedRngWithRtc()), :201-206 (SeedRngWithRtc), :328 (VBlankIntr: Random()), :131-170 (the main loop: ReadKeys, callbacks, WaitForVBlank)",
+    "pokeruby src/rtc.c:13 (sRtcDummy 2000 Jan 1), :62-95 (ConvertDateToDayCount, BUGFIX_BERRY undefined), :97-103 (RtcGetDayCount), :134-139 (RtcGetInfo), :162-170 (RtcCheckInfo, RTC_ERR_POWER_FAILURE), :367-371 (RtcGetMinuteCount); include/rtc.h:10,17 (RTC_ERR_POWER_FAILURE 0x0020, RTC_ERR_FLAG_MASK 0x0FF0)",
+    "pokeruby src/random.c:9-18 (Random: gRngValue = 1103515245 * gRngValue + 24691; return gRngValue >> 16; SeedRng(u16)); include/random.h",
+    "pokeruby src/new_game.c:76-79 (InitPlayerTrainerId: write_word_to_mem((Random() << 16) | Random(), gSaveBlock2.playerTrainerId)), :160-175 (NewGameInitData)",
+    "pokeruby src/overworld.c:1272-1277 (CB2_NewGame -> NewGameInitData), src/main_menu.c:1300-1320 (Task_NewGameSpeech32/33 -> SetMainCallback2(CB2_NewGame)), :1211-1300 (Task_NewGameSpeech23-31), :334-372 (Task_MainMenuCheckRtc / WaitForRtcErrorAck: the battery-dry box), :1073-1108 (name menu: presets 1-4 skip the naming screen)",
+    "pokeruby src/intro.c:826-836 (MainCB2_Intro: any new key ends the intro), :946-949 (Task_IntroLoadPart1Graphics: Random() & 1), :858-926 (SetUpCopyrightScreen: state 0 fade from white, state 140 fade to black, 141 -> intro)",
+    "pokeruby src/text.c:2403-2438 (UpdateWindowText: WIN_STATE_WAIT_BUTTON takes JOY_NEW(A|B) and returns FALSE that frame; holding A|B skips character delays), :437 (sTextSpeedDelays {6,3,1}); src/new_game.c:82-90 (SetDefaultOptions: MID)",
+    "pokeruby include/global.h:841-846 (struct SaveBlock2 at 0x02024EA4: playerTrainerId at +0x0A, TID u16 then SID u16 little-endian); byte-exact agbcc builds of pret/pokeruby ruby and sapphire (sha1 as above): gRngValue 0x03004818, gSaveBlock2 0x02024EA4, gTasks 0x03004B20, gMain 0x03001770, sErrorStatus 0x03000458",
+    "isleep2late-Files src/Services/Manip/RsRtcSeed.cs (the same fold, BCD and berry-glitch day count, DeadBatterySeed 0x5A0), Gen3BootSeedGame.cs, Gen3BirchOpening.cs (the mash-8 opening and the last-box probe), Gen3BootSeedTidRunner.cs (MeasureRoll)",
+    "mGBA 0.10.5 src/gba/cart/gpio.c:101 (the emulated S3511 control byte starts 0x40: 24-hour, POWER flag never set, so a dead battery cannot be emulated through the clock; hence the gRngValue overwrite), :273-300 (_rtcUpdateClock: localtime_r of the RTC source); libmgx mgx.c mgx_pin_boot_config (useBios=0, skipBios=1 pinned)",
+    "RNG-Solution tools/gba-sid-harness/RESULTS.md (Emerald / FRLG measured the same way; frame-boundary convention)"
+   ],
+   "methodology": {
+    "id": "sapphire/gba/dead-battery-v1",
+    "name": "Pokemon Sapphire (GBA, retail rev 0): choose the Trainer ID / Secret ID pair by timing the last Birch press from a dead-battery boot",
+    "protocol": [
+     "Use a cartridge whose clock battery is dead: the main menu shows 'The internal clock's battery has run dry. The game can be played, however clock-based events will no longer occur.' on every power-on. That message is the proof the game seeded 0x5A0 (RtcGetInfo returns 2000-01-01 00:00 whenever the power-failure flag is set).",
+     "Have no save file, or clear it first (UP + B + SELECT on the title screen, then YES): NEW GAME must be what A selects on the main menu.",
+     "Pick a target (TID, or TID+SID pair) in the app; it names the press frame P (>= P_min) and the wait on the last box.",
+     "Power on. Start the app's frame timer on the anchor: the copyright screen fading in (frame 4 after the first game frame; the text is fully black-on-white from frame 21, and it starts fading to black on frame 148). The app maps timer frames to P by adding the anchor offset it was started on.",
+     "Go through the opening as fast as you like (mashing A is fine; every press only changes when the boxes end, never the RNG): intro (any button), title (A), the battery-dry box (A), NEW GAME (A), Birch's boxes (A), BOY (A), name menu: DOWN then A (first preset name) or NEW NAME, 'So it's NAME?' YES (A), 'Ah, okay!' box (A), the first four pages of 'All right, are you ready?' (A each).",
+     "On the last page ('Come see me in my POKeMON LAB.') wait for the cue and press A on frame P. The game reads the press on the frame it is pressed; the ID is written 74 frames later, inside the white fade before the truck.",
+     "Verify: the Trainer ID is on the Trainer Card (START > the card). Read it back into the app; the SID follows from the same P (the app shows the neighbours P-1, P+1 in case the press was read a frame off)."
+    ],
+    "validity": [
+     "Retail USA rev 0 image (sha1 3ccbbd45f8553c36463f13b938e833f652b793e4); other revisions and languages are unmeasured.",
+     "Dead battery (the battery-dry box shows) so S = 0x5A0; with a live battery the same map holds with S = fold(minuteCount) of the clock minute at boot (the branch the app can offer when the clock is known).",
+     "Frame counts are mGBA 0.10.5 (libmgx fingerprint 5b96375cabe3920a) counts: F_SEED = 4 assumes SeedRngWithRtc finishes inside frame 4 on hardware too (the RTC probe and the flash detection run before it; a slower probe on a real cartridge would shift every n by one, which the TID read-back would show as the P+1 neighbour); C = 74 and X = 1 are set by the game's own counters and fades and are expected to transfer.",
+     "No BIOS boot was measured (no GBA BIOS on this machine and libmgx cannot load one), so power-on is not an anchor: use the copyright screen.",
+     "Nothing else on the path calls Random(): 4128+ frames of every run stepped gRngValue exactly once per frame except the intro's first frame (2) and the write frame (3); do not open menus that roll (none exist before the truck).",
+     "P_min is the earliest read frame for the mash-8 opening with the preset name and MID text; a faster mash (one frame in 2) reaches P_min = 3520 with the box; any slower human opening simply means a larger P, and the wait on the last box absorbs the difference."
+    ]
+   }
+  }
+ }
+}

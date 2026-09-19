@@ -1,0 +1,295 @@
+{
+ "note": "harness rows sampled (fixed LCG seed 0x5A0, 4 per table, 24 rows) from rngsolution/data/<game>/buffer-<platform>.csv of RNG-Solution (windows-column CSVs, harness sha1 6808dbe0); a row is the CSV line verbatim split on commas: sequence, tid_hex, newgame_frame, roll_frame, seconds, windows (reg/exit per title token, ; separated). Used by tests/tid-helper/buffer.test.cjs to compose each row through buffer-decode.js and compare with the recorded newgame / roll frames.",
+ "sources": {
+  "red/gbp": {
+   "file": "rngsolution/data/red/buffer-gbp.csv",
+   "sha1": "b79738cffa4cfbbc57ef0edce82c2f4b5a2b5207"
+  },
+  "red/dmg": {
+   "file": "rngsolution/data/red/buffer-dmg.csv",
+   "sha1": "0638f39cc9a394bd35f3bba487236c4d470938ee"
+  },
+  "blue/gbp": {
+   "file": "rngsolution/data/blue/buffer-gbp.csv",
+   "sha1": "56f112e05d8a79aba75652b33a05879f02443bbc"
+  },
+  "blue/dmg": {
+   "file": "rngsolution/data/blue/buffer-dmg.csv",
+   "sha1": "9e85362c34a1b5ef896e2d0ca52184c79c83432a"
+  },
+  "yellow/gbp": {
+   "file": "rngsolution/data/yellow/buffer-gbp.csv",
+   "sha1": "5f50df0380d117d93fb6dda1cbe80083a812fcac"
+  },
+  "yellow/dmg": {
+   "file": "rngsolution/data/yellow/buffer-dmg.csv",
+   "sha1": "bb99316b2b56ceb27c975fb3dce3531a38e1d423"
+  }
+ },
+ "rows": [
+  {
+   "game": "red",
+   "platform": "gbp",
+   "line": 9738,
+   "sequence": "nopal_gfskip_hop5_title4(scroll)_opt(backout)_backout_title2_opt(backout)_opt(backout)_opt(backout)_newgame",
+   "tid_hex": "61E1",
+   "newgame_frame": 3683,
+   "roll_frame": 3713,
+   "seconds": 62.0661,
+   "windows": "1456/48;692/62"
+  },
+  {
+   "game": "red",
+   "platform": "gbp",
+   "line": 9971,
+   "sequence": "nopal_gfskip_hop6_title0_opt(backout)_opt(backout)_opt(backout)_backout_title0(scroll)_opt(backout)_opt(backout)_newgame",
+   "tid_hex": "58A6",
+   "newgame_frame": 2182,
+   "roll_frame": 2212,
+   "seconds": 36.9356,
+   "windows": "150/60;366/60"
+  },
+  {
+   "game": "red",
+   "platform": "gbp",
+   "line": 84368,
+   "sequence": "pal(hold)_gfwait_hop2_title2_opt(backout)_backout_title3(scroll)_opt(backout)_newgame",
+   "tid_hex": "32CC",
+   "newgame_frame": 3253,
+   "roll_frame": 3283,
+   "seconds": 54.8668,
+   "windows": "688/48;1226/54"
+  },
+  {
+   "game": "red",
+   "platform": "gbp",
+   "line": 112771,
+   "sequence": "pal(ab)_gfwait_hop5_title3(scroll)_opt(backout)_opt(backout)_backout_title2_opt(backout)_opt(backout)_opt(backout)_newgame",
+   "tid_hex": "1EB4",
+   "newgame_frame": 3787,
+   "roll_frame": 3817,
+   "seconds": 63.8074,
+   "windows": "1196/36;723/82"
+  },
+  {
+   "game": "red",
+   "platform": "dmg",
+   "line": 13833,
+   "sequence": "gfwait_hop1_title2_opt(backout)_backout_title1(scroll)_opt(backout)_opt(backout)_newgame",
+   "tid_hex": "2A8A",
+   "newgame_frame": 2856,
+   "roll_frame": 2886,
+   "seconds": 48.2179,
+   "windows": "710/60;640/49"
+  },
+  {
+   "game": "red",
+   "platform": "dmg",
+   "line": 15058,
+   "sequence": "gfwait_hop2_title0(scroll)_opt(backout)_opt(backout)_opt(backout)_backout_title1_opt(backout)_newgame",
+   "tid_hex": "FB79",
+   "newgame_frame": 2481,
+   "roll_frame": 2511,
+   "seconds": 41.9394,
+   "windows": "367/60;438/87"
+  },
+  {
+   "game": "red",
+   "platform": "dmg",
+   "line": 16837,
+   "sequence": "gfwait_hop3_title1_opt(backout)_opt(backout)_backout_title3_opt(backout)_newgame",
+   "tid_hex": "B9F3",
+   "newgame_frame": 3130,
+   "roll_frame": 3160,
+   "seconds": 52.8053,
+   "windows": "425/82;970/87"
+  },
+  {
+   "game": "red",
+   "platform": "dmg",
+   "line": 22375,
+   "sequence": "gfwait_hop6_title3_opt(backout)_backout_title3(scroll)_newgame",
+   "tid_hex": "6D6D",
+   "newgame_frame": 3943,
+   "roll_frame": 3973,
+   "seconds": 66.4173,
+   "windows": "970/63;1181/70"
+  },
+  {
+   "game": "blue",
+   "platform": "gbp",
+   "line": 98110,
+   "sequence": "pal(ab)_gfskip_hop3_title4_backout_title4(scroll)_newgame",
+   "tid_hex": "37EA",
+   "newgame_frame": 3804,
+   "roll_frame": 3834,
+   "seconds": 64.0921,
+   "windows": "1277/31;1476/71"
+  },
+  {
+   "game": "blue",
+   "platform": "gbp",
+   "line": 105252,
+   "sequence": "pal(ab)_gfwait_hop1_title0(scroll)_opt(backout)_opt(backout)_opt(backout)_backout_title0_opt(backout)_opt(backout)_opt(backout)_newgame",
+   "tid_hex": "78D6",
+   "newgame_frame": 2117,
+   "roll_frame": 2147,
+   "seconds": 35.8319,
+   "windows": "367/68;149/68"
+  },
+  {
+   "game": "blue",
+   "platform": "gbp",
+   "line": 107066,
+   "sequence": "pal(ab)_gfwait_hop2_title1_opt(backout)_opt(backout)_opt(backout)_backout_title1(scroll)_opt(backout)_newgame",
+   "tid_hex": "6101",
+   "newgame_frame": 2641,
+   "roll_frame": 2671,
+   "seconds": 44.6204,
+   "windows": "444/87;660/69"
+  },
+  {
+   "game": "blue",
+   "platform": "gbp",
+   "line": 112708,
+   "sequence": "pal(ab)_gfwait_hop5_title3(scroll)_backout_title4(scroll)_opt(backout)_opt(backout)_newgame",
+   "tid_hex": "901A",
+   "newgame_frame": 4375,
+   "roll_frame": 4405,
+   "seconds": 73.6522,
+   "windows": "1212/80;1489/60"
+  },
+  {
+   "game": "blue",
+   "platform": "dmg",
+   "line": 3800,
+   "sequence": "gfskip_hop2_title1(scroll)_backout_title3_opt(backout)_opt(backout)_newgame",
+   "tid_hex": "DFE7",
+   "newgame_frame": 2871,
+   "roll_frame": 2901,
+   "seconds": 48.4685,
+   "windows": "650/80;978/31"
+  },
+  {
+   "game": "blue",
+   "platform": "dmg",
+   "line": 4248,
+   "sequence": "gfskip_hop2_title2(scroll)_opt(backout)_opt(backout)_opt(backout)_backout_title2(scroll)_opt(backout)_opt(backout)_opt(backout)_newgame",
+   "tid_hex": "2616",
+   "newgame_frame": 3413,
+   "roll_frame": 3443,
+   "seconds": 57.543,
+   "windows": "936/69;927/61"
+  },
+  {
+   "game": "blue",
+   "platform": "dmg",
+   "line": 4871,
+   "sequence": "gfskip_hop2_title4(scroll)_opt(backout)_opt(backout)_backout_title3(scroll)_opt(backout)_opt(backout)_opt(backout)_newgame",
+   "tid_hex": "02CE",
+   "newgame_frame": 4177,
+   "roll_frame": 4207,
+   "seconds": 70.3344,
+   "windows": "1492/83;1183/71"
+  },
+  {
+   "game": "blue",
+   "platform": "dmg",
+   "line": 16773,
+   "sequence": "gfwait_hop3_title1_opt(backout)_backout_title0_opt(backout)_opt(backout)_newgame",
+   "tid_hex": "CD8C",
+   "newgame_frame": 2274,
+   "roll_frame": 2304,
+   "seconds": 38.473,
+   "windows": "421/71;148/68"
+  },
+  {
+   "game": "yellow",
+   "platform": "gbp",
+   "line": 13,
+   "sequence": "gfskip_intro1_title_backout_title_newgame",
+   "tid_hex": "D781",
+   "newgame_frame": 1246,
+   "roll_frame": 1275,
+   "seconds": 21.219,
+   "windows": "146/57;145/57"
+  },
+  {
+   "game": "yellow",
+   "platform": "gbp",
+   "line": 41,
+   "sequence": "gfskip_intro3_title_backout_title_backout_title_backout_title_backout_title_backout_title_backout_title_backout_title_newgame",
+   "tid_hex": "530D",
+   "newgame_frame": 3051,
+   "roll_frame": 3080,
+   "seconds": 51.3029,
+   "windows": "146/57;145/57;145/57;145/57;145/57;145/57;145/57;145/57"
+  },
+  {
+   "game": "yellow",
+   "platform": "gbp",
+   "line": 77,
+   "sequence": "gfskip_intro6_title_backout_title_backout_title_backout_title_backout_title_backout_title_backout_title_backout_title_backout_title_backout_title_backout_title_newgame",
+   "tid_hex": "7076",
+   "newgame_frame": 4274,
+   "roll_frame": 4303,
+   "seconds": 71.6927,
+   "windows": "146/57;145/57;145/57;145/57;145/57;145/57;145/57;145/57;145/57;145/57;145/57"
+  },
+  {
+   "game": "yellow",
+   "platform": "gbp",
+   "line": 109,
+   "sequence": "gfwait_intro1_title_backout_title_backout_title_backout_title_backout_title_backout_title_backout_title_backout_title_backout_title_backout_title_newgame",
+   "tid_hex": "3C18",
+   "newgame_frame": 3539,
+   "roll_frame": 3568,
+   "seconds": 59.4692,
+   "windows": "146/57;145/57;145/57;145/57;145/57;145/57;145/57;145/57;145/57;145/57"
+  },
+  {
+   "game": "yellow",
+   "platform": "dmg",
+   "line": 7,
+   "sequence": "gfskip_intro0_title_backout_title_backout_title_backout_title_backout_title_backout_title_backout_title_newgame",
+   "tid_hex": "9435",
+   "newgame_frame": 2417,
+   "roll_frame": 2446,
+   "seconds": 40.7674,
+   "windows": "140/55;138/55;138/55;138/55;138/55;138/55;138/55"
+  },
+  {
+   "game": "yellow",
+   "platform": "dmg",
+   "line": 37,
+   "sequence": "gfskip_intro3_title_backout_title_backout_title_backout_title_newgame",
+   "tid_hex": "D99A",
+   "newgame_frame": 2115,
+   "roll_frame": 2144,
+   "seconds": 35.6965,
+   "windows": "139/55;138/55;138/55;138/55"
+  },
+  {
+   "game": "yellow",
+   "platform": "dmg",
+   "line": 46,
+   "sequence": "gfskip_intro4_title_backout_title_newgame",
+   "tid_hex": "EC7C",
+   "newgame_frame": 1820,
+   "roll_frame": 1849,
+   "seconds": 30.7689,
+   "windows": "139/55;138/55"
+  },
+  {
+   "game": "yellow",
+   "platform": "dmg",
+   "line": 134,
+   "sequence": "gfwait_intro4_title_backout_title_newgame",
+   "tid_hex": "8B3C",
+   "newgame_frame": 2073,
+   "roll_frame": 2102,
+   "seconds": 35.0048,
+   "windows": "139/55;138/55"
+  }
+ ]
+}

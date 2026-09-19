@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Get a TID</title>
+<style>
+:root { --bg:#101418; --panel:#1a2027; --panel2:#222a33; --text:#e8edf2; --muted:#93a1af; --accent:#f97316;
+  --good:#4ade80; --bad:#f87171; --warn:#fcd34d; --edge:#2e3946; --blue:#2962ff; }
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html { background:var(--bg); }
+body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:14px; line-height:1.4; }
+#top { position:sticky; top:0; z-index:5; display:flex; align-items:center; gap:8px; padding:8px 10px; background:var(--panel); border-bottom:1px solid var(--edge); }
+#top h1 { margin:0; font-size:17px; color:var(--accent); flex:1; }
+#back { background:var(--panel2); color:var(--text); border:1px solid var(--edge); border-radius:8px; padding:6px 10px; font-size:13px; }
+#main { max-width:820px; margin:0 auto; padding:10px 10px 90px; }
+h1 { margin:4px 0 2px; font-size:20px; color:var(--accent); }
+h2 { margin:0 0 8px; font-size:16px; }
+h3 { margin:10px 0 4px; font-size:14px; }
+p { margin:6px 0; }
+p.note { color:var(--muted); font-size:13px; }
+.card { background:var(--panel); border:1px solid var(--edge); border-radius:10px; padding:12px; margin-bottom:10px; overflow-wrap:anywhere; }
+.card.game .gh { display:flex; align-items:baseline; gap:8px; margin-bottom:6px; }
+.card.game .gen { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+.card.game .gn { font-weight:700; font-size:15px; }
+.hidden { display:none !important; }
+.muted { color:var(--muted); } .small { font-size:12px; } .good { color:var(--good); } .bad { color:var(--bad); } .warn { color:var(--warn); }
+.mono { font-family:ui-monospace,Menlo,monospace; }
+.clamp { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.row { display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end; margin:6px 0; }
+label.field { display:flex; flex-direction:column; gap:3px; color:var(--muted); font-size:12px; min-width:120px; flex:1; }
+label.check { display:flex; align-items:center; gap:8px; color:var(--text); font-size:13px; margin:6px 0; }
+select, input[type=text], input[type=number], input[type=date], input[type=time] { background:var(--panel2); color:var(--text); border:1px solid var(--edge); border-radius:6px; padding:8px; font-size:15px; width:100%; }
+button { background:var(--accent); color:#111; border:0; border-radius:8px; padding:10px 14px; font-size:14px; font-weight:600; cursor:pointer; }
+button.secondary { background:var(--panel2); color:var(--text); border:1px solid var(--edge); }
+button.small { padding:6px 10px; font-size:12px; }
+button.anchor { background:var(--good); color:#062; }
+button:disabled { opacity:.45; cursor:default; }
+.choices { display:flex; flex-direction:column; gap:6px; margin:6px 0; }
+.choice { text-align:left; background:var(--panel2); color:var(--muted); border:1px solid var(--edge); border-radius:8px; padding:10px 12px; font-weight:500; width:100%; }
+.choice.active { border-color:var(--accent); color:var(--text); background:#2a2320; }
+.choice .ct { display:block; font-weight:600; color:var(--text); }
+.choice .cs { display:block; font-size:12px; color:var(--muted); margin-top:2px; }
+.tabs { display:flex; gap:6px; margin:8px 0; flex-wrap:wrap; }
+.tabs .tab { background:var(--panel2); color:var(--muted); border:1px solid var(--edge); padding:6px 12px; font-size:13px; }
+.tabs .tab.active { color:var(--text); border-color:var(--accent); }
+ol.steps { padding-left:22px; margin:6px 0; }
+ol.steps li { margin:0 0 10px; }
+ol.steps li.reset { border-left:3px solid var(--bad); padding-left:8px; }
+ol.steps .st { font-family:ui-monospace,Menlo,monospace; font-weight:700; color:var(--accent); }
+ol.steps .sm { display:block; margin-top:2px; }
+ol.steps .sw { display:block; font-size:12px; color:var(--muted); margin-top:2px; }
+ol.steps .sc { display:block; font-size:11px; color:#6b7a89; margin-top:2px; }
+ol.steps .mod { display:block; margin-top:4px; padding-left:8px; border-left:2px solid var(--edge); }
+ol.plain, ul.plain { padding-left:20px; margin:4px 0; }
+ul.plain li.ev { color:var(--muted); }
+.tag { display:inline-block; border:1px solid var(--edge); border-radius:6px; padding:1px 6px; font-size:12px; color:var(--muted); }
+.tag.ok { border-color:var(--good); color:var(--good); }
+.tag.warn { border-color:var(--warn); color:var(--warn); }
+a { color:#7aa7ff; }
+.src { margin:6px 0 4px; }
+.srcs { margin:4px 0 0; padding-left:18px; }
+.srcs li { margin-bottom:6px; }
+.srcs .sm { display:block; font-size:12px; margin-top:1px; }
+.srcs .mono { font-family:ui-monospace,Menlo,Consolas,monospace; overflow-wrap:anywhere; }
+.status .srow { display:flex; gap:8px; margin:3px 0; font-size:12px; }
+.status .sl { min-width:96px; color:var(--muted); flex-shrink:0; }
+.status .sv { color:var(--text); }
+details { margin:6px 0; } summary { cursor:pointer; color:var(--accent); font-size:13px; }
+table.tbl { border-collapse:collapse; width:100%; font-size:12px; }
+table.tbl th, table.tbl td { border-bottom:1px solid var(--edge); padding:4px 6px; text-align:left; vertical-align:top; }
+table.tbl tr.sel td { background:#2a2320; }
+.scroll { max-height:340px; overflow:auto; border:1px solid var(--edge); border-radius:6px; }
+.story canvas { display:block; width:100%; background:#0b0e12; border-radius:8px; }
+.story-controls { margin-top:6px; }
+.aim { background:#1c2a1c; border:1px solid var(--good); border-radius:8px; padding:6px 8px; }
+.msg p { margin:4px 0; }
+.calib .lbl { color:var(--muted); }
+#fatal { background:#3a1010; border:1px solid var(--bad); color:#ffd7d7; border-radius:8px; padding:10px; margin:10px; font-size:13px; white-space:pre-wrap; }
+#runbar { position:fixed; bottom:0; left:0; right:0; z-index:6; background:rgba(16,20,24,.96); border-top:1px solid var(--edge); padding:8px 12px calc(8px + env(safe-area-inset-bottom)); display:flex; align-items:center; gap:10px; }
+#runlabel { flex:1; font-size:12px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#runclock { font-family:ui-monospace,Menlo,monospace; font-size:18px; white-space:pre; }
+.flash { position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center; pointer-events:none; font-family:ui-monospace,Menlo,monospace; font-weight:700; line-height:1; text-align:center; padding:0 4vw; }
+.flash.v-white { background:#fff; color:#000; } .flash.v-green { background:#00c853; color:#fff; } .flash.v-blue { background:#2962ff; color:#fff; }
+.flash.v-amber { background:#ffb300; color:#000; } .flash.v-red { background:#d50000; color:#fff; }
+
+/* SC Metronome. The indicator is the DEFAULT visual beat and the only one allowed when the pattern is
+   fast: it is small, it is not saturated red (the red-flash rule is separate from and stricter than the
+   general one), and it sits in the page rather than over it. The full-screen overlay is only ever
+   attached when flashPlan() says the pattern is slow enough for it. */
+.scm-dot { display: inline-block; min-width: 132px; padding: 10px 14px; border-radius: 8px;
+  border: 1px solid var(--edge, #2e3946); background: var(--panel2, #222a33); color: var(--muted, #93a1af);
+  font-weight: 600; text-align: center; transition: none; }
+.scm-dot.on.lead { background: #3a4a63; color: #e8edf2; }
+.scm-dot.on.second { background: #4a6b4f; color: #f2fff4; }
+.scm-overlay { position: fixed; inset: 0; z-index: 40; pointer-events: none; background: transparent; }
+.scm-overlay.on { background: #6f8fb0; }
+.scm-flashbox { border: 1px solid var(--edge, #2e3946); border-radius: 8px; padding: 10px 12px; margin: 10px 0; }
+@media (prefers-reduced-motion: reduce) {
+  /* A motion preference is not consent to flash, but it is a clear signal not to animate a whole
+     viewport. The overlay stops painting; the small indicator stays, because it is the beat. */
+  .scm-overlay.on { background: transparent; }
+}
+</style>
+</head>
+<body>
+<div id="top"><button type="button" id="back" class="hidden">Back</button><h1 id="title">Get a TID</h1></div>
+<div id="fatal" class="hidden"></div>
+<div id="main"><p class="note">Loading the TID data...</p></div>
+<div id="runbar" class="hidden"><span id="runlabel"></span><span id="runclock"></span><button type="button" id="runstop" class="small">Stop</button></div>
+<div id="flash" class="flash hidden"></div>
+<!--@@SCRIPT:rng.js@@-->
+<!--@@SCRIPT:gen1tid.js@@-->
+<!--@@SCRIPT:gen2tid.js@@-->
+<!--@@SCRIPT:generators.js@@-->
+<!--@@SCRIPT:buffer-decode.js@@-->
+<!--@@SCRIPT:tid-sources.js@@-->
+<!--@@SCRIPT:data@@-->
+<!--@@SCRIPT:page-app.js@@-->
+<!--@@SCRIPT:page-cue.js@@-->
+<!--@@SCRIPT:page-storyboard.js@@-->
+<!--@@SCRIPT:page-widgets.js@@-->
+<!--@@SCRIPT:page-gen1-buffer.js@@-->
+<!--@@SCRIPT:page-gen1-timed.js@@-->
+<!--@@SCRIPT:page-gen2.js@@-->
+<!--@@SCRIPT:page-gen2-psr.js@@-->
+<!--@@SCRIPT:page-gen3-rs.js@@-->
+<!--@@SCRIPT:page-gen3-sid.js@@-->
+<!--@@SCRIPT:page-gen3-enc.js@@-->
+<!--@@SCRIPT:page-sc-metronome.js@@-->
+<!--@@SCRIPT:page-render.js@@-->
+</body>
+</html>

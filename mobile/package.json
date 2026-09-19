@@ -1,0 +1,15 @@
+{
+  "name": "tid-helper-build",
+  "version": "1.0.0",
+  "private": true,
+  "license": "GPL-3.0-or-later",
+  "description": "Build and test harness for the TID Helper page bundle",
+  "scripts": {
+    "build": "node scripts/gen-tid-helper-data.cjs && node scripts/gen-tid-helper-html.cjs",
+    "check": "node scripts/gen-tid-helper-data.cjs --check && node scripts/gen-tid-helper-html.cjs --check",
+    "test": "node --test tests/tid-helper/"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

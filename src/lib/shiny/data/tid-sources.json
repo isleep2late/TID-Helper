@@ -1,0 +1,2959 @@
+{
+ "version": 1,
+ "generated": "2026-09-17",
+ "source": "Hand-curated by Hackmons Hub from the Pokemon Speedrunning community's route documents (github.com/pokemon-speedrunning/speedrun-routes), the PSR Discord 'Gen 1 Resources' pins and public YouTube searches. Every video was confirmed through YouTube's oEmbed endpoint (title and channel) and yt-dlp (upload date) on the date in 'verified'. A Trainer ID with no entry here has no published manipulation on record and the tools say so; an entry here credits the original author and never implies they endorse these tools.",
+ "labels": {
+  "documented": {
+   "label": "Original source",
+   "text": "A published manipulation of this exact Trainer ID exists; it is the original source, and the route shown here is only a rendering of the same target."
+  },
+  "community": {
+   "label": "Community list",
+   "text": "This Trainer ID is served from the Pokemon Speedrunning community's published buffered-input list; no video or write-up for this exact ID is on record here."
+  },
+  "derived": {
+   "label": "Derived",
+   "text": "No published manipulation of this Trainer ID is on record here; the route shown was derived by Hackmons Hub's own tooling and has not been confirmed by anyone else."
+  }
+ },
+ "games": {
+  "red": "Pokemon Red",
+  "blue": "Pokemon Blue",
+  "yellow": "Pokemon Yellow",
+  "gold": "Pokemon Gold",
+  "silver": "Pokemon Silver",
+  "crystal": "Pokemon Crystal",
+  "ruby": "Pokemon Ruby",
+  "sapphire": "Pokemon Sapphire",
+  "emerald": "Pokemon Emerald",
+  "firered": "Pokemon FireRed",
+  "leafgreen": "Pokemon LeafGreen",
+  "diamond": "Pokemon Diamond",
+  "pearl": "Pokemon Pearl",
+  "platinum": "Pokemon Platinum",
+  "heartgold": "Pokemon HeartGold",
+  "soulsilver": "Pokemon SoulSilver",
+  "black": "Pokemon Black",
+  "white": "Pokemon White",
+  "black2": "Pokemon Black 2",
+  "white2": "Pokemon White 2"
+ },
+ "entry_fields": "games: the game keys the source applies to | tid: 4 upper-case hex digits, or null for a source that documents the method without one ID | title / author / url / date (YYYY-MM-DD, null when the page carries none) / kind (video, wiki, guide, forum, list, route) / what (one sentence) | console, note, route {title, url}, sequence (the input sequence the source states, in the community list grammar): optional | verified: the day the url was confirmed | tools: the community timer programs the cues stand in for (id, name, author, url, links, what), credited by id wherever a page offers a cue or timer",
+ "entries": [
+  {
+   "games": [
+    "red"
+   ],
+   "tid": "64C2",
+   "title": "[Red NSC - Old Route] TID Manip (25794 = 0x64C2)",
+   "author": "entrpntr",
+   "url": "https://www.youtube.com/watch?v=Jh7Z_frbfNs",
+   "date": "2017-03-19",
+   "kind": "video",
+   "what": "The Trainer ID manipulation of the Pokemon Red Any% route: hold a direction through the logo, skip the Game Freak logo, A on the second hop, START on the title, NEW GAME, soft reset in Oak's speech, soft reset on the Game Freak logo, skip it, A on the first hop, START, NEW GAME.",
+   "console": "emulator (BGB, plain Game Boy Color timing)",
+   "note": "Recorded in plain Game Boy Color timing; on a Game Boy Player the same route is the list's variant without the palette hold.",
+   "route": {
+    "title": "Pokemon Red/Blue Any% route (PSR)",
+    "url": "https://github.com/pokemon-speedrunning/speedrun-routes/blob/main/docs/gen-1/red-blue/main-any/README.md"
+   },
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "red"
+   ],
+   "tid": "64C2",
+   "title": "Pokemon Red Any% TID Tutorial (25794)",
+   "author": "Rosstafari",
+   "url": "https://www.youtube.com/watch?v=QsLCCMSaU4U",
+   "date": "2025-02-03",
+   "kind": "video",
+   "what": "A 22-minute tutorial on the same Red Any% manipulation, with every input explained.",
+   "route": {
+    "title": "Pokemon Red/Blue Any% route (PSR)",
+    "url": "https://github.com/pokemon-speedrunning/speedrun-routes/blob/main/docs/gen-1/red-blue/main-any/README.md"
+   },
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "red"
+   ],
+   "tid": "64C3",
+   "title": "[3DSVC Red] 64C3 TID Manip",
+   "author": "CasualPokePlayer",
+   "url": "https://www.youtube.com/watch?v=6fkJf-xgGrU",
+   "date": "2022-08-15",
+   "kind": "video",
+   "what": "Trainer ID 0x64C3 on the 3DS Virtual Console release of Red.",
+   "console": "3DS Virtual Console",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "red"
+   ],
+   "tid": "64C6",
+   "title": "[3DSVC Red] 64C6 TID Manip",
+   "author": "CasualPokePlayer",
+   "url": "https://www.youtube.com/watch?v=JSGNYEKmGrc",
+   "date": "2022-08-15",
+   "kind": "video",
+   "what": "Trainer ID 0x64C6 on the 3DS Virtual Console release of Red.",
+   "console": "3DS Virtual Console",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "red"
+   ],
+   "tid": "64C6",
+   "title": "Pokémon Red Any% TID manip &0x64c6)",
+   "author": "DJ Incendration",
+   "url": "https://www.youtube.com/watch?v=RQLEj484FIA",
+   "date": "2020-06-25",
+   "kind": "video",
+   "what": "Described by its author as the fastest Trainer ID manipulation for Red Any% (0x64C6).",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "red"
+   ],
+   "tid": "7928",
+   "title": "[Red RBA] 31016 TID Manip",
+   "author": "stringflow",
+   "url": "https://www.youtube.com/watch?v=bB_r7bXLEEk",
+   "date": "2023-10-28",
+   "kind": "video",
+   "what": "Trainer ID 0x7928 (31016) for the Reverse Badge Acquisition Kadabra/Beedrill route; the description gives the sequence (Offset 32.28).",
+   "route": {
+    "title": "Reverse Badge Acquisition, Kadabeedrill route (PSR)",
+    "url": "https://github.com/pokemon-speedrunning/speedrun-routes/blob/main/docs/gen-1/red-blue/catext/reverse-badge-acquisition/kadabeedrill-route/README.md"
+   },
+   "verified": "2026-09-17",
+   "sequence": "red_pal(hold)_gfskip_hop2_title0_newgame_oakreset_gfskip_hop0_title0_newgame"
+  },
+  {
+   "games": [
+    "red"
+   ],
+   "tid": "D628",
+   "title": "0xD628 (54824) TID manips for Pokemon Red [RBA]",
+   "author": "krazyd4n",
+   "url": "https://www.youtube.com/watch?v=ZchsK8ped14",
+   "date": "2023-10-05",
+   "kind": "video",
+   "what": "Two buffered routes to 0xD628 for Red Reverse Badge Acquisition, the fastest first and a palette variant second.",
+   "sequence": "red_nopal_gfskip_hop0_title0(scroll)_opt(backout)_backout_title0(reset)_gfwait_hop0_title0(scroll)_newgame",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "blue"
+   ],
+   "tid": "765E",
+   "title": "[Classic Catch 'Em All] 0x765e (30302) TID manip",
+   "author": "stocchi",
+   "url": "https://www.youtube.com/watch?v=jB4u4UU4gyU",
+   "date": "2020-10-14",
+   "kind": "video",
+   "what": "Trainer ID 0x765E (30302) for Blue Catch 'Em All Classic (151 FTL), the route luckytyphlosion wrote; the PSR route page links this video.",
+   "route": {
+    "title": "Catch 'Em All Classic route (PSR)",
+    "url": "https://github.com/pokemon-speedrunning/speedrun-routes/blob/main/docs/gen-1/red-blue/catext/catch-em-all-classic/README.md"
+   },
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "blue"
+   ],
+   "tid": "D65E",
+   "title": "[151] Trainer ID Manip",
+   "author": "stringflow",
+   "url": "https://www.youtube.com/watch?v=upzxy_0KW7A",
+   "date": "2020-09-18",
+   "kind": "video",
+   "what": "Trainer ID 54878 (0xD65E) for the Autumn 2020 Blue Catch 'Em All route; the route doc gives the buffered sequence.",
+   "route": {
+    "title": "Catch 'Em All route (PSR)",
+    "url": "https://github.com/pokemon-speedrunning/speedrun-routes/blob/main/docs/gen-1/red-blue/main-cea/README.md"
+   },
+   "verified": "2026-09-17",
+   "sequence": "nopal(ab)_gfskip_hop3_title0(backout)_title0_opt(backout)_backout_title0_opt(backout)"
+  },
+  {
+   "games": [
+    "blue"
+   ],
+   "tid": "805E",
+   "title": "805E TID manip",
+   "author": "stringflow",
+   "url": "https://www.youtube.com/watch?v=tlDlQ02tZvY",
+   "date": "2017-09-28",
+   "kind": "video",
+   "what": "Trainer ID 0x805E (32862) for the 2018 Blue Catch 'em All route (Glitch City Wiki's Blue Catch 'em All route and the 2018-2020 route document both link this video).",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "blue"
+   ],
+   "tid": "5A5E",
+   "title": "5a5e TID manip",
+   "author": "krazyd4n",
+   "url": "https://www.youtube.com/watch?v=Zcgj5g9Y5EI",
+   "date": "2016-10-09",
+   "kind": "video",
+   "what": "A buffered manipulation of Trainer ID 0x5A5E with no description; the game and category are not stated (the $5E low byte matches krazyd4n's 2016-2017 Blue Catch 'em All targets, so it is filed under Blue).",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "red"
+   ],
+   "tid": "07D0",
+   "title": "TogamiBot \"RNG\": Gen 1 TiD Manipulation",
+   "author": "Collector Togami",
+   "url": "https://www.youtube.com/watch?v=HDlnBWpDFQ4",
+   "date": "2016-08-16",
+   "kind": "video",
+   "what": "Trainer ID 02000 (0x07D0), the ID of the international Stadium prizes, reached by a bot re-recording an emulator about 25,000 times; a proof of concept, not a human route.",
+   "console": "emulator (bot-driven re-recording)",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "blue"
+   ],
+   "tid": "B307",
+   "title": "Pokemon Blue B307 TID manip [RBA]",
+   "author": "krazyd4n",
+   "url": "https://www.youtube.com/watch?v=iH0kW5fd6XA",
+   "date": "2017-07-13",
+   "kind": "video",
+   "what": "Trainer ID 0xB307 (45831) for the Reverse Badge Acquisition Charizard route; krazyd4n's route paste gives the sequence and credits entrpntr with finding it.",
+   "route": {
+    "title": "Reverse Badge Acquisition, Charizard route (PSR)",
+    "url": "https://github.com/pokemon-speedrunning/speedrun-routes/blob/main/docs/gen-1/red-blue/catext/reverse-badge-acquisition/charizard-route/README.md"
+   },
+   "verified": "2026-09-17",
+   "sequence": "blue_nopal(ab)_gfskip_hop3(reset)_gfskip_hop2_title0_opt(backout)_backout_title0_opt(backout)_opt(backout)_newgame"
+  },
+  {
+   "games": [
+    "blue"
+   ],
+   "tid": "64BD",
+   "title": "[Blue NSC - Old Charm1024 Route] TID Manip (25789 = 0x64BD)",
+   "author": "entrpntr",
+   "url": "https://www.youtube.com/watch?v=4tOKjS-Oeck",
+   "date": "2017-07-01",
+   "kind": "video",
+   "what": "Trainer ID 0x64BD (25789) for the old Blue No Save Corruption route (Charmander 1024).",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "blue"
+   ],
+   "tid": "F1C8",
+   "title": "[Blue NSC] TID Manip (61896 = 0xF1C8)",
+   "author": "entrpntr",
+   "url": "https://www.youtube.com/watch?v=hjFPSA1YEYk",
+   "date": "2018-01-25",
+   "kind": "video",
+   "what": "Trainer ID 0xF1C8 (61896) for Blue No Save Corruption; the description gives a LiveSplit offset of -23.76 s.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "blue"
+   ],
+   "tid": "F1C8",
+   "title": "0xF1C8 TID manip for new NSC",
+   "author": "stringflow",
+   "url": "https://www.youtube.com/watch?v=u5_hDQ7H98w",
+   "date": "2017-09-07",
+   "kind": "video",
+   "what": "The same 0xF1C8 target for the then-new No Save Corruption route; the title names no game (entrpntr's Blue NSC video targets the same ID).",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "blue"
+   ],
+   "tid": "8628",
+   "title": "0x8628 (34344) TID manips for Pokemon Blue [RBA]",
+   "author": "krazyd4n",
+   "url": "https://www.youtube.com/watch?v=ZCniba_M53E",
+   "date": "2023-10-03",
+   "kind": "video",
+   "what": "Two buffered routes to 0x8628 for Blue Reverse Badge Acquisition, the fastest first and a slower one with no options buffer.",
+   "sequence": "blue_pal(hold)_gfskip_hop0_title0(reset)_gfwait_hop2_title0_opt(backout)_newgame",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "blue"
+   ],
+   "tid": "76D6",
+   "title": "Trainer ID manip (2 Sept 2016)",
+   "author": "gifvex",
+   "url": "https://www.youtube.com/watch?v=WetKznENqjc",
+   "date": "2016-09-30",
+   "kind": "video",
+   "what": "Trainer ID 0x76D6 for a Blue route; the pasted route notes the video links to name the game and the ID.",
+   "note": "The game and ID come from the route notes the description links (pastebin gcteE0XY: 'Blue version Trainer ID: 76D6').",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "yellow"
+   ],
+   "tid": "6415",
+   "title": "[Yellow NSC] TID Manip (25621 = 0x6415)",
+   "author": "entrpntr",
+   "url": "https://www.youtube.com/watch?v=WffIE2ubIak",
+   "date": "2017-07-16",
+   "kind": "video",
+   "what": "Trainer ID 0x6415 (25621), the standard Pokemon Yellow Any% target: a 7-frame window on the first Pikachu cutscene A press with an audio cue, everything else free; resets run about 36 s longer.",
+   "route": {
+    "title": "Pokemon Yellow Any% route (PSR)",
+    "url": "https://github.com/pokemon-speedrunning/speedrun-routes/blob/main/docs/gen-1/yellow/main-any/README.md"
+   },
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "yellow"
+   ],
+   "tid": "64EA",
+   "title": "[Yellow Any%] TID Manip (25834 = 0x64EA)",
+   "author": "CasualPokePlayer",
+   "url": "https://www.youtube.com/watch?v=RjqDCth4GIk",
+   "date": "2020-05-26",
+   "kind": "video",
+   "what": "Trainer ID 0x64EA (25834), the second Pokemon Yellow Any% target: 16 frames faster than 0x6415 later in the run, 'ez with beep strats', flowtimer offsets 26100/47000.",
+   "route": {
+    "title": "Pokemon Yellow Any% route (PSR)",
+    "url": "https://github.com/pokemon-speedrunning/speedrun-routes/blob/main/docs/gen-1/yellow/main-any/README.md"
+   },
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "yellow"
+   ],
+   "tid": "7676",
+   "title": "[obsolete] yellow NSC TID manip 30326",
+   "author": "stocchi",
+   "url": "https://www.youtube.com/watch?v=5zrjmfCqgOs",
+   "date": "2022-04-10",
+   "kind": "video",
+   "what": "Trainer ID 0x7676 (30326) for an old Yellow No Save Corruption route (credited to stringflow); the sequence is in the description.",
+   "sequence": "yellow_gfwait_intro0_title_newgame_oakreset_gfskip_intro0(reset)_gfskip_intro0_title_newgame",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "red",
+    "blue",
+    "yellow"
+   ],
+   "tid": null,
+   "title": "RNG Guide: Gen 1 Trainer ID (TID)",
+   "author": "Lotad (ImALotad)",
+   "url": "https://www.youtube.com/watch?v=VetcS-RQP2g",
+   "date": "2017-08-06",
+   "kind": "video",
+   "what": "How Gen 1 Trainer ID manipulation works, with a Lua script for emulators.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "red"
+   ],
+   "tid": null,
+   "title": "Red TID list (PSR Discord 'Gen 1 Resources' pin)",
+   "author": "Pokemon Speedrunning community",
+   "url": "https://drive.google.com/file/d/1LfZfZnYwIeF4HL2RnwFBl_TjaFzv_tUA",
+   "date": "2018-03-24",
+   "kind": "list",
+   "what": "The community's list of 1,132,015 buffered input sequences and the Trainer ID each gives on a Game Boy Player; every Red buffer route on this page is one of its rows or is labelled otherwise.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "yellow"
+   ],
+   "tid": null,
+   "title": "Yellow TID List (PSR Discord 'Gen 1 Resources' pin)",
+   "author": "Pokemon Speedrunning community",
+   "url": "https://drive.google.com/file/d/1NeHnA070djPBJJ5ht7X1yimAIrPCw3zL",
+   "date": "2018-03-24",
+   "kind": "list",
+   "what": "The community's list of 183,478 buffered input sequences for Yellow and the Trainer ID each gives; every Yellow buffer route on this page is one of its rows or is labelled otherwise.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "red",
+    "blue",
+    "yellow",
+    "gold",
+    "silver",
+    "crystal"
+   ],
+   "tid": null,
+   "title": "pokemon-speedrunning/speedrun-routes",
+   "author": "Pokemon Speedrunning community",
+   "url": "https://github.com/pokemon-speedrunning/speedrun-routes",
+   "date": null,
+   "kind": "route",
+   "what": "The community's route documents; the per-category Trainer ID targets and their videos above are taken from these READMEs.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "gold"
+   ],
+   "tid": "25E9",
+   "title": "[Gold Any%] TID Manip (09705 = 0x25E9)",
+   "author": "CasualPokePlayer",
+   "url": "https://www.youtube.com/watch?v=VjOSelnhE3s",
+   "date": "2020-10-29",
+   "kind": "video",
+   "what": "Trainer ID 09705 (0x25E9) for the Gold/Silver Any% backup-collision route; the route doc gives the flowtimer offsets 13750/22750.",
+   "route": {
+    "title": "Gold/Silver Any% backup-collision route (PSR)",
+    "url": "https://github.com/pokemon-speedrunning/speedrun-routes/blob/main/docs/gen-2/gold-silver/main-any/gold-silver-backup-collision-route/README.md"
+   },
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "gold"
+   ],
+   "tid": "25E9",
+   "title": "Gold 09705 manip: early and late Trainer IDs",
+   "author": "CasualPokePlayer",
+   "url": "https://pastebin.com/ZF4QX7Ya",
+   "date": null,
+   "kind": "guide",
+   "what": "The wait-frame table around the 09705 target (each row one frame early or late) that the route doc links beside the video.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "silver"
+   ],
+   "tid": "25E9",
+   "title": "[Silver Any%] TID Manip (09705 = 0x25E9)",
+   "author": "CasualPokePlayer",
+   "url": "https://www.youtube.com/watch?v=erpaVH2p4_I",
+   "date": "2020-10-29",
+   "kind": "video",
+   "what": "Trainer ID 09705 (0x25E9) on Silver for the backup-collision route; the route doc gives the flowtimer offsets 14100/23350.",
+   "route": {
+    "title": "Gold/Silver Any% backup-collision route (PSR)",
+    "url": "https://github.com/pokemon-speedrunning/speedrun-routes/blob/main/docs/gen-2/gold-silver/main-any/gold-silver-backup-collision-route/README.md"
+   },
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "silver"
+   ],
+   "tid": "25E9",
+   "title": "Silver 09705 manip: early and late Trainer IDs",
+   "author": "CasualPokePlayer",
+   "url": "https://pastebin.com/HEXruHKq",
+   "date": null,
+   "kind": "guide",
+   "what": "The wait-frame table around the 09705 target on Silver that the route doc links beside the video.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "gold"
+   ],
+   "tid": "D9E9",
+   "title": "[Gold Any%] TID Manip, Option 1 (55785 = 0xD9E9)",
+   "author": "entrpntr",
+   "url": "https://www.youtube.com/watch?v=Jwtw0KM9nTI",
+   "date": "2017-03-20",
+   "kind": "video",
+   "what": "Trainer ID 55785 (0xD9E9), the older Gold Any% target; the description lists the three early and three late IDs.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "gold"
+   ],
+   "tid": "D9E9",
+   "title": "[Gold Any%] TID Manip, Option 2 (55785 = 0xD9E9)",
+   "author": "entrpntr",
+   "url": "https://www.youtube.com/watch?v=zILtBVI37us",
+   "date": "2017-03-20",
+   "kind": "video",
+   "what": "A second route to 55785 (0xD9E9) on Gold: reset holding A to the white screen then B, enter and leave NEW GAME 8 times, wait about 23 s (a 4-frame window), then 4 more times holding START on the fourth.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "gold"
+   ],
+   "tid": "D9E9",
+   "title": "[Gold Any%] TID Manip w/pre-New Game options (55785 = 0xD9E9)",
+   "author": "entrpntr",
+   "url": "https://www.youtube.com/watch?v=zGMsVa_Fl8U",
+   "date": "2019-01-15",
+   "kind": "video",
+   "what": "55785 (0xD9E9) on Gold with the options set before NEW GAME (the A+LEFT options trick, written up at pastebin 8Wmj4Se8).",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "silver"
+   ],
+   "tid": "D9E9",
+   "title": "[Silver Any%] TID Manip (55875 = 0xD9E9)",
+   "author": "entrpntr",
+   "url": "https://www.youtube.com/watch?v=BEMlm7mU4lc",
+   "date": "2017-03-20",
+   "kind": "video",
+   "what": "Trainer ID 0xD9E9 on Silver (the title's 55875 is a typo for 55785, which the description confirms).",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "silver"
+   ],
+   "tid": "D9E9",
+   "title": "[Silver Any%] TID Manip w/pre-New Game options (55785 = 0xD9E9)",
+   "author": "entrpntr",
+   "url": "https://www.youtube.com/watch?v=_Cg9IB-bKs0",
+   "date": "2019-01-15",
+   "kind": "video",
+   "what": "55785 (0xD9E9) on Silver with the options set before NEW GAME.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "gold",
+    "silver",
+    "crystal"
+   ],
+   "tid": null,
+   "title": "Pre-New Game options trick for the Gold/Silver/Crystal Trainer ID manips",
+   "author": "entrpntr",
+   "url": "https://pastebin.com/8Wmj4Se8",
+   "date": null,
+   "kind": "guide",
+   "what": "Pressing A+LEFT together on the options menu shifts every option but Frame left at once, so the time-saving options are set before NEW GAME; offsets: Gold wait 28.654 s / NEW GAME 34.06 s, Silver 24.113 / 35.23, Crystal 40.370 / 42.03.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "gold"
+   ],
+   "tid": null,
+   "title": "Gold NSC - RTC TID Fast Option Manip",
+   "author": "Raykaz SpeedRun",
+   "url": "https://www.youtube.com/watch?v=SmC7pYVVufs",
+   "date": "2025-06-08",
+   "kind": "video",
+   "what": "A Gold No Save Corruption Trainer ID manipulation with RTC 00 and fast options; the title names no ID (the PSR Gold NSC route targets 0xD900).",
+   "route": {
+    "title": "Gold NSC route (PSR)",
+    "url": "https://github.com/pokemon-speedrunning/speedrun-routes/blob/main/docs/gen-2/gold-silver/catext/nsc/README.md"
+   },
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "26DB",
+   "title": "[Crystal Any%] TID Manip, Option 1 (09947 = 0x26DB)",
+   "author": "entrpntr",
+   "url": "https://www.youtube.com/watch?v=cHZAqjFIGlo",
+   "date": "2017-03-20",
+   "kind": "video",
+   "what": "Trainer ID 09947 (0x26DB) for Crystal Any%: enter and leave NEW GAME 10 and 9 times, then the timed press with an audio cue; the description lists the three early and three late IDs.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "26DB",
+   "title": "Crystal TID 09947/SS0 manip",
+   "author": "OceanBagel",
+   "url": "https://www.youtube.com/watch?v=J91HNC8qM7U",
+   "date": "2021-11-26",
+   "kind": "video",
+   "what": "09947 (0x26DB) together with Start Second 0, found by entrpntr; the sequence and the adjacent IDs are in the description.",
+   "sequence": "crystal_reset1_intro3_backout6_wait84(setopt)_backout6_newgame",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "26FB",
+   "title": "[Crystal Any%] TID Manip, Option 2 (09979 = 0x26FB)",
+   "author": "entrpntr",
+   "url": "https://www.youtube.com/watch?v=IePf7zVV85c",
+   "date": "2017-03-20",
+   "kind": "video",
+   "what": "Trainer ID 09979 (0x26FB), the faster Crystal Any% option: in and out 2 and 1 times, then a timed B press about 25.63 s after a Game Boy Player hard reset; early and late IDs in the description.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "F407",
+   "title": "Pokemon Crystal Any% No ACE TID Manip - 0xF407 (62471)",
+   "author": "CasualPokePlayer",
+   "url": "https://www.youtube.com/watch?v=45jk3THdPPM",
+   "date": "2020-03-10",
+   "kind": "video",
+   "what": "Trainer ID 0xF407 (62471) for Crystal Any% No ACE, flowtimer offset 27680; the early and late IDs are at pastebin jWpbuv8G.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "20A6",
+   "title": "Pokemon Crystal Any% TID Manip - 0x20A6 (08358)",
+   "author": "CasualPokePlayer",
+   "url": "https://www.youtube.com/watch?v=8ysOtKErbwo",
+   "date": "2020-05-16",
+   "kind": "video",
+   "what": "Trainer ID 0x20A6 (08358) with Lucky ID 0x622B; the sequence and the IDs three frames either side are in the description.",
+   "sequence": "crystal_gfskip_wait56(setopt)_newgame",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "6B45",
+   "title": "TID/LID 01001 manip - No save data, fast options with Frame Type 6 and SS0",
+   "author": "OceanBagel",
+   "url": "https://www.youtube.com/watch?v=CIwlTq10SrY",
+   "date": "2022-03-04",
+   "kind": "video",
+   "what": "The Any% Glitchless Lucky ID manip: Trainer ID 0x6B45 (27461) with Lucky ID 01001 (0x03E9), no save data, fast options and Start Second 0.",
+   "sequence": "crystal_reset1_gfskip_backout4_wait64(opt)_newgame",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "03E9",
+   "title": "TID/LID 01001 manip - No save data, fast options with Frame Type 6 and SS0",
+   "author": "OceanBagel",
+   "url": "https://www.youtube.com/watch?v=CIwlTq10SrY",
+   "date": "2022-03-04",
+   "kind": "video",
+   "what": "The same video's second manip: Trainer ID 01001 (0x03E9) itself, with Frame Type 6 set during the manip; adjacent IDs at pastebin G2d3CMLS.",
+   "sequence": "crystal_reset3_gfskip_backout13_wait100(setopt_type6_wait233)_backout1_newgame",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "0000",
+   "title": "VCクリスタルにおけるTID「00000」再現（JPN Crystal TID manip）",
+   "author": "サイファー",
+   "url": "https://www.youtube.com/watch?v=VGzI3y4zXF0",
+   "date": "2023-03-13",
+   "kind": "video",
+   "what": "Trainer ID 00000 on the Japanese Virtual Console release of Crystal.",
+   "console": "3DS Virtual Console (Japanese)",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "3039",
+   "title": "VCクリスタルにおけるTID「12345」再現（JPN Crystal TID manip）",
+   "author": "サイファー",
+   "url": "https://www.youtube.com/watch?v=jqYfO9R01aw",
+   "date": "2023-03-14",
+   "kind": "video",
+   "what": "Trainer ID 12345 (0x3039) on the Japanese Virtual Console release of Crystal, aimed through the 256n shift an existing save causes.",
+   "console": "3DS Virtual Console (Japanese)",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "firered"
+   ],
+   "tid": "0000",
+   "title": "FireRed TID 00000",
+   "author": "Bambo_Rambo",
+   "url": "https://www.youtube.com/watch?v=yaz2cWgnQHM",
+   "date": "2021-05-12",
+   "kind": "video",
+   "what": "Trainer ID 00000 reached on FireRed.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "leafgreen"
+   ],
+   "tid": null,
+   "title": "Retail TID/SID RNG in Leaf Green - 5 frame perfect inputs on console",
+   "author": "Cow",
+   "url": "https://www.youtube.com/watch?v=Pk0Xn0Gs44E",
+   "date": "2025-03-20",
+   "kind": "video",
+   "what": "Both the Trainer ID and the Secret ID manipulated on a GameCube with the Game Boy Player, through five frame-perfect inputs (seed, two frame inputs, the ID, the SID); target found by ddeeffgg.",
+   "console": "GameCube / Game Boy Player",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "ruby",
+    "sapphire"
+   ],
+   "tid": null,
+   "title": "GUARANTEED SHINY STARTER POKEMON RUBY/SAPPHIRE (HOW TO RNG TID/SID AND SHINY STARTER IN POKEMON R/S)",
+   "author": "im a blisy ._.",
+   "url": "https://www.youtube.com/watch?v=oodB4qgvl8I",
+   "date": "2017-04-12",
+   "kind": "video",
+   "what": "The dead-battery Ruby/Sapphire Trainer ID and Secret ID manipulation, step by step.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "ruby",
+    "sapphire"
+   ],
+   "tid": null,
+   "title": "Easy Shiny Starter in Ruby and Sapphire, +TID SID (with RNG!)",
+   "author": "Alex-RNG",
+   "url": "https://www.youtube.com/watch?v=DGjwe-oirZU",
+   "date": "2024-09-02",
+   "kind": "video",
+   "what": "Dead-battery Ruby/Sapphire: manipulating the Trainer ID and Secret ID, then a shiny starter.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "ruby",
+    "sapphire"
+   ],
+   "tid": null,
+   "title": "[RS/EMU] RUBY/SAPPHIRE TID/SID RNG ABUSE GUIDE!!!",
+   "author": "damovlogs",
+   "url": "https://www.youtube.com/watch?v=WC7Nha0WTVE",
+   "date": "2019-12-05",
+   "kind": "video",
+   "what": "The same manipulation on an emulator.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "ruby",
+    "sapphire"
+   ],
+   "tid": null,
+   "title": "RNG de ID de entrenador en Rubí y Zafiro (leer descripción)",
+   "author": "ErmacPoké | Ermac y los Pokémon",
+   "url": "https://www.youtube.com/watch?v=7aTvPvULnxM",
+   "date": "2021-03-27",
+   "kind": "video",
+   "what": "Ruby/Sapphire Trainer ID manipulation explained in Spanish, with PokeFinder and EonTimer.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "ruby",
+    "sapphire",
+    "emerald"
+   ],
+   "tid": null,
+   "title": "Live Battery 3rd Gen RNG Part 2/Trainer ID manipulation",
+   "author": "rPokemontrades",
+   "url": "https://www.youtube.com/watch?v=OhPwkjiYlMc",
+   "date": "2014-03-01",
+   "kind": "video",
+   "what": "Trainer ID manipulation with a live battery in the Gen 3 games.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl",
+    "platinum",
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": null,
+   "title": "How to RNG Abuse Trainer ID in Pokemon D/P/Pt/HG/SS",
+   "author": "im a blisy ._.",
+   "url": "https://www.youtube.com/watch?v=EOJWiiEmYK0",
+   "date": "2016-09-19",
+   "kind": "video",
+   "what": "The Gen 4 Trainer ID / Secret ID manipulation by boot delay and seed.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl",
+    "platinum"
+   ],
+   "tid": null,
+   "title": "How to RNG your TID/SID in Diamond/Pearl/Platinum",
+   "author": "im a blisy ._.",
+   "url": "https://www.youtube.com/watch?v=dyp1I6w6JVw",
+   "date": "2022-07-23",
+   "kind": "video",
+   "what": "A newer walkthrough of the Diamond/Pearl/Platinum Trainer ID and Secret ID manipulation.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "platinum"
+   ],
+   "tid": null,
+   "title": "TID/SID rng abuse example Platinum",
+   "author": "Defensive Espeon",
+   "url": "https://www.youtube.com/watch?v=zaXPnUOueT8",
+   "date": "2015-04-08",
+   "kind": "video",
+   "what": "A worked Platinum Trainer ID / Secret ID manipulation.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl",
+    "platinum",
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": null,
+   "title": "HOW TO DO THE CUTE CHARM GLITCH IN 25 MINUTES OR LESS (How to RNG Cute Charm TID/SID combo!)",
+   "author": "im a blisy ._.",
+   "url": "https://www.youtube.com/watch?v=icFud3PS0v0",
+   "date": "2018-07-25",
+   "kind": "video",
+   "what": "Manipulating a Trainer ID / Secret ID pair that makes Cute Charm encounters shiny in Gen 4.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "platinum"
+   ],
+   "tid": "0000",
+   "title": "TID 0 50% Cute Charm Shiny Starter Pokemon Platinum RNG",
+   "author": "Gimme Jirachi",
+   "url": "https://www.youtube.com/watch?v=93otdvhZNa4",
+   "date": "2020-08-12",
+   "kind": "video",
+   "what": "Trainer ID 0 with Secret ID 153 (TSV 19) on Platinum, seed 5B121F99 at 18:03:00 on 11 Aug 2020, for a Cute Charm shiny starter.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "black",
+    "white"
+   ],
+   "tid": null,
+   "title": "5th Gen RNG Guide: TID/SID Abuse.",
+   "author": "KazoWAR",
+   "url": "https://www.youtube.com/watch?v=XF5wv1BGZ98",
+   "date": "2013-02-16",
+   "kind": "video",
+   "what": "The Black/White Trainer ID / Secret ID manipulation with RNG Reporter and EonTimer, following Smogon's guide.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "black",
+    "white"
+   ],
+   "tid": null,
+   "title": "Gen. 5 Trainer ID(TID) RNG Abuse (PPRNG v1.12.0) Full Guide",
+   "author": "ZeldismaticRNG",
+   "url": "https://www.youtube.com/watch?v=1iXk768nkag",
+   "date": "2012-08-06",
+   "kind": "video",
+   "what": "A full Black/White Trainer ID manipulation guide with PPRNG.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "black",
+    "white",
+    "black2",
+    "white2"
+   ],
+   "tid": null,
+   "title": "How to RNG Abuse Trainer ID and Secret ID in B/W or B/W2",
+   "author": "im a blisy ._.",
+   "url": "https://www.youtube.com/watch?v=gJp4RNuhQXI",
+   "date": "2016-08-12",
+   "kind": "video",
+   "what": "The Black/White and Black 2/White 2 Trainer ID / Secret ID manipulation.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "red"
+   ],
+   "tid": "B328",
+   "title": "[Red RBA - Aborted route] TID Manip (45864 = 0xB328)",
+   "author": "entrpntr",
+   "url": "https://www.youtube.com/watch?v=ENYXt698Y5I",
+   "date": "2017-03-19",
+   "kind": "video",
+   "what": "Trainer ID 0xB328 (45864) for a Red Reverse Badge Acquisition route with Mewtwo that was abandoned for the Charizard route.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "blue"
+   ],
+   "tid": "F1C8",
+   "title": "Pokemon Blue No Save Corruption Trainer ID Tutorial (61896)",
+   "author": "Rosstafari",
+   "url": "https://www.youtube.com/watch?v=GmgPK2-3gVw",
+   "date": "2023-11-06",
+   "kind": "video",
+   "what": "A talk-through tutorial for buffering the Blue No Save Corruption Trainer ID 61896 (the input viewer shows START and SELECT swapped).",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "blue"
+   ],
+   "tid": "F1C8",
+   "title": "Written guide for ID Manip in NSC?",
+   "author": "Jasper (speedrun.com forums)",
+   "url": "https://www.speedrun.com/pkmnredblue/forums/jurum",
+   "date": "2018-01-01",
+   "kind": "forum",
+   "what": "A written version of the Blue NSC 0xF1C8 manip: Up+B+Select at the copyright screen, A+B+Start+Select on the title cry, A on Jigglypuff's second jump, START at the menu, B at NEW GAME, START as Squirtle slides off, A when NEW GAME appears.",
+   "note": "The date is the thread's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "blue"
+   ],
+   "tid": "F1C8",
+   "title": "Pokemon Blue any% No Save Corruption speedrun route",
+   "author": "Glitch City Wiki",
+   "url": "https://glitchcity.wiki/wiki/Pok%C3%A9mon_Blue_any%25_No_Save_Corruption_speedrun_route",
+   "date": null,
+   "kind": "wiki",
+   "what": "The Viridian Forest 0xF8FF route: 'Manipulate for a Trainer ID of 0xF1C8 (61896)', linking stringflow's video.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "blue"
+   ],
+   "tid": "F1C8",
+   "title": "Pokemon Blue Any% No Save Corruption Guide",
+   "author": "davidpoko",
+   "url": "https://docs.google.com/document/d/14Vep4XZ-46nNPb5r2bK3QNut6G8DHzwe8tkZyTZnJrU",
+   "date": "2018-07-23",
+   "kind": "guide",
+   "what": "The beginner guide: manipulate the Trainer ID to 61896 (F1C8) with either video (entrpntr's faster but harder, stringflow's slower but easier), with the full name-entry inputs.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "blue"
+   ],
+   "tid": "805E",
+   "title": "Easier 805E TID manip",
+   "author": "stringflow",
+   "url": "https://www.youtube.com/watch?v=XgycGIg0VHw",
+   "date": "2017-09-29",
+   "kind": "video",
+   "what": "The alternative 0x805E route for Blue Catch 'em All, described in the route document as a little slower but easier to execute.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "blue"
+   ],
+   "tid": "805E",
+   "title": "Pokemon Blue \"Catch 'em All\" speedrun route",
+   "author": "Glitch City Wiki (Bbbbbbbbba)",
+   "url": "https://glitchcity.wiki/wiki/User:Bbbbbbbbba/Pok%C3%A9mon_Blue_%22Catch_'em_All%22_speedrun_route",
+   "date": null,
+   "kind": "wiki",
+   "what": "'Manipulate for a Trainer ID of 0x805E (32862)', linking stringflow's video, rival AaR SSx, Fast/Off/Shift options.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "blue"
+   ],
+   "tid": "945E",
+   "title": "945E TID manip",
+   "author": "krazyd4n",
+   "url": "https://www.youtube.com/watch?v=L0aMD1HeYO0",
+   "date": "2016-12-19",
+   "kind": "video",
+   "what": "Trainer ID 0x945E (37982) for the 2016 Blue Catch 'em All route; the description says it did not work on BGB at the time but works on console and GSR.",
+   "console": "console / GSR (not BGB)",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "blue"
+   ],
+   "tid": "945E",
+   "title": "Blue 151 (pastebin KHq6QbQW)",
+   "author": "blakie2332",
+   "url": "https://pastebin.com/KHq6QbQW",
+   "date": null,
+   "kind": "guide",
+   "what": "The 2016 Blue Catch 'em All notes: 'a in the bios / select up b / a / Trainer id should be 37982', name A, rival AaR SSx.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "blue"
+   ],
+   "tid": "64BD",
+   "title": "Blue NSC Charmander-1024 route notes (pastebin K8TLAKqY)",
+   "author": "entrpntr",
+   "url": "https://pastebin.com/K8TLAKqY",
+   "date": "2017-09-07",
+   "kind": "guide",
+   "what": "'TID Manip: ... target TID is 25789, or 0x64BD in hex', with the BGB practice tip (watch D359-D35A) and the starter's stats screen as the check.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "blue"
+   ],
+   "tid": "765E",
+   "title": "blue 151 FTL (pastebin c5F57GVX)",
+   "author": "luckytyphlosion",
+   "url": "https://pastebin.com/c5F57GVX",
+   "date": null,
+   "kind": "guide",
+   "what": "The original Catch 'Em All Classic route: first step 'manip TID 0x765e (30302)', player baaaa, rival ??//;;.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "blue"
+   ],
+   "tid": "B307",
+   "title": "Blue RBA yolo route featuring Charmander manip (pastebin bUdLfBtP)",
+   "author": "krazyd4n",
+   "url": "https://pastebin.com/bUdLfBtP",
+   "date": "2017-08-11",
+   "kind": "guide",
+   "what": "'TID is b307' with the full buffered sequence and the video; name uuAAA, rival RRRGpg-.",
+   "sequence": "blue_nopal(ab)_gfskip_hop3(reset)_gfskip_hop2_title0_opt(backout)_backout_title0_opt(backout)_opt(backout)_newgame",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "red"
+   ],
+   "tid": "64C2",
+   "title": "Pokemon Red any% speedrun route",
+   "author": "Glitch City Wiki",
+   "url": "https://glitchcity.wiki/wiki/Pok%C3%A9mon_Red_any%25_speedrun_route",
+   "date": null,
+   "kind": "wiki",
+   "what": "The SRAM-glitch route: 'Manipulate for a Trainer ID of 0x64C2 (25794)', linking entrpntr's video, and why: the two ID bytes spell the map-script address the party swaps put into play.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "red"
+   ],
+   "tid": "64C2",
+   "title": "TASVideos #6907: Pokemon Red \"save glitch\" in 01:15.62",
+   "author": "MrWint, Alyosha, CasualPokePlayer",
+   "url": "https://tasvideos.org/6907S",
+   "date": "2020-01-01",
+   "kind": "forum",
+   "what": "The TAS notes weigh 0x64C2 against 0x64C1 and 0x64C6 by reset timing and bytes written; the same target as the human route.",
+   "console": "emulator (TAS)",
+   "note": "The date is the submission's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "yellow"
+   ],
+   "tid": "26F1",
+   "title": "TASVideos #6228: Pokemon Yellow \"game end glitch\" in 09:47.92",
+   "author": "TiKevin83",
+   "url": "https://tasvideos.org/6228S",
+   "date": "2019-01-01",
+   "kind": "forum",
+   "what": "'Manip TID 26F1 ... waits 4-3-12-2 frames on the first 4 inputs'; the notes say four consecutive one-frame inputs make this TAS-only, which is why the human route uses a different ID.",
+   "console": "emulator (TAS)",
+   "note": "A tool-assisted route, not a human one. The date is the submission's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "yellow"
+   ],
+   "tid": "26F1",
+   "title": "GBC Pokemon Yellow NSC TAS in 9:47 by TiKevin83 - TASBot Verification with GBI",
+   "author": "TiKevin83 Speedruns",
+   "url": "https://www.youtube.com/watch?v=gkwTCYtwt4I",
+   "date": "2019-01-16",
+   "kind": "video",
+   "what": "The console-verified Yellow NSC TAS whose notes document the 0x26F1 Trainer ID manip.",
+   "console": "GBP via GBI (TASBot)",
+   "note": "A tool-assisted route, not a human one.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "yellow"
+   ],
+   "tid": "C5E6",
+   "title": "Yellow RBA (no underflow) route",
+   "author": "entrpntr, krazyd4n (PSR route doc)",
+   "url": "https://github.com/pokemon-speedrunning/speedrun-routes/blob/main/docs/gen-1/yellow/catext/reverse-badge-acquisition/README.md",
+   "date": null,
+   "kind": "route",
+   "what": "The Yellow Reverse Badge Acquisition route: the buffered sequence for 0xC5E6 (50662), which puts HM02 and TM30 in the Pewter glitch mart; no video is linked.",
+   "sequence": "yellow_gfskip_intro0_title_newgame_oakreset_gfskip_intro0_title_backout_title_newgame_oakreset_gfskip_intro0_title_newgame",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "yellow"
+   ],
+   "tid": "C5E6",
+   "title": "Yellow RBA no underflow notes (pastebin XScRtwTr)",
+   "author": "entrpntr",
+   "url": "https://pastebin.com/XScRtwTr",
+   "date": null,
+   "kind": "guide",
+   "what": "'TID Manip: (Fastest intro, oakreset, Fastest intro w/1 backout, oakreset, Fastest intro)' with the same sequence, and the PB video for the run.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "yellow"
+   ],
+   "tid": "C5E6",
+   "title": "Pokemon Yellow reverse badge acquisition no underflow route",
+   "author": "Glitch City Wiki",
+   "url": "https://glitchcity.wiki/wiki/Pok%C3%A9mon_Yellow_reverse_badge_acquisition_no_underflow_route",
+   "date": "2023-07-07",
+   "kind": "wiki",
+   "what": "'Manipulate for a Trainer ID of 0xC5E6 (50662)': fastest intro, Oak reset, fastest intro with one backout, Oak reset, fastest intro.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "26DB",
+   "title": "[Crystal Any%] TID Manip w/pre-New Game options (09947 = 0x26DB)",
+   "author": "entrpntr",
+   "url": "https://www.youtube.com/watch?v=Al4g-MgWObw",
+   "date": "2018-02-01",
+   "kind": "video",
+   "what": "09947 (0x26DB) with the options set before NEW GAME through the A+LEFT trick, about 4.5 s faster; offsets wait 40.370 s / NEW GAME 42.03 s.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "26DB",
+   "title": "Any% - entrpntr - 12 Feb 2017",
+   "author": "entrpntr",
+   "url": "https://www.speedrun.com/pkmncrystal/guides/axd5j",
+   "date": "2017-02-12",
+   "kind": "guide",
+   "what": "The Crystal Any% route notes: manip 0x26DB (in/out 10/9 times, then the timed press with an audio cue) or the faster 0x26FB (in/out 2/1 times, B press about 25.63 s after a GBP hard reset), with offsets for GBP/GSR and GBI/BGB.",
+   "verified": "2026-09-17 (sweep fetch; speedrun.com refuses direct fetches, content quoted by the sweep)"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "26FB",
+   "title": "[Crystal Any%] Combined TID/LID Manip",
+   "author": "entrpntr",
+   "url": "https://www.youtube.com/watch?v=LgQiDpcPpDQ",
+   "date": "2018-04-27",
+   "kind": "video",
+   "what": "Trainer ID 0x26FB (09979) together with Lucky ID 0x186F (06255) in one manip, which lets the route skip the Antidote shop and the stats check.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "26FB",
+   "title": "[Crystal Any%] Advanced route guide (pastebin EiQzry7w)",
+   "author": "entrpntr",
+   "url": "https://pastebin.com/EiQzry7w",
+   "date": null,
+   "kind": "guide",
+   "what": "Manip Trainer ID 0x26DB or 0x26FB with Lucky ID 0x186F (06255); EonTimer offsets GBP/GSR 22393 + 7757, GBI 21853 + 7757.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "26FB",
+   "title": "Pokemon Crystal any% speedrun route",
+   "author": "Glitch City Wiki",
+   "url": "https://glitchcity.wiki/wiki/Pok%C3%A9mon_Crystal_any%25_speedrun_route",
+   "date": null,
+   "kind": "wiki",
+   "what": "'Manipulate for a Trainer ID of 0x26FB (09979) and Lucky ID of 0x186F (06255)', linking the combined manip video and the advanced route paste.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "6B45",
+   "title": "New Crystal LID Manip",
+   "author": "CasualPokePlayer",
+   "url": "https://www.youtube.com/watch?v=_erIWoNblYs",
+   "date": "2021-09-30",
+   "kind": "video",
+   "what": "The Lucky ID manip entrpntr botted: Trainer ID 0x6B45 (27461) with Lucky ID 01001 (0x03E9); offsets wait 23.332 s / NEW GAME 24.92 s, FlowTimer 5500/23332 on GBP or emulator.",
+   "sequence": "crystal_reset1_gfskip_backout4_wait64(opt)_newgame",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "68C5",
+   "title": "Crystal LID Manip",
+   "author": "Ivan Rossitto",
+   "url": "https://www.youtube.com/watch?v=UopjtT-F3W0",
+   "date": null,
+   "kind": "video",
+   "what": "A Crystal Lucky ID manip landing Trainer ID 26821 (0x68C5) after deleting the save; FlowTimer offsets 15480/25854; adjacent IDs in the description.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "6BE7",
+   "title": "[Crystal] Lottery Manip for Master Ball (Kenya)",
+   "author": "entrpntr",
+   "url": "https://www.youtube.com/watch?v=jS-pCvclxS0",
+   "date": "2017-03-20",
+   "kind": "video",
+   "what": "Trainer ID 27623 (0x6BE7) with Lucky ID 01001 so Kenya's ID wins the radio lottery Master Ball; the description lists the early and late IDs.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "8A84",
+   "title": "[JP Crystal] Lottery Manip for Master Ball (Kenya)",
+   "author": "entrpntr",
+   "url": "https://www.youtube.com/watch?v=56VGW7WV2s0",
+   "date": "2018-09-08",
+   "kind": "video",
+   "what": "Japanese Crystal: a timed B press about 28.89 s after a GBP hard reset then 7 backouts gives Trainer ID 35460 (0x8A84) with Lucky ID 01001.",
+   "console": "GBP (Japanese cartridge)",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "8A84",
+   "title": "Crystal RTA Totodile + Entei chart (rinchanDX)",
+   "author": "rinchanDX",
+   "url": "https://rinchandx.hatenablog.com/entry/2019/08/03/172353",
+   "date": "2019-08-03",
+   "kind": "guide",
+   "what": "A Japanese Crystal RTA chart that opens with entrpntr's 35460 lottery manip on GBP (Simple Timer 28.89 s) so the Master Ball can be claimed.",
+   "console": "GBP (Japanese cartridge)",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "gold"
+   ],
+   "tid": "6E06",
+   "title": "[Gold] Lottery Manip for Master Ball (Kenya)",
+   "author": "entrpntr",
+   "url": "https://www.youtube.com/watch?v=cTNJYQ1tYC8",
+   "date": "2017-03-20",
+   "kind": "video",
+   "what": "Trainer ID 28166 (0x6E06) with Lucky ID 01001 for the Kenya Master Ball; early and late IDs in the description.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "gold"
+   ],
+   "tid": "78CF",
+   "title": "[JP Gold] Lottery Manip for Master Ball (Kenya)",
+   "author": "entrpntr",
+   "url": "https://www.youtube.com/watch?v=rVRFeHIGi4E",
+   "date": "2017-05-29",
+   "kind": "video",
+   "what": "Japanese Gold: a timed B press about a quarter second after the earliest main-menu input (4-frame window, audio cue) gives Trainer ID 30927 (0x78CF) with Lucky ID 01001.",
+   "console": "Japanese cartridge",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "silver"
+   ],
+   "tid": "6ED3",
+   "title": "[Silver] Lottery Manip for Master Ball (Kenya)",
+   "author": "entrpntr",
+   "url": "https://www.youtube.com/watch?v=jPsMD7DsZjw",
+   "date": "2017-05-29",
+   "kind": "video",
+   "what": "About 28.4 s from the hard reset to the timed A press gives Trainer ID 28371 (0x6ED3) with Lucky ID 01001.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "gold"
+   ],
+   "tid": "6F49",
+   "title": "[Gold Any% Glitchless] LID Manip (01001 = 0x03E9)",
+   "author": "CasualPokePlayer",
+   "url": "https://www.youtube.com/watch?v=1TDvAfAthVU",
+   "date": "2020-10-24",
+   "kind": "video",
+   "what": "The Gold Any% Glitchless Lucky ID manip: Trainer ID 0x6F49 (28489) with Lucky ID 01001; buffer START past the Game Freak screen, back out of NEW GAME/OPTIONS repeatedly, wait in 4-frame windows, buffer A on NEW GAME; FlowTimer offsets GSR/GBP 28259, GBI 27187.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "gold"
+   ],
+   "tid": "6F49",
+   "title": "Gold Any% Glitchless LID manip notes (pastebin 8abgtnKP)",
+   "author": "CasualPokePlayer",
+   "url": "https://pastebin.com/8abgtnKP",
+   "date": "2020-10-24",
+   "kind": "guide",
+   "what": "The written steps for the 0x6F49 / 01001 manip above, with the FlowTimer offsets.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "gold"
+   ],
+   "tid": null,
+   "title": "Explaining Pokemon Gold Speedrun Manipulations (How to get masterball, perfect toto & 0 encounters)",
+   "author": "Gunnermaniac",
+   "url": "https://www.youtube.com/watch?v=tEdqe-7Mcao",
+   "date": "2019-01-22",
+   "kind": "video",
+   "what": "Why the Gold glitchless route times NEW GAME so the Lucky Number Show matches the player's ID for a Master Ball, alongside the Totodile and encounter manips.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "gold",
+    "silver"
+   ],
+   "tid": "D9E9",
+   "title": "Trainer ID Manip For Any% Glitched",
+   "author": "Consair, D7X (speedrun.com forums)",
+   "url": "https://www.speedrun.com/pkmngoldsilver/forums/vdox8",
+   "date": "2017-01-01",
+   "kind": "forum",
+   "what": "Consair's GameCube method for 55785: reset with Start+X+B holding A to the white screen then B, enter and leave NEW GAME 8 times, wait about 23 s (4-frame window), 4 more times holding START on the fourth; lists the adjacent IDs.",
+   "note": "The date is the thread's year only.",
+   "verified": "2026-09-17 (sweep fetch; speedrun.com refuses direct fetches, content quoted by the sweep)"
+  },
+  {
+   "games": [
+    "silver"
+   ],
+   "tid": "D9E9",
+   "title": "TASVideos #4233: Pokemon Silver \"game end glitch\" in 30:39.49",
+   "author": "MrWint",
+   "url": "https://tasvideos.org/4233S",
+   "date": "2014-01-01",
+   "kind": "forum",
+   "what": "The TAS manipulates the Trainer ID to 0xD9E9 for the Coin Case setup, 14 frames faster in Silver than Gold.",
+   "console": "emulator (TAS)",
+   "note": "A tool-assisted run. The date is the submission's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "gold"
+   ],
+   "tid": "F8E9",
+   "title": "TASVideos #4213: Pokemon Gold \"arbitrary code execution\" in 31:41.59",
+   "author": "FractalFusion",
+   "url": "https://tasvideos.org/4213S",
+   "date": "2014-01-01",
+   "kind": "forum",
+   "what": "Trainer ID F8E9 combined with Tackle and Mud-Slap as moves 3 and 4 forms the memory jump for the ACE.",
+   "console": "emulator (TAS)",
+   "note": "A tool-assisted run. The date is the submission's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "gold"
+   ],
+   "tid": "F8F7",
+   "title": "TASVideos #6796: Pokemon Gold \"game end glitch\" in 30:01.80",
+   "author": "CasualPokePlayer",
+   "url": "https://tasvideos.org/6796S",
+   "date": "2020-01-01",
+   "kind": "forum",
+   "what": "Trainer ID F8F7 (D8F7 also works) for the Coin Case route, found with a bot based on the RTA Trainer ID bot.",
+   "console": "emulator (TAS)",
+   "note": "A tool-assisted run. The date is the submission's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "2636",
+   "title": "TASVideos #6108: Pokemon Crystal \"save glitch\" in 04:12.68",
+   "author": "gifvex",
+   "url": "https://tasvideos.org/6108S",
+   "date": "2018-01-01",
+   "kind": "forum",
+   "what": "Trainer ID $2636 manipulated for the '15 00' setup with 23 frames of delay between power-on and NEW GAME; the ID and DV bytes form the exploit's instructions.",
+   "console": "emulator (TAS)",
+   "note": "A tool-assisted run. The date is the submission's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "D9DE",
+   "title": "Pokemon GSC Any% NSC - Some questions about",
+   "author": "Skyword572, ScaryOne (speedrun.com forums)",
+   "url": "https://www.speedrun.com/post/dugjr",
+   "date": "2020-01-01",
+   "kind": "forum",
+   "what": "Crystal NSC: Trainer ID 55774 (0xD9DE) with a FlowTimer offset of -13.37, and the usable D8/D9/F8/F9 ranges (55296-55551, 55552-55807, 63488-63743, 63744-63999).",
+   "note": "The date is the thread's year only.",
+   "verified": "2026-09-17 (sweep fetch; speedrun.com refuses direct fetches, content quoted by the sweep)"
+  },
+  {
+   "games": [
+    "gold"
+   ],
+   "tid": "D9DE",
+   "title": "Gold NSC notes [old tid manip] (pastebin cUY5WUgq)",
+   "author": "unknown (linked from Kylovic's Gold NSC guide)",
+   "url": "https://pastebin.com/cUY5WUgq",
+   "date": null,
+   "kind": "guide",
+   "what": "Gold No Save Corruption notes targeting Trainer ID 55774 with a FlowTimer offset of 13350 (GBP disc reset) or 11540 (GBI); the early and late IDs are listed.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "gold",
+    "silver"
+   ],
+   "tid": null,
+   "title": "Any% - Werster - August 14th 2014 (OUTDATED)",
+   "author": "Werster",
+   "url": "https://www.speedrun.com/pkmngoldsilver/guides/yxf52",
+   "date": "2014-08-14",
+   "kind": "guide",
+   "what": "The pre-manip Coin Case route: the run needs a Trainer ID in the D8xx/F8xx or D9xx/F9xx sets (a combined 1 in 64), which the later manips target directly.",
+   "verified": "2026-09-17 (sweep fetch; speedrun.com refuses direct fetches, content quoted by the sweep)"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "D33D",
+   "title": "VC クリスタルID54077の再現方法",
+   "author": "ナベリアン",
+   "url": "https://www.youtube.com/watch?v=pXOM4T8-Lxg",
+   "date": "2024-12-04",
+   "kind": "video",
+   "what": "Japanese 3DS Virtual Console Crystal: delete the save with Up+B+Select, an 85042-frame timer from the reset, 13 fastest B resets, NEW GAME at zero gives Trainer ID 54077 (0xD33D), and with Sunday set the radio lottery number is fixed at 12912.",
+   "console": "3DS Virtual Console (Japanese)",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "D33D",
+   "title": "VCクリスタルのIDくじで1等を当てるための状況再現",
+   "author": "naberian",
+   "url": "https://naberian.hatenablog.com/entry/2024/12/12/185444",
+   "date": "2024-12-12",
+   "kind": "guide",
+   "what": "The written version of the 54077 reproduction above (about 24 minutes), which fixes the lottery number at 12912 for a Master Ball.",
+   "console": "3DS Virtual Console (Japanese)",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "gold"
+   ],
+   "tid": "62A1",
+   "title": "誰でも簡単！ポケモン初代金銀を同じIDで「さいしょからはじめる」方法",
+   "author": "つうしんケーブルクラブ",
+   "url": "https://www.youtube.com/watch?v=rDzL1T5Vsjo",
+   "date": "2021-05-15",
+   "kind": "video",
+   "what": "A 'situation reproduction' method for starting the Gen 1/2 Virtual Console games with the same Trainer ID every time; lists Gold 25249 (0x62A1) among the reproducible IDs.",
+   "console": "3DS Virtual Console (Japanese)",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "silver"
+   ],
+   "tid": "FBEA",
+   "title": "誰でも簡単！ポケモン初代金銀を同じIDで「さいしょからはじめる」方法",
+   "author": "つうしんケーブルクラブ",
+   "url": "https://www.youtube.com/watch?v=rDzL1T5Vsjo",
+   "date": "2021-05-15",
+   "kind": "video",
+   "what": "The same video lists Silver 64490 (0xFBEA) as a reproducible Virtual Console ID.",
+   "console": "3DS Virtual Console (Japanese)",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "crystal"
+   ],
+   "tid": "0000",
+   "title": "日本版VCクリスタルでTID00000を狙う",
+   "author": "サイファー",
+   "url": "https://e52301147.hatenablog.com/entry/2023/03/09/183606",
+   "date": "2023-03-09",
+   "kind": "guide",
+   "what": "The write-up behind the 00000 video: 13 fastest B presses at the title, 115,240 frames from the hard reset, then NEW GAME with no save; JPN = NA + 23568 + 256n.",
+   "console": "3DS Virtual Console (Japanese)",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "ruby",
+    "sapphire"
+   ],
+   "tid": "31C2",
+   "title": "【ID調整】ポケモンRSで色違いが大量発生する最強のIDを紹介します！",
+   "author": "タマみゆch【リボンコンプ】",
+   "url": "https://www.youtube.com/watch?v=C9tt8_5OpoU",
+   "date": "2021-08-29",
+   "kind": "video",
+   "what": "Dead-battery Ruby/Sapphire: Trainer ID 12738 (0x31C2) with Secret ID 62642, a pair that makes many wild shinies, and how to hit it with a simple timer.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "ruby",
+    "sapphire"
+   ],
+   "tid": "E581",
+   "title": "【ID調整】ポケモンRSで色違いが大量発生する最強のIDを紹介します！",
+   "author": "タマみゆch【リボンコンプ】",
+   "url": "https://www.youtube.com/watch?v=C9tt8_5OpoU",
+   "date": "2021-08-29",
+   "kind": "video",
+   "what": "The same video's alternative target: Trainer ID 58753 (0xE581) with Secret ID 28602.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "sapphire"
+   ],
+   "tid": "31C2",
+   "title": "ポケモンサファイアGBA(電池切れ)　ID調整＋色違いの最初の三匹",
+   "author": "chikaramochida",
+   "url": "https://chikaramochida.hatenablog.com/entry/2024/09/12/201123",
+   "date": "2024-09-12",
+   "kind": "guide",
+   "what": "Dead-battery Sapphire to 12738 / 62642, adjusting the documented 4402-frame wait to 4353 and starting the timer with the Start+Select+A+B reset, then a shiny Mudkip at frame 1855.",
+   "console": "GBA",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "sapphire"
+   ],
+   "tid": "31C2",
+   "title": "ルビーサファイアID調整やってみた。",
+   "author": "エイプル",
+   "url": "https://note.com/aprilfoolnote/n/n34280dde14a5",
+   "date": "2021-01-01",
+   "kind": "guide",
+   "what": "Sapphire to 12738 on a GBA SP following the video above, a stopwatch window of about 1:12.3-1:12.4, under 20 attempts.",
+   "console": "GBA SP",
+   "note": "The date is the post's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "ruby",
+    "sapphire"
+   ],
+   "tid": "0000",
+   "title": "色投げラッキー 【RS ID調整編】",
+   "author": "Natsuba728",
+   "url": "https://natsuba728.hatenadiary.org/entry/20121002/1349168924",
+   "date": "2012-10-02",
+   "kind": "guide",
+   "what": "Dead-battery Ruby/Sapphire Trainer ID 00000 with Secret ID 26999 at frame 19396: reset the GBA with the timer, choose gender and name, press A when the timer reaches zero.",
+   "console": "GBA",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "ruby"
+   ],
+   "tid": "0000",
+   "title": "ルビーID調整",
+   "author": "さき",
+   "url": "https://xxsakixx.com/archives/53516205.html",
+   "date": "2011-01-01",
+   "kind": "guide",
+   "what": "Dead-battery Ruby: Trainer ID 00000 / Secret ID 26999 at frame 19397 (0x0000DA67), confirmed with a shiny Regirock.",
+   "console": "GBA",
+   "note": "The date is the post's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "ruby",
+    "sapphire"
+   ],
+   "tid": "1BCF",
+   "title": "自分用のID乱数調整〜ルビサファ編〜",
+   "author": "tendejiru391819",
+   "url": "https://tendejiru.hatenablog.com/entry/2021/12/23/150742",
+   "date": "2021-12-23",
+   "kind": "guide",
+   "what": "Dead-battery Ruby/Sapphire Trainer ID 07119 (0x1BCF) / Secret ID 22881 at frame 112169 (about a 31-minute wait) on a DS with an Emerald timer, hit after 27 attempts.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "ruby"
+   ],
+   "tid": "95AE",
+   "title": "【乱数調整嫌いな人は回れ右】ルビサファでID調整に成功しました",
+   "author": "マスト",
+   "url": "https://masutopokemon.blog.jp/archives/27240198.html",
+   "date": "2020-01-01",
+   "kind": "guide",
+   "what": "A successful Ruby manip to Trainer ID 38318 (0x95AE) / Secret ID 21049 after roughly a 37,000-frame wait.",
+   "note": "The date is the post's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "sapphire"
+   ],
+   "tid": "DDE5",
+   "title": "【乱数調整嫌いな人は回れ右】ルビサファでID調整に成功しました",
+   "author": "マスト",
+   "url": "https://masutopokemon.blog.jp/archives/27240198.html",
+   "date": "2020-01-01",
+   "kind": "guide",
+   "what": "The same post's Sapphire manip to Trainer ID 56805 (0xDDE5) / Secret ID 62090 for a Modest Kyogre.",
+   "note": "The date is the post's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "ruby",
+    "sapphire"
+   ],
+   "tid": "0137",
+   "title": "Ruby and Sapphire RNG Manipulation of Method 1 Pokemon and TID/SID Guide",
+   "author": "NixHex (Smogon)",
+   "url": "https://www.smogon.com/ingame/rng/rs_nonbredrng",
+   "date": "2011-01-01",
+   "kind": "guide",
+   "what": "The dead-battery (seed 0x5A0) guide: the Trainer ID and Secret ID are generated on one frame after the A press on 'Come see me in my POKEMON LAB'; the worked example lands 311 (0x0137) at frame 15784 and recalibrates from it.",
+   "note": "The date is the guide's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "ruby",
+    "sapphire"
+   ],
+   "tid": "091C",
+   "title": "RS Live Battery ID Abuse (PokemonRNGGuides pull request 40)",
+   "author": "zapdos44",
+   "url": "https://github.com/zaksabeast/PokemonRNGGuides/pull/40/files",
+   "date": "2018-01-01",
+   "kind": "guide",
+   "what": "Live-battery Ruby/Sapphire on VBA-RR with Lua: find the seed for the wanted IDs, set the clock, hit the frame and correct for delay; worked example Trainer ID 02332 (0x091C) / Secret ID 46392.",
+   "console": "emulator",
+   "note": "The date is the pull request's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "ruby",
+    "sapphire"
+   ],
+   "tid": null,
+   "title": "Ruby and Sapphire Retail TID RNG",
+   "author": "Shiny_Sylveon, EzPz (PokemonRNG.com)",
+   "url": "https://www.pokemonrng.com/retail-rubysapphire-tid/",
+   "date": null,
+   "kind": "guide",
+   "what": "The retail dead-battery Trainer ID method with an interactive target and calibration tool: one timer after power-on then the Start+Select+A+B reset, a second before the A press that generates the IDs.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "ruby",
+    "sapphire"
+   ],
+   "tid": null,
+   "title": "Ruby and Sapphire TID RNG (live battery, emulator)",
+   "author": "PokemonRNG.com",
+   "url": "https://www.pokemonrng.com/emulator-rs-live-battery-tid/",
+   "date": null,
+   "kind": "guide",
+   "what": "Live-battery emulator method: find a seed and time for the wanted IDs in PokeFinder, set mGBA's clock, advance to the frame with Lua.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "ruby",
+    "sapphire"
+   ],
+   "tid": null,
+   "title": "GUARANTEED SHINY STARTER IN POKEMON RUBY AND SAPPHIRE",
+   "author": "im a blisy ._.",
+   "url": "https://www.youtube.com/watch?v=5feON9zDy6g",
+   "date": "2020-09-30",
+   "kind": "video",
+   "what": "The updated dead-battery Ruby/Sapphire starter tutorial, with the Trainer ID / Secret ID manip first.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "ruby",
+    "sapphire"
+   ],
+   "tid": null,
+   "title": "How to RNG Manipulate a SHINY Starter in Ruby/Sapphire! (and Learn Your SID)",
+   "author": "LordCrisp",
+   "url": "https://www.youtube.com/watch?v=pTDFtBXcxI8",
+   "date": "2026-04-17",
+   "kind": "video",
+   "what": "Ruby/Sapphire: a Trainer ID / Secret ID manip, then a shiny Treecko or Torchic, with EonTimer and PokeFinder.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "ruby",
+    "sapphire"
+   ],
+   "tid": null,
+   "title": "TID y SID para Pokemon perfectos",
+   "author": "Alarkan",
+   "url": "https://www.youtube.com/watch?v=CIf-aOEAda8",
+   "date": "2023-03-28",
+   "kind": "video",
+   "what": "A Spanish emulator guide (VBA-RR with Lua, PokeFinder) to choosing a Trainer ID and Secret ID in Ruby/Sapphire.",
+   "console": "emulator",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "sapphire"
+   ],
+   "tid": null,
+   "title": "【ルビーサファイア】色違いを楽して手に入れる手段！？ID調整してみた【乱数調整】",
+   "author": "こいし",
+   "url": "https://www.youtube.com/watch?v=jfv_kpRAJ7o",
+   "date": "2019-04-07",
+   "kind": "video",
+   "what": "A Japanese Sapphire Trainer ID manip demonstration (works on Ruby too, not on Emerald).",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "emerald"
+   ],
+   "tid": null,
+   "title": "GUARANTEED SHINY STARTER IN POKEMON EMERALD!(How to RNG a Shiny Starter and SID in Emerald)",
+   "author": "im a blisy ._.",
+   "url": "https://www.youtube.com/watch?v=-1XfmKlSojY",
+   "date": "2022-06-05",
+   "kind": "video",
+   "what": "Emerald: the Trainer ID itself is not chosen; the Secret ID is deduced from the ID you got and a timed intro, then confirmed with the starter.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "emerald"
+   ],
+   "tid": null,
+   "title": "RETAIL - HOW TO FIND YOUR SECRET ID IN POKEMON EMERALD WITHOUT A SHINY POKEMON",
+   "author": "PKMN Trainer Choppy",
+   "url": "https://www.youtube.com/watch?v=ARy_xSgXh2I",
+   "date": "2018-05-18",
+   "kind": "video",
+   "what": "Choppy's method: create the file on an EonTimer beep, convert the Trainer ID to hex, list the Secret ID candidates in RNG Reporter's Researcher, confirm with starter resets.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "emerald"
+   ],
+   "tid": null,
+   "title": "Emerald Starter Manip | Retail Pokemon RNG",
+   "author": "retailrng.com",
+   "url": "https://retailrng.com/emerald/beginner/starter-rng/",
+   "date": null,
+   "kind": "guide",
+   "what": "States that the Emerald Trainer ID becomes the seed on leaving the naming screen and cannot be chosen; the Secret ID is set 50 advances after the intro A press and deduced afterwards.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "emerald"
+   ],
+   "tid": "0000",
+   "title": "日本版エメラルドID調整",
+   "author": "BZL",
+   "url": "https://blog.bzl-web.com/entry/2020/03/12/230036",
+   "date": "2020-03-12",
+   "kind": "guide",
+   "what": "A Japanese Emerald Trainer ID manip with the author's TIDFinder and CCTimer: two frame targets set the ID and a third the Secret ID; demonstrated on Trainer ID 00000 on a GBA.",
+   "console": "GBA",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "emerald"
+   ],
+   "tid": "0000",
+   "title": "【ポケモンEm】進化したID調整自動化",
+   "author": "Dokudenpa",
+   "url": "https://dokudenpa.hatenablog.jp/entry/EmTID",
+   "date": "2024-01-01",
+   "kind": "guide",
+   "what": "An automated Emerald Trainer ID / Secret ID manip with a macro controller; example Trainer ID 00000 / Secret ID 14633 for a shiny Timid Kyogre.",
+   "console": "GBA (automated)",
+   "note": "The date is the post's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "emerald"
+   ],
+   "tid": "002E",
+   "title": "エメラルドのID調整を成功させた話",
+   "author": "egina33699307",
+   "url": "https://egina33699307.hatenablog.com/entry/2024/09/10/171822",
+   "date": "2024-09-10",
+   "kind": "guide",
+   "what": "A manual Emerald manip reaching Trainer ID 00046 (0x002E) after 462 attempts (about 15 hours) with TIDFinder and CCTimer.",
+   "console": "GBA",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "firered",
+    "leafgreen"
+   ],
+   "tid": null,
+   "title": "GUARANTEED SHINY STARTER IN POKEMON FIRE RED AND LEAF GREEN(How to RNG Starters and SID in FRLG)",
+   "author": "im a blisy ._.",
+   "url": "https://www.youtube.com/watch?v=LFBbfr5-asc",
+   "date": "2025-03-26",
+   "kind": "video",
+   "what": "FireRed/LeafGreen: the starter manip and the Secret ID deduction; the Trainer ID is set on leaving the naming screen.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "firered",
+    "leafgreen"
+   ],
+   "tid": null,
+   "title": "FR/LG Starter Manip & SID Deduction | Retail Pokemon RNG",
+   "author": "retailrng.com",
+   "url": "https://retailrng.com/frlg/beginner/frlgstarter/",
+   "date": null,
+   "kind": "guide",
+   "what": "States that the FireRed/LeafGreen Trainer ID is set the instant you leave the naming screen and cannot be chosen; the Secret ID locks about 249 advances after the final prompt and is deduced afterwards.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "firered",
+    "leafgreen"
+   ],
+   "tid": null,
+   "title": "RNG Manipulation in FireRed/LeafGreen: Wild Pokemon Supported in RNG Reporter 9.93",
+   "author": "Arseus, Kaphotics (Smogon forums)",
+   "url": "https://www.smogon.com/forums/threads/rng-manipulation-in-firered-leafgreen-wild-pok%C3%A9mon-supported-in-rng-reporter-9-93.62357/",
+   "date": "2009-01-01",
+   "kind": "forum",
+   "what": "How the FireRed/LeafGreen IDs form: the Timer1 value when OK is pressed on the name screen becomes the seed and the Trainer ID; the Secret ID is the seed's upper 16 bits on the frame the shrink ends.",
+   "note": "The date is the thread's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "firered",
+    "leafgreen"
+   ],
+   "tid": null,
+   "title": "Find SID (FireRed/LeafGreen)",
+   "author": "PokemonRNG.com",
+   "url": "https://www.pokemonrng.com/frlg-gen3-sid/",
+   "date": null,
+   "kind": "guide",
+   "what": "Time from accepting the name to the character shrinking, multiply by 59.7275 for the advance, enter it with the Trainer ID in PokeFinder and test the candidates with the starter.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "firered",
+    "leafgreen"
+   ],
+   "tid": "0000",
+   "title": "【ポケモンFRLG】進化したID調整自動化",
+   "author": "Dokudenpa",
+   "url": "https://dokudenpa.hatenablog.jp/entry/FRLGID",
+   "date": "2024-01-01",
+   "kind": "guide",
+   "what": "An automated FireRed/LeafGreen Trainer ID / Secret ID manip with a macro controller, brute-forcing the frame settings; example Trainer ID 00000 / Secret ID 14633 for a shiny Timid Mewtwo.",
+   "console": "GBA (automated)",
+   "note": "The date is the post's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "firered",
+    "leafgreen"
+   ],
+   "tid": "0000",
+   "title": "ポケモン　FRLGのID厳選について　機械に頼ってみる",
+   "author": "トノ",
+   "url": "https://pokemon-suki.com/frlg-em_id/",
+   "date": "2019-01-01",
+   "kind": "guide",
+   "what": "FireRed/LeafGreen Trainer ID 00000 (Secret ID 38454) reached with an Arduino and servos pressing the buttons to the millisecond, after about 1,000 attempts.",
+   "console": "GBA (automated)",
+   "note": "The date is the post's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": "464E",
+   "title": "Pokemon HGSS - DS Rng Manipulation Tutorial",
+   "author": "JTMagicman",
+   "url": "https://www.youtube.com/watch?v=VqgAvUy0Ew8",
+   "date": "2015-07-28",
+   "kind": "video",
+   "what": "The HeartGold/SoulSilver Any% speedrun manip on a DS: Trainer ID 17998 (Secret ID 11090) from seed 9C0B1074, which wins the lottery Master Ball for Raikou, with a Mild 22/22/8/30/16/24 Cyndaquil; credits MKDasher.",
+   "console": "DS",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": "464E",
+   "title": "Pokemon HGSS - 3DS Rng Manipulation Tutorial",
+   "author": "JTMagicman",
+   "url": "https://www.youtube.com/watch?v=ts4zwWKTDSk",
+   "date": "2015-07-28",
+   "kind": "video",
+   "what": "The same 17998 / seed 9C0B1074 manip timed for a 3DS.",
+   "console": "3DS",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": "464E",
+   "title": "DS & 3DS RNG Manip Tutorials",
+   "author": "JTMagicman",
+   "url": "https://www.speedrun.com/pkmnhgss/guides/yhgi3",
+   "date": "2015-01-01",
+   "kind": "guide",
+   "what": "The speedrun.com guide bundling the two tutorials, the glitchless ID list and MKDasher's no-encounter steps.",
+   "note": "The date is the guide's year only.",
+   "verified": "2026-09-17 (sweep fetch; speedrun.com refuses direct fetches, content quoted by the sweep)"
+  },
+  {
+   "games": [
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": "464E",
+   "title": "HG/SS FAQ (pastebin du7Kdyfx)",
+   "author": "unknown (speedrun stream FAQ)",
+   "url": "https://pastebin.com/du7Kdyfx",
+   "date": null,
+   "kind": "guide",
+   "what": "'If the ID isn't 17998, I reset': the Trainer ID that wins the lottery Master Ball, reset on a specific second and frame; links the DS and 3DS tutorials.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": "464E",
+   "title": "The rng manipulation",
+   "author": "Cheesenan, Thunderstorming (speedrun.com forums)",
+   "url": "https://www.speedrun.com/pkmnhgss/forums/lutog",
+   "date": "2020-01-01",
+   "kind": "forum",
+   "what": "17998 is the target ID, 48101 is one frame early and 15529 one frame late; resetting a second late shifts the IDs.",
+   "note": "The date is the thread's year only.",
+   "verified": "2026-09-17 (sweep fetch; speedrun.com refuses direct fetches, content quoted by the sweep)"
+  },
+  {
+   "games": [
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": "464E",
+   "title": "【乱数調整】ポケモン ハートゴールド・ソウルシルバー RTA マスターボールくじID,ヒノアラシ",
+   "author": "ばすたぁ(Buster)",
+   "url": "https://www.youtube.com/watch?v=uCQi0_9NJ2Y",
+   "date": "2016-07-10",
+   "kind": "video",
+   "what": "The Japanese HeartGold/SoulSilver RTA manip for the Master Ball lottery ID from the same initial seed 9C0B1074 (Mild Cyndaquil 22-22-8-30-16-24).",
+   "console": "DS (Japanese cartridge)",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": "99DF",
+   "title": "Any% - Werster - Jan 8th 2018",
+   "author": "werster",
+   "url": "https://www.speedrun.com/pkmnhgss/guides/j6z2p",
+   "date": "2018-01-08",
+   "kind": "guide",
+   "what": "Werster's Any% notes: 'Check trainer ID. Aim is 39391' from seed 100A0D2A at 10:07 on 1 Jan 2096, timer -7.5 on reset, start at -1.",
+   "verified": "2026-09-17 (sweep fetch; speedrun.com refuses direct fetches, content quoted by the sweep)"
+  },
+  {
+   "games": [
+    "diamond"
+   ],
+   "tid": "6181",
+   "title": "Speed Demos Archive - Pokemon Diamond",
+   "author": "playe (Lawrence Palmiter)",
+   "url": "https://speeddemosarchive.com/PokemonDiamond.html",
+   "date": "2014-01-01",
+   "kind": "guide",
+   "what": "The run comments: wait at the Red Gyarados scene because that is when the Trainer ID is determined; ID 24961 (frame perfect) gives a Rash 24/31/28/30/31/31 Chimchar with Hidden Power Grass 66.",
+   "note": "The date is the page's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl"
+   ],
+   "tid": "0824",
+   "title": "Any% Glitchless - Crafted - 21st January 2017",
+   "author": "crafted",
+   "url": "https://www.speedrun.com/pkmndp/guides/ucyo3",
+   "date": "2017-01-21",
+   "kind": "guide",
+   "what": "Seed CC08142A at 8:57 on 22 May 2098, EonTimer calibrated delay 591 / second 14, target delay 5064 / second 36; the ID chart around the target 02084 (28002, 52260, 02084, 54853, 35943).",
+   "verified": "2026-09-17 (sweep fetch; speedrun.com refuses direct fetches, content quoted by the sweep)"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl"
+   ],
+   "tid": "0824",
+   "title": "【乱数調整】ポケモン ダイヤモンド・パール RTA ヒコザル",
+   "author": "ばすたぁ(Buster)",
+   "url": "https://www.youtube.com/watch?v=Wp5arl4qV5s",
+   "date": "2016-09-12",
+   "kind": "video",
+   "what": "The Japanese Diamond/Pearl RTA manip from the same initial seed CC08142A (Naughty Chimchar 25-31-26-30-27-31).",
+   "console": "DS (Japanese cartridge)",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl"
+   ],
+   "tid": "370D",
+   "title": "RNG Manipulation Tutorial + Any% Notes",
+   "author": "Etchy",
+   "url": "https://www.speedrun.com/pkmndp/guides/s6l1t",
+   "date": "2022-01-01",
+   "kind": "guide",
+   "what": "Seed C6031382: 3:15 on 13 Nov 2074, timer -13.83, calibrated delay 591 / second 14, target delay 4920 / second 39; the ID chart 26851, 62341, 14093, 47130, 23758 with the Twinleaf man's facing as the tell.",
+   "note": "The date is the guide's year only.",
+   "verified": "2026-09-17 (sweep fetch; speedrun.com refuses direct fetches, content quoted by the sweep)"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl"
+   ],
+   "tid": "370D",
+   "title": "Pokemon Diamond/Pearl Any% Notes",
+   "author": "Etchy (based on scoagogo)",
+   "url": "https://docs.google.com/document/d/1iiSAimOqF-v7whA-t2p4zJpmmthHVfKlWEkPqnGm2gs/edit",
+   "date": null,
+   "kind": "guide",
+   "what": "The route notes: 3:15:00 on 13 Nov 2072 (2073 on melonDS), press A on the TV broadcast when FlowTimer hits 0, timer -13.83; ID chart 0 = 14093.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl"
+   ],
+   "tid": "370D",
+   "title": "Pokemon Diamond/Pearl Any% Speedrun RNG Manipulation",
+   "author": "Etchy",
+   "url": "https://www.youtube.com/watch?v=6f_nNMQyhXQ",
+   "date": "2021-09-21",
+   "kind": "video",
+   "what": "A silent reference video of the full Diamond/Pearl Any% manip whose notes use the seed C6031382 ID chart (target 14093).",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl"
+   ],
+   "tid": "370D",
+   "title": "How to do RNG Manipulation for Gen 4 Pokemon Speedruns [Nintendo DS]",
+   "author": "Etchy",
+   "url": "https://www.youtube.com/watch?v=j_hJ0wc30RI",
+   "date": "2021-09-14",
+   "kind": "video",
+   "what": "Hitting the Diamond/Pearl Any% seed on a real DS with FlowTimer offset 86377 and timer -13.83; the ID chart (0 = 14093) is the check.",
+   "console": "DS",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "platinum"
+   ],
+   "tid": "C24D",
+   "title": "Any% Glitchless - Crafted - 11th September 2018",
+   "author": "crafted",
+   "url": "https://www.speedrun.com/pkmnplat/guides/0i54r",
+   "date": "2018-09-11",
+   "kind": "guide",
+   "what": "Initial seed 310715D0, calibrated delay 556 / second 14, target delay 5485 / second 44; ID chart 22359, 14722, 49741, 36073, 49448.",
+   "verified": "2026-09-17 (sweep fetch; speedrun.com refuses direct fetches, content quoted by the sweep)"
+  },
+  {
+   "games": [
+    "platinum"
+   ],
+   "tid": "C24D",
+   "title": "Platinum glitchless extended manip v2 0",
+   "author": "craftedite",
+   "url": "https://www.youtube.com/watch?v=oCsjPGcSPy4",
+   "date": "2018-04-26",
+   "kind": "video",
+   "what": "The manipulation video Crafted's Platinum glitchless guide links (seed 310715D0, target ID 49741); the description lists the NPC movement pattern.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl",
+    "platinum",
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": "1158",
+   "title": "DPP / HGSS RNG Manipulation Guide Part 4 - How to Abuse for your Desired TID/SID",
+   "author": "Everstone (Smogon)",
+   "url": "https://www.smogon.com/ingame/rng/dpphgss_rng_part4",
+   "date": null,
+   "kind": "guide",
+   "what": "The Pandora's Box + EonTimer method; the worked example targets ID 04440 / Secret ID 41508 at 15:59:30 on 1 Jul 2012 with target delay 5021.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl",
+    "platinum",
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": "4E85",
+   "title": "DPP / HGSS RNG Manipulation Guide Part 5 - Cute Charm TID/SID and Poke Radar Abuse",
+   "author": "Everstone (Smogon)",
+   "url": "https://www.smogon.com/ingame/rng/dpphgss_rng_part5",
+   "date": null,
+   "kind": "guide",
+   "what": "Cute Charm ID abuse with the example pair 20101 / 20101 and seed 900207FF; every Cute Charm encounter is shiny with that pair.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "platinum"
+   ],
+   "tid": "0000",
+   "title": "「プラチナ」ID調整00000/47390",
+   "author": "ひーくん (daimanten)",
+   "url": "https://ameblo.jp/daimanten/entry-11190280406.html",
+   "date": "2012-01-01",
+   "kind": "guide",
+   "what": "Platinum Trainer ID 00000 / Secret ID 47390 from initial seed 2E0D1745 with the clock at 13:03:18 on 4 Oct 2091 and the A press at about 1:42.5.",
+   "console": "DS",
+   "note": "The date is the post's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "platinum"
+   ],
+   "tid": "0000",
+   "title": "乱数調整 プラチナでIDを０００００にしよう",
+   "author": "tugaaarusun",
+   "url": "https://tugaaarusun.hatenablog.com/entry/29759842",
+   "date": "2011-01-01",
+   "kind": "guide",
+   "what": "Platinum 00000 / 47390 from seed 2E0D1745 at 13:45 on 1 Jan 2011, about 4.63 s of blank time, 6224 frames timed with EmeTimer.",
+   "console": "DS",
+   "note": "The date is the post's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "platinum"
+   ],
+   "tid": "0000",
+   "title": "【ポケモンDPt】プラチナ ID乱数調整 ID00000 SID31224(スマホ対応版)",
+   "author": "milk4724",
+   "url": "https://milk4724.hatenablog.com/entry/20240504/00000000",
+   "date": "2024-05-04",
+   "kind": "guide",
+   "what": "Platinum 00000 / Secret ID 31224 from seed 4A046935: DS start 3:53:10 on 3 Oct 2025 and resume at 4:00:44; 3DS start 3:57:30 on 6 Oct 2028 and resume 4:05:09; with a neighbouring-ID calculator.",
+   "console": "DS / 3DS",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl",
+    "platinum"
+   ],
+   "tid": "0000",
+   "title": "【ID調整】ダイパプラチナで色違い5V出る最強のID00000に調整する方法！",
+   "author": "タマみゆch【リボンコンプ】",
+   "url": "https://www.youtube.com/watch?v=DG6NEva4FCw",
+   "date": "2021-06-17",
+   "kind": "video",
+   "what": "A Diamond/Pearl/Platinum tutorial for Trainer ID 00000 with the SimpleTimer web timer.",
+   "console": "DS",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "platinum"
+   ],
+   "tid": "2382",
+   "title": "プラチナ 乱数調整 ID調整 色違い 臆病6V 控えめ6V",
+   "author": "tono1985",
+   "url": "https://otona-pokemon.blog.jp/archives/1024138366.html",
+   "date": "2015-01-01",
+   "kind": "guide",
+   "what": "Platinum Trainer ID 09090 / Secret ID 46517 from seed 97121702 with the clock at 18:07:10 on 9 Oct 2010 and 102.62 s from the TV screen to the press (DS / DS Lite only).",
+   "console": "DS / DS Lite",
+   "note": "The date is the post's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": "2382",
+   "title": "HGSS 乱数調整 ID調整 色違い 臆病6V 控えめ6V",
+   "author": "tono1985",
+   "url": "https://otona-pokemon.blog.jp/archives/1022666852.html",
+   "date": "2015-01-01",
+   "kind": "guide",
+   "what": "HeartGold/SoulSilver Trainer ID 09090 / Secret ID 46517 from seed 97121702 at 18:06:10 on 9 Oct 2010 with about 101.2 s to the end of Oak's dialogue (DS / DS Lite only).",
+   "console": "DS / DS Lite",
+   "note": "The date is the post's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": "0000",
+   "title": "ID00000に成功（HGSS）",
+   "author": "ひーくん (daimanten)",
+   "url": "https://ameblo.jp/daimanten/entry-11074455172.html",
+   "date": "2011-01-01",
+   "kind": "guide",
+   "what": "HeartGold/SoulSilver Trainer ID 00000 / Secret ID 47390 with the clock at 13:06:10 on 24 Oct 2008 and a stopwatch press at about 1:42.45.",
+   "console": "DS",
+   "note": "The date is the post's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": "0000",
+   "title": "HGSS ID調整",
+   "author": "kenkaitixyou",
+   "url": "https://kenkaitixyou.hatenadiary.org/entry/20140511/1399817902",
+   "date": "2014-05-11",
+   "kind": "guide",
+   "what": "Two HeartGold/SoulSilver targets: 00000 / 47390 (seed 2E0D1745, 13:06 on 24 Oct 2009, A at 1:42.59) and 00000 / 51574 (seed 73176838, 23:17 on 30 Oct 2010, A at 7:35.00), with odd-skip tables.",
+   "console": "DS",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": "0000",
+   "title": "[乱数]HGSSのＩＤ調整 説明[状況]",
+   "author": "コタロー (kotaro931)",
+   "url": "https://ameblo.jp/kotaro931/entry-11411344980.html",
+   "date": "2012-01-01",
+   "kind": "guide",
+   "what": "HeartGold/SoulSilver 00000 / 47390 from seed 2E0D1745, clock 13:43:15, 5957 frames (1:45.12) with PHS, ddddloop and EmeTimer.",
+   "console": "DS",
+   "note": "The date is the post's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": "0000",
+   "title": "＜HGSS＞色違い乱数用のID調整",
+   "author": "ポケ廃DAKAO",
+   "url": "https://pokehaidakao.com/2021/09/17/%EF%BC%9Chgss%EF%BC%9E%E8%89%B2%E9%81%95%E3%81%84%E4%B9%B1%E6%95%B0%E7%94%A8%E3%81%AEid%E8%AA%BF%E6%95%B4/",
+   "date": "2021-09-17",
+   "kind": "guide",
+   "what": "A PC-free HeartGold/SoulSilver 00000 / 47390 (seed 2E0D1745): clock 13:06 on 24 Oct 2008, launch at the 10 s mark, press at about 1:42.5 with a phone stopwatch (DS / DS Lite only).",
+   "console": "DS / DS Lite",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": "0000",
+   "title": "【4世代HGSS乱数調整】ID調整00000&固定･徘徊･野生乱数",
+   "author": "bicha_178",
+   "url": "https://bicha-178.hatenadiary.jp/entry/2021/12/01/175725",
+   "date": "2021-12-01",
+   "kind": "guide",
+   "what": "HeartGold/SoulSilver 00000 / Secret ID 41752 from seed 760D57F9: startup 12:57:10 on 8 Oct 2089, selection at 13:03:28 (378 s), then a square-shiny Kyogre.",
+   "console": "DS",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": "0000",
+   "title": "【ID調整】色違い5Vが出る4世代最強のID00000に調整する方法！！【ポケモンHGSS】",
+   "author": "タマみゆch【リボンコンプ】",
+   "url": "https://www.youtube.com/watch?v=R51Y3gaMTBc",
+   "date": "2021-04-24",
+   "kind": "video",
+   "what": "A HeartGold/SoulSilver tutorial for Trainer ID 00000 with SimpleTimer, citing daimanten's 00000 / 47390 post.",
+   "console": "DS",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": "C3B4",
+   "title": "【HGSS】PC無しでも意地っ張り5V・慎重5Vが光るID調整のやり方(ID:50100 32663)",
+   "author": "nero_R_PKMN",
+   "url": "https://note.com/nero_r_pkmn/n/n717d21f31a12",
+   "date": "2021-01-01",
+   "kind": "guide",
+   "what": "HeartGold/SoulSilver Trainer ID 50100 / Secret ID 32663 from seed 120F1BA1: start 15:53:35 on 15 Dec 2010, target 15:55:37 (121.21 s) on a DS Lite with the Emtimer app.",
+   "console": "DS Lite",
+   "note": "The date is the post's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "soulsilver",
+    "platinum"
+   ],
+   "tid": "56D0",
+   "title": "ポケモン第4世代でメロボ乱数用のID調整",
+   "author": "pokenaga",
+   "url": "https://note.com/pokenaga/n/nc844757bf810",
+   "date": "2020-01-01",
+   "kind": "guide",
+   "what": "The Cute Charm pair 22224 / 22233 from seed 890613A8: SoulSilver at 6:05:11.87 on 10 Sep 2052 (86.33 s) and Platinum at 6:50:14.5 on 25 Dec 2052 (87.6 s) on a DS Lite, with seed tables.",
+   "console": "DS Lite",
+   "note": "The date is the post's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond"
+   ],
+   "tid": "56D0",
+   "title": "ポケモンダイヤモンドで22224/22233のID調整(メロボ乱数)",
+   "author": "pokenaga",
+   "url": "https://note.com/pokenaga/n/n7ad8e9a215aa",
+   "date": "2021-01-01",
+   "kind": "guide",
+   "what": "Diamond Cute Charm pair 22224 / 22233: TV screen off at 6:09:38 on 10 Sep 2052 with 86.88 s from software selection to the seed on a DS Lite.",
+   "console": "DS Lite",
+   "note": "The date is the post's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": "56D0",
+   "title": "ポケモンHGSSで色違いの確率が20％になる方法を解説！！【メロメロボディ　メロボ乱数】",
+   "author": "タマみゆch【リボンコンプ】",
+   "url": "https://www.youtube.com/watch?v=0u2OMnj1ZQE",
+   "date": "2021-01-30",
+   "kind": "video",
+   "what": "The HeartGold/SoulSilver Cute Charm ID manip (22224) following pokenaga's article.",
+   "console": "DS",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl"
+   ],
+   "tid": "56D0",
+   "title": "もっと簡単にポケモンDPで色違い率20％になる方法を解説！！【メロボ乱数　ダイパ】",
+   "author": "タマみゆch【リボンコンプ】",
+   "url": "https://www.youtube.com/watch?v=geockx-6VMQ",
+   "date": "2021-02-28",
+   "kind": "video",
+   "what": "The easier Diamond/Pearl Cute Charm ID manip using pokenaga's 22224 / 22233 seed and SimpleTimer.",
+   "console": "DS",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "platinum"
+   ],
+   "tid": "56D0",
+   "title": "ポケモンプラチナPtで色違いの確率が20％になる方法を解説！！【メロメロボディ　メロボ乱数】",
+   "author": "タマみゆch【リボンコンプ】",
+   "url": "https://www.youtube.com/watch?v=mf2JjWgWsc4",
+   "date": "2021-02-09",
+   "kind": "video",
+   "what": "The Platinum Cute Charm ID manip following pokenaga's 22224 / 22233 article (Platinum: 6:50:14.5 on 25 Dec 2052).",
+   "console": "DS",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl",
+    "platinum",
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": "56D0",
+   "title": "3DS、DSiでメロボ乱数(色違い20％)する方法を解説！【ポケモンDPt　ポケモンHGSS】",
+   "author": "タマみゆch【リボンコンプ】",
+   "url": "https://www.youtube.com/watch?v=sz0OccvNq7I",
+   "date": "2021-02-16",
+   "kind": "video",
+   "what": "The same Cute Charm ID manip on a 3DS or DSi for Diamond/Pearl/Platinum and HeartGold/SoulSilver, measuring the console's blank time.",
+   "console": "3DS / DSi",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl"
+   ],
+   "tid": "04D2",
+   "title": "【ID調整】表ID01234でメロメロボディ乱数をする",
+   "author": "Ophelia (ophelia-olphe)",
+   "url": "https://ameblo.jp/ophelia-olphe/entry-11528368665.html",
+   "date": null,
+   "kind": "guide",
+   "what": "Diamond/Pearl Cute Charm pair 01234 / 01246 from seed 26108C5B at 16:12:08 (menu) or 16:22:12 (TV) on 26 Oct 2026, about a 10-minute wait, chosen because 00000 needs over 31 minutes.",
+   "console": "DS",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl"
+   ],
+   "tid": "04D2",
+   "title": "ポケモンDPで色違いの確率が20％になる方法を解説！！【メロメロボディ　メロボ乱数】",
+   "author": "タマみゆch【リボンコンプ】",
+   "url": "https://www.youtube.com/watch?v=JnjUvrNezFY",
+   "date": "2021-01-08",
+   "kind": "video",
+   "what": "The Diamond/Pearl Cute Charm ID manip tutorial following Ophelia's 01234 article.",
+   "console": "DS",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl"
+   ],
+   "tid": "55B1",
+   "title": "【乱数】4世代のグループシステムで複数IDくじ当選",
+   "author": "pokemonplatinum (エレキブルを使いたい)",
+   "url": "https://ameblo.jp/pokemonplatinum/entry-12852736459.html",
+   "date": "2024-01-01",
+   "kind": "guide",
+   "what": "Trainer ID 21937 / Secret ID 45652 from seed 30001433 at 0:02:39 on 26 Oct 2011, frame 5171, chosen to match the Gen 4 lottery and used across group-linked cartridges for several Master Balls.",
+   "console": "DS",
+   "note": "The date is the post's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl"
+   ],
+   "tid": "DDD5",
+   "title": "【乱数調整】実質5Vの色違いを簡単に出す解説(ID調整編)【ポケモンDP】",
+   "author": "parallel(パラレル)",
+   "url": "https://www.youtube.com/watch?v=zSQlgdr7_QQ",
+   "date": "2021-05-11",
+   "kind": "video",
+   "what": "A PC-free Diamond/Pearl manip to Trainer ID 56789 / Secret ID 49713 from seed D90A2553 with only a timer, confirmed on a DS, DSi and 3DS.",
+   "console": "DS / DSi / 3DS",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "soulsilver"
+   ],
+   "tid": "0007",
+   "title": "HG/SS Part 1 (Mein X Spielstand und SoulSilver TID/SID RNG Abuse)",
+   "author": "VIX (BisaBoard)",
+   "url": "https://community.bisafans.de/blog/index.php?entry/7234-hg-ss-part-1-mein-x-spielstand-und-soulsilver-tid-sid-rng-abuse/",
+   "date": "2024-01-01",
+   "kind": "guide",
+   "what": "SoulSilver Trainer ID 00007 / Secret ID 00000 on a 3DS from seed B70215A1 at 02:55:41 on 29 Mar 2024, delay 5513, with PokeFinder and EonTimer.",
+   "console": "3DS",
+   "note": "The date is the post's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": null,
+   "title": "How to RNG Manipulate your Secret ID in Heart Gold/Soul Silver",
+   "author": "im a blisy ._.",
+   "url": "https://www.youtube.com/watch?v=PSIbk9CYRd0",
+   "date": "2022-07-15",
+   "kind": "video",
+   "what": "The retail HeartGold/SoulSilver Trainer ID / Secret ID manip with PokeFinder and EonTimer.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": null,
+   "title": "GUARANTEED SHINY STARTER POKEMON IN HEARTGOLD AND SOUL SILVER AND CUTE CHARM GLITCH ON 3DS",
+   "author": "im a blisy ._.",
+   "url": "https://www.youtube.com/watch?v=aHfVnqkmmUw",
+   "date": "2020-08-08",
+   "kind": "video",
+   "what": "HeartGold/SoulSilver on a 3DS: a Cute Charm Trainer ID / Secret ID pair and a shiny starter in one new-game manip.",
+   "console": "3DS",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl"
+   ],
+   "tid": null,
+   "title": "GUARANTEED SHINY STARTER AND CUTE CHARM GLITCH IN POKEMON DIAMOND AND PEARL ON 3DS",
+   "author": "im a blisy ._.",
+   "url": "https://www.youtube.com/watch?v=XZs_vCDgibY",
+   "date": "2020-08-07",
+   "kind": "video",
+   "what": "Diamond/Pearl on a 3DS: the new-game Cute Charm ID pair plus a shiny starter.",
+   "console": "3DS",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "platinum"
+   ],
+   "tid": null,
+   "title": "GUARANTEED SHINY STARTER AND CUTE CHARM GLITCH IN POKEMON PLATINUM EASY",
+   "author": "im a blisy ._.",
+   "url": "https://www.youtube.com/watch?v=Ms-aN81FyAM",
+   "date": "2020-08-05",
+   "kind": "video",
+   "what": "Platinum: the new-game Cute Charm ID pair plus a shiny starter.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl",
+    "platinum",
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": null,
+   "title": "Cute Charm Glitch (Step by Step)",
+   "author": "Shona",
+   "url": "https://www.youtube.com/watch?v=If6rJi4jjEI",
+   "date": "2016-03-08",
+   "kind": "video",
+   "what": "Setting up Cute Charm ID abuse with RNG Reporter and EonTimer, following Smogon's guide part 5.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl",
+    "platinum",
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": null,
+   "title": "Pokemon Gen 4 RNG Manipulation Speedrunning Tutorial [DPPt/HGSS]",
+   "author": "Etchy",
+   "url": "https://www.youtube.com/watch?v=TmFvt61wJ4U",
+   "date": "2021-09-14",
+   "kind": "video",
+   "what": "The emulator tutorial (DeSmuME with Lua, RunAsDate) for finding and hitting Gen 4 speedrun seeds, the foundation of the ID-check method.",
+   "console": "emulator",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "pearl"
+   ],
+   "tid": null,
+   "title": "Pokemon Pearl - RNG Manipulation Tutorial for Speedrunning",
+   "author": "mkdasher",
+   "url": "https://www.youtube.com/watch?v=ALG_MI_3uBk",
+   "date": "2014-02-01",
+   "kind": "video",
+   "what": "The Any% Glitched Chimchar manip: DeSmuME date 22:30:45 on 6 Jan 2057, A at 5160 frames, with DS and 3DS timing notes.",
+   "console": "emulator",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl",
+    "platinum"
+   ],
+   "tid": null,
+   "title": "Diamond, Pearl, & Platinum Cute Charm Glitch TID/SID RNG",
+   "author": "Zaksabeast (PokemonRNG.com)",
+   "url": "https://www.pokemonrng.com/dppt-tid-sid/",
+   "date": null,
+   "kind": "guide",
+   "what": "The interactive retail Diamond/Pearl/Platinum tool: set the console clock, start a timer with A, reach the screen before the ID is generated, calibrate the delay from the ID you got.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": null,
+   "title": "HeartGold and SoulSilver Cute Charm Glitch TID/SID RNG",
+   "author": "Zaksabeast (PokemonRNG.com)",
+   "url": "https://www.pokemonrng.com/hgss-tid-sid/",
+   "date": null,
+   "kind": "guide",
+   "what": "The interactive retail HeartGold/SoulSilver tool for a DS, DSi or 3DS: console time, two timed A presses, delay calibration over several attempts.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "diamond",
+    "pearl",
+    "platinum"
+   ],
+   "tid": null,
+   "title": "Diamond/Pearl/Platinum TID & Starter Manip | Retail Pokemon RNG",
+   "author": "retailrng.com (imablisy and others)",
+   "url": "https://retailrng.com/dppt/beginner/starter-rng/",
+   "date": null,
+   "kind": "guide",
+   "what": "The retail Diamond/Pearl/Platinum Trainer ID / Secret ID manip then the starter, with PokeFinder and EonTimer and the Cute Charm TSV ranges.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "heartgold",
+    "soulsilver"
+   ],
+   "tid": null,
+   "title": "Nostalgia Hit: Cute Charm = Endless Random Shinies",
+   "author": "Zak",
+   "url": "https://www.youtube.com/watch?v=4mLxKXYWgvs",
+   "date": "2025-06-11",
+   "kind": "video",
+   "what": "A step-by-step retail manip of a Cute Charm Trainer ID / Secret ID pair (Diamond to SoulSilver) with the pokemonrng.com tool.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "black",
+    "white"
+   ],
+   "tid": "022B",
+   "title": "BW/BW2 Trainer ID & Secret ID Manip | Retail Pokemon RNG",
+   "author": "retailrng.com (imablisy and others)",
+   "url": "https://retailrng.com/bw/beginner/tidsid/",
+   "date": null,
+   "kind": "guide",
+   "what": "The retail Timer0 method with PokeFinder and EonTimer; the worked example targets Trainer ID 00555 in Black/White (target second 24).",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "black2",
+    "white2"
+   ],
+   "tid": "D6D8",
+   "title": "BW/BW2 Trainer ID & Secret ID Manip | Retail Pokemon RNG",
+   "author": "retailrng.com (imablisy and others)",
+   "url": "https://retailrng.com/bw/beginner/tidsid/",
+   "date": null,
+   "kind": "guide",
+   "what": "The same page's Black 2/White 2 example targets Trainer ID 55000 (target second 6).",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "black",
+    "white",
+    "black2",
+    "white2"
+   ],
+   "tid": "0000",
+   "title": "【ポケモンBW1・BW2】BW ID乱数のやり方(プラスルツール使用版)",
+   "author": "milk4724",
+   "url": "https://milk4724.hatenablog.com/entry/20220918/00000000",
+   "date": "2022-09-18",
+   "kind": "guide",
+   "what": "The Black/White and Black 2/White 2 ID manip with the Plusle tool; the example result is Trainer ID 00000 / Secret ID 61669, Timer0 1513, at 01:39:34 on 1 Jan 2000 with 0 advances, on a DS, DS Lite or 3DS.",
+   "console": "DS / DS Lite / 3DS",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "black",
+    "white"
+   ],
+   "tid": null,
+   "title": "BW RNG Manipulation Guide Part 4 - How to Abuse your IDs",
+   "author": "Kaphotics (Smogon)",
+   "url": "https://www.smogon.com/ingame/rng/bw_rng_part4",
+   "date": null,
+   "kind": "guide",
+   "what": "RNG Reporter's Pandora's Box ID seeds, the initial frame and advancing by declining Juniper's name confirmation.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "black",
+    "white"
+   ],
+   "tid": null,
+   "title": "PPRNG Guide - How to RNG Abuse your Trainer ID/Secret ID",
+   "author": "religiousjedi (Smogon)",
+   "url": "https://www.smogon.com/ingame/rng/pprng_gen5_03_id_abuse",
+   "date": null,
+   "kind": "guide",
+   "what": "The PPRNG Trainer ID Searcher workflow: a date and time for the target ID seed, then advance frames with 'No' to Juniper until the target frame.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "black",
+    "white"
+   ],
+   "tid": null,
+   "title": "5th Generation ID Abuse: An RNG Guide",
+   "author": "Biosci (Nugget Bridge)",
+   "url": "https://nuggetbridge.com/breeding/make-a-name-to-be-proud-of-guide-to-rnging-your-id-in-bwwith-tidbits-on-roamer-abuse/",
+   "date": "2012-01-01",
+   "kind": "guide",
+   "what": "The RNG Reporter Timer0-based Black/White ID abuse guide with the roamer tie-in, for any DS model.",
+   "note": "The date is the guide's year only.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "black2",
+    "white2"
+   ],
+   "tid": null,
+   "title": "TID SID abuse",
+   "author": "howtorngbw2",
+   "url": "https://howtorngbw2.wordpress.com/2013/10/16/tid-sid-abuse/",
+   "date": "2013-10-16",
+   "kind": "guide",
+   "what": "Black 2/White 2 ID abuse through Pandora's Box seeds and frame advances.",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "black2",
+    "white2"
+   ],
+   "tid": null,
+   "title": "Gen 5 Pokemon RNG manipulation tutorial for speedrunning",
+   "author": "GarfieldTL",
+   "url": "https://www.youtube.com/watch?v=4HowdCSEnWU",
+   "date": "2015-04-19",
+   "kind": "video",
+   "what": "The DS / 3DS Black 2 / White 2 speedrun tutorial (parameters, seed search, hitting the seed) the Pokemon Speedruns wiki links; the Trainer ID in the options menu is one way to verify the seed.",
+   "console": "DS",
+   "verified": "2026-09-17"
+  },
+  {
+   "games": [
+    "white2"
+   ],
+   "tid": null,
+   "title": "Pokemon White 2 RNG Manipulation Tutorial for Speedrunning",
+   "author": "Swiftalu",
+   "url": "https://www.youtube.com/watch?v=rli6MaFk73M",
+   "date": "2022-01-28",
+   "kind": "video",
+   "what": "Finding Timer0 and the Drilbur and Tepig seeds; notes that Challenge Mode changes the Trainer ID because of the key inputs.",
+   "verified": "2026-09-17"
+  }
+ ],
+ "tools": [
+  {
+   "id": "eontimer",
+   "name": "EonTimer",
+   "author": "Toast++ (ToastPlusOne), 2010; ported and maintained by DasAmpharos",
+   "url": "https://github.com/DasAmpharos/EonTimer",
+   "links": [
+    {
+     "title": "web version",
+     "url": "https://dasampharos.github.io/EonTimer/"
+    },
+    {
+     "title": "releases",
+     "url": "https://github.com/DasAmpharos/EonTimer/releases"
+    },
+    {
+     "title": "original Smogon thread",
+     "url": "https://www.smogon.com/forums/threads/eontimer-zomgtimer.81513/"
+    }
+   ],
+   "what": "the community's countdown timer for Pokemon RNG manipulation: Gen 3 standard and variable-target timers, the Gen 4 delay timer with its second and delay calibration, the Gen 5 boot-second, C-Gear and Entralink timers, and custom multi-phase timers; the Gen 3 dead-battery timer and the Gen 4 two-phase timer on these pages are ports of its models (MIT per its README).",
+   "generations": "Gen 3-5",
+   "license": "MIT per its README (no license file on the main branch on the day verified)",
+   "verified": "2026-09-17"
+  },
+  {
+   "id": "flowtimer",
+   "name": "FlowTimer",
+   "author": "stringflow",
+   "url": "https://github.com/stringflow/FlowTimer",
+   "links": [
+    {
+     "title": "download page",
+     "url": "https://gunnermaniac.com/ft"
+    },
+    {
+     "title": "original Java version",
+     "url": "https://github.com/stringflow/FlowTimer-Java"
+    }
+   ],
+   "what": "the speedrunning community's beep-and-flash countdown timer, described by its author as a more accurate EonTimer clone with more functionality for speedrunning: offsets, a beep interval and count, custom timer files; the offsets the Gen 1-3 route documents and videos quote are FlowTimer offsets, and the count-in cues here play the same role.",
+   "generations": "Gen 1-3 speedruns (and other games)",
+   "license": "none stated",
+   "verified": "2026-09-17"
+  }
+ ]
+}

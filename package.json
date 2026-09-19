@@ -1,0 +1,15 @@
+{
+  "name": "tid-helper",
+  "version": "1.0.0",
+  "description": "Offline Pokemon Trainer ID / Secret ID / encounter manipulation helper: engines, derived data, page and tests",
+  "license": "GPL-3.0-or-later",
+  "private": false,
+  "scripts": {
+    "build": "cd mobile && node scripts/gen-tid-helper-data.cjs && node scripts/gen-tid-helper-html.cjs",
+    "check": "cd mobile && node scripts/gen-tid-helper-data.cjs --check && node scripts/gen-tid-helper-html.cjs --check",
+    "test": "cd mobile && node --test tests/tid-helper/"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
