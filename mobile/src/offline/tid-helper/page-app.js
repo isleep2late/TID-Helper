@@ -226,6 +226,103 @@
   A.prefs = mergePrefs(A.prefs, readLocal());
   A.readLocal = readLocal; A.mergePrefs = mergePrefs; A.pref = pref; A.setPref = setPref; A.persistPrefs = persistPrefs; A.cal = cal; A.setCal = setCal;
   A.receive = receive; A.installBridge = installBridge; A.bindData = bindData;
+  // ---- "what did you get?" and the correction it implies --------------------------------------------
+  // ONE implementation for every mode, because the reasoning is the same everywhere and only the lookup
+  // differs. A mode supplies locate(got) - "which press does that result correspond to" - and gets the
+  // attempt list, the per-attempt advice, the running recommendation and the Use-it button for free.
+  //
+  // WHY THE CORRECTION ALREADY APPLIED IS ADDED BACK. If you are 10 frames late, dial in -10 frames and
+  // are then 3 frames late, your intrinsic lateness is 13, not 3. Averaging the raw errors would chase
+  // the answer in ever-smaller steps and never arrive. Averaging (error - correctionApplied) converges
+  // in one round, which is the whole point of recording the correction alongside each attempt.
+  //
+  // WHY ATTEMPTS ARE KEYED BY TARGET. The correction is a fact about the runner's reaction time and is
+  // worth carrying between targets, but the ERRORS are measured against one route's geometry, so they
+  // are kept per target and only the resulting millisecond figure is portable.
+  var ATT = {};
+  function attKey(o) { return 'tries.' + o.game + '.' + o.targetKey; }
+  ATT.list = function (o) { var v = pref(o.section, attKey(o)); return Array.isArray(v) ? v : []; };
+  ATT.set = function (o, list) { var patch = {}; patch[attKey(o)] = list; setPref(o.section, patch); };
+  // attempts that locate() could place on the timed axis, converted to intrinsic error in frames
+  ATT.recommend = function (o) {
+    var msPerFrame = 1000 / o.fps, used = [];
+    ATT.list(o).forEach(function (t) {
+      var d = o.locate(t.got);
+      if (!d || (d.kind !== 'timing' && d.kind !== 'target')) return;
+      var err = d.kind === 'target' ? 0 : d.errorFrames;
+      used.push(err - (Number(t.corrMs) || 0) / msPerFrame);
+    });
+    if (!used.length) return { n: 0, msPerFrame: msPerFrame };
+    var sum = 0, lo = used[0], hi = used[0];
+    used.forEach(function (u) { sum += u; if (u < lo) lo = u; if (u > hi) hi = u; });
+    var mean = sum / used.length;
+    return { n: used.length, meanFrames: mean, spreadFrames: hi - lo, msPerFrame: msPerFrame,
+             ms: -Math.round(mean * msPerFrame) };
+  };
+  ATT.panelHtml = function (o) {
+    var id = o.idPrefix, list = ATT.list(o), rec = ATT.recommend(o), out = [];
+    out.push('<p class="small"><b>What did you get?</b> Type the ' + esc(o.noun || 'Trainer ID') + ' the run actually '
+      + 'produced. The correction in the box is recorded with it, so the advice stays right as you change it.</p>');
+    out.push('<div class="row"><label class="field">' + esc(o.noun || 'Trainer ID') + ' you got'
+      + '<input type="text" inputmode="numeric" id="' + id + '-got" placeholder="' + esc(o.placeholder || 'e.g. 27355 or $6ADB') + '"></label>'
+      + '<button type="button" id="' + id + '-add">Add</button></div>');
+    if (list.length) {
+      out.push('<ul class="plain small">' + list.map(function (t, i) {
+        var d = o.locate(t.got) || { kind: 'unknown' };
+        var head = '<b>' + esc(fmtTid(t.got)) + '</b>'
+          + (t.corrMs ? ' <span class="muted">(correction ' + (t.corrMs > 0 ? '+' : '') + Math.round(t.corrMs) + ' ms)</span>' : '');
+        var body;
+        if (d.kind === 'target') body = ' - <b>that is the target.</b>';
+        else if (d.kind === 'timing') {
+          var n = d.errorFrames, late = n > 0;
+          body = ' - ' + (d.note ? esc(d.note) + '; ' : '') + 'the press was <b>' + Math.abs(n) + ' frame'
+            + (Math.abs(n) === 1 ? '' : 's') + ' ' + (late ? 'LATE' : 'EARLY') + '</b> ('
+            + (late ? '+' : '-') + Math.abs(n * rec.msPerFrame).toFixed(0) + ' ms).';
+        } else body = ' - ' + esc(d.note || 'this table cannot say where that came from.');
+        return '<li>' + head + body + ' <button type="button" class="link" data-' + id + '-drop="' + i + '">remove</button></li>';
+      }).join('') + '</ul>');
+    }
+    if (rec.n) {
+      var same = Math.abs((Number(o.corrMs) || 0) - rec.ms) < 1;
+      out.push('<p class="small"><b>Recommended correction: ' + (rec.ms > 0 ? '+' : '') + rec.ms + ' ms</b>'
+        + ' <span class="muted">(from ' + rec.n + ' timed attempt' + (rec.n === 1 ? '' : 's') + ': you press on average '
+        + Math.abs(rec.meanFrames).toFixed(1) + ' frames ' + (rec.meanFrames >= 0 ? 'late' : 'early')
+        + ', spread ' + rec.spreadFrames.toFixed(1) + ' frames)</span>'
+        + (same ? ' <span class="muted">- already applied.</span>' : ' <button type="button" id="' + id + '-usecorr">Use it</button>') + '</p>');
+      if (rec.n < 3) out.push('<p class="small muted">Two or three more attempts will make this worth trusting; one is a guess.</p>');
+      if (o.windowFrames && rec.spreadFrames > o.windowFrames * 2)
+        out.push('<p class="small muted">Your spread is wider than the ' + o.windowFrames + '-frame window, so a correction '
+          + 'alone will not land it every time - it moves the middle of your scatter onto the target.</p>');
+    } else if (list.length) {
+      out.push('<p class="small muted">None of those could be placed on the timed axis, so there is nothing to correct yet.</p>');
+    }
+    if (list.length) out.push('<p class="small"><button type="button" id="' + id + '-clear">Clear attempts</button></p>');
+    return out.join('');
+  };
+  // Returns 'render' when the caller should re-render, null when it handled nothing (or handled it in
+  // place). A typed-in field NEVER returns 'render': that rebuilds the card and closes the keyboard.
+  ATT.onEvent = function (ev, o) {
+    var id = o.idPrefix;
+    if (ev.type !== 'click') return (ev.target && ev.target.id === id + '-got') ? null : undefined;
+    var t = ev.target; if (!t) return undefined;
+    if (t.id === id + '-add') {
+      var box = $(id + '-got'), got = box ? o.parse(box.value) : null;
+      if (got == null) return null;
+      var l = ATT.list(o).slice(); l.push({ got: got, corrMs: Number(o.corrMs) || 0 });
+      ATT.set(o, l); return 'render';
+    }
+    var drop = t.closest && t.closest('[data-' + id + '-drop]');
+    if (drop) { var l2 = ATT.list(o).slice(); l2.splice(Number(drop.getAttribute('data-' + id + '-drop')), 1); ATT.set(o, l2); return 'render'; }
+    if (t.id === id + '-clear') { ATT.set(o, []); return 'render'; }
+    if (t.id === id + '-usecorr') {
+      var rec = ATT.recommend(o);
+      if (!rec.n || typeof o.setCorr !== 'function') return null;
+      o.setCorr(rec.ms); return 'render';
+    }
+    return undefined;
+  };
+  A.attempts = ATT;
+
   A.registerMode = registerMode; A.modesFor = modesFor; A.go = go;
   A.card = card; A.statusBlock = statusBlock; A.choices = choices; A.select = select; A.details = details; A.list = list;
   A.sourcesHtml = sourcesHtml; A.sourcesCard = sourcesCard; A.linkHtml = linkHtml; A.toolsHtml = toolsHtml;

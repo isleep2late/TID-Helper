@@ -29,6 +29,25 @@
       resetModel: resetModel, resetExtraS: resetModel ? G1.resetAnchorExtraSeconds(resetModel) : null, anchors: anchors, sets: sets };
   }
   function hitsAllStates(G2, D, ctx) { return G2.targetsAllStates(D.gen2, ctx.game, ctx.platformKey, ctx.sets); }
+  // HOW FAR THE ROUTE-TARGET SETS REACH UNDER THIS METHOD, counted rather than asserted: the hits of the
+  // platform key the page is on, and the hits of every platform key the game runs on, each against the number
+  // of (RTC state, bin) combinations examined to get them.
+  //
+  // It exists because "no hits" needed a number and a scope before it could be acted on. The Route targets tab
+  // printed one warning line when the list came back empty and stopped there, while section 7 still read "Pick
+  // a target to build the cue" - an instruction with nothing on the tab to carry it out. On Crystal that is the
+  // whole mode: the game is RTC-immune (gen2.rtc.crystal), so stateIds gives one state, and neither of its two
+  // platform keys produces a member of the two sets in force in any of their 599 bins - 0 of 1,198. A runner
+  // who opened this mode on Crystal was therefore offered no route to a cue at all and no way to tell whether
+  // another console or another clock state would have given one. Neither would. Gold and Silver do have hits,
+  // but only on some platform keys (Gold: 1 on gbp, 3 on gbc, 0 on either DMG protocol, all of them in
+  // first-boot-only RTC states), so the same empty tab appears there and the per-key counts say where to look.
+  function routeReach(D, G2, game, sets) {
+    var keys = D.gen2.games[game].platform_keys, states = G2.stateIds(D.gen2, game), per = {}, total = 0;
+    keys.forEach(function (pk) { var n = G2.targetsAllStates(D.gen2, game, pk, sets).length; per[pk] = n; total += n; });
+    return { keys: keys.slice(), states: states.length, bins: G2.BIN_COUNT, perKey: per, total: total,
+      combosPerKey: states.length * G2.BIN_COUNT, combos: keys.length * states.length * G2.BIN_COUNT };
+  }
   // HOW MUCH OF THE TID SPACE THIS METHOD ACTUALLY REACHES, read off the inversion tables rather than
   // written down. It matters because the single-press protocol these tables describe is a NARROW slice of
   // what the games can be made to do: the community's own Gen 2 manips are multi-step scripts (a gfwait or
@@ -36,11 +55,27 @@
   // this one does not have. On Crystal that is the difference between about 1,200 reachable Trainer IDs and
   // all 65,536. A user typing an arbitrary TID will therefore miss nearly always, and saying only "not in
   // the table" invites them to conclude they mistimed something when the ID was never reachable this way.
-  function coverage(D, game) {
+  //
+  // The headline figure is SCOPED TO THE ONE TABLE THE PAGE IS AIMING INTO (this platform, this RTC state).
+  // That is the only table a single press can land in, and the only one the typed-ID lookup searches
+  // (invertTyped passes {platformKey, states: [state]}). It used to be read straight off
+  // inversion.games[game].ambiguity.all_distinct_tables, the union over every distinct table of the game,
+  // while the sentence around it named one platform and one RTC state: on Gold that printed 23,739 TIDs
+  // (36.2%) where the selected table carries 595 (0.9%), so an ID that was never reachable looked about forty
+  // times more likely to be on the table than it was. The union is still returned, labelled as a union.
+  // distinctTids over the tables in scope is the engine's own count over the shipped bins; run over every
+  // table it reproduces the data's precomputed all_distinct_tables exactly (tests/tid-helper/gen2-coverage.test.cjs).
+  function coverage(D, G2, game, platformKey, state) {
+    var a = G2.ambiguity(D.gen2, game, { platformKey: platformKey, states: [state] });
     var g = D.gen2.inversion && D.gen2.inversion.games ? D.gen2.inversion.games[game] : null;
-    var a = g && g.ambiguity ? g.ambiguity.all_distinct_tables : null;
-    if (!a || !a.distinct_tids) return null;
-    return { tids: a.distinct_tids, entries: a.entries, pct: (a.distinct_tids / 65536) * 100 };
+    var all = g && g.ambiguity ? g.ambiguity.all_distinct_tables : null;
+    var hasAll = !!(all && all.distinct_tids);
+    // the size of the Trainer ID space comes from the engine (ID_MAX + 1), not from 65536 written out here:
+    // it was inlined at two sites, which is two places to be wrong in if it is ever anything else
+    var space = G2.ID_MAX + 1;
+    return { tids: a.distinctTids, entries: a.entries, tables: a.tables, pct: (a.distinctTids / space) * 100, space: space,
+      allTids: hasAll ? all.distinct_tids : null, allTables: hasAll ? all.tables : null,
+      allPct: hasAll ? (all.distinct_tids / space) * 100 : null };
   }
 
   function invertTyped(G2, D, ctx, tid, lid) { return G2.invert(D.gen2, ctx.game, tid, { lid: lid == null ? null : lid, platformKey: ctx.platformKey, states: [ctx.state] }).candidates; }
@@ -79,7 +114,7 @@
     lines.push('Recorded: ' + kept.length + ' sample' + (kept.length === 1 ? '' : 's') + ' on ' + ctx.platformId + ', ' + anchorLabel[anchor] + ' anchor, under ' + ctx.methId + '. Correction in force is now ' + fmt.ms(m) + (cal.override != null ? ' (the mean; your override of ' + fmt.ms(cal.override) + ' is still in force until you clear it).' : '.'));
     return { lines: lines, recorded: true, samples: next };
   }
-  var pure = { coverage: coverage, platformsFor: platformsFor, context: context, hitsAllStates: hitsAllStates, invertTyped: invertTyped, schedule: schedule, submitGot: submitGot, fmtLid: fmtLid };
+  var pure = { coverage: coverage, platformsFor: platformsFor, context: context, hitsAllStates: hitsAllStates, routeReach: routeReach, invertTyped: invertTyped, schedule: schedule, submitGot: submitGot, fmtLid: fmtLid };
 
   // ---- UI -------------------------------------------------------------------------------------------
   var A = root.TidHelperApp;
@@ -100,12 +135,48 @@
       ctx.beeps = Number(p('beeps', g2.defaults.count_in_beeps)) || 0; ctx.spacing = g2.defaults.count_in_spacing_s;
       var aimedBin = p('aimed', null); ctx.aimed = null;
       if (typeof aimedBin === 'number' && aimedBin >= 0 && aimedBin < A.G2.BIN_COUNT) { var l = A.G2.lookup(g2, game, ctx.platformKey, ctx.state, aimedBin); ctx.aimed = { bin: aimedBin, tid: l.tid, lid: l.lid, sid: l.sid, offsets: l.offsets }; }
+      // the route targets are read here, not only inside the target tab, because section 7 has to know whether
+      // there is anything to pick before it tells the runner to pick something
+      ctx.hits = hitsAllStates(A.G2, A.D, ctx);
+      // the sweep over every platform key of the game costs a table decode per key, so it runs only in the case
+      // that needs it: when this platform key has no hits and the runner has to be told whether another would
+      ctx.reach = ctx.hits.length ? null : routeReach(A.D, A.G2, ctx.game, ctx.sets);
       ctx.sched = null; ctx.schedError = null;
       if (ctx.aimed) { try { ctx.sched = schedule(A.G2, A.D, ctx, ctx.aimed.bin, ctx.correction, anchor, ctx.beeps, ctx.spacing); } catch (e) { ctx.schedError = A.errMsg(e); } }
       return ctx;
     }
+    // the one table this page can aim into, named the way the rest of the page names it (Crystal is RTC-immune)
+    function scopeLabel(ctx) { return 'the ' + esc(ctx.platform.name) + ' table' + (ctx.gameInfo.rtc_dependent ? ' for RTC state ' + esc(ctx.state) : ''); }
     function rowHtml(ctx, r) {
       return '<tr' + (ctx.aimed && ctx.aimed.bin === r.bin && r.state === ctx.state ? ' class="sel"' : '') + '><td>' + esc(r.state) + (r.reachable === false || r.reachableAfterFirstBoot === false ? ' <span class="small warn">(first boot only)</span>' : '') + '</td><td>' + r.bin + '</td><td>' + r.offsets[0] + '-' + r.offsets[1] + '</td><td class="mono">' + esc(A.fmtTid(r.tid)) + '</td><td class="mono">' + esc(fmtLid(r.lid)) + '</td>' + (r.sid != null ? '<td class="mono">' + esc(A.hex4(r.sid)) + '</td>' : '') + '<td><button type="button" class="secondary small" data-g2-aim="' + r.bin + '" data-g2-state="' + esc(r.state) + '">aim</button></td></tr>';
+    }
+    // the Prescribed sequence mode's own coverage figure for this game, or null where that mode does not serve it
+    function psrPercent(ctx) {
+      var g = A.D.gen2psr && A.D.gen2psr.games ? A.D.gen2psr.games[ctx.game] : null;
+      return g && g.gbp && g.gbp.coverage ? g.gbp.coverage.percent : null;
+    }
+    // WHAT AN EMPTY ROUTE-TARGET TAB SAYS. It used to be one line - "No (RTC state, bin) of this platform
+    // produces a member of the sets in force under the single-tap methodology" - with no count behind it, no
+    // statement of whether another platform would do better, and no route onward, while section 7 went on
+    // asking for a target. On Crystal, where nothing is reachable on either platform key, that left the mode
+    // with no way to a cue at all. Every number here is measured off the shipped tables at render time.
+    function emptyTargetsHtml(ctx) {
+      var r = ctx.reach, cov = coverage(A.D, A.G2, ctx.game, ctx.platformKey, ctx.state), pct = psrPercent(ctx);
+      var others = r.keys.filter(function (k) { return k !== ctx.platformKey && r.perKey[k] > 0; });
+      var h = '<p class="warn">No (RTC state, bin) of this platform produces a member of the sets in force under the single-tap methodology: 0 of the ' +
+        // the count is per platform KEY, and a platform can carry two of them (the DMG runs both dmg and
+        // dmg-latestart), so naming the platform here attributed one key's zero to both protocols
+        r.combosPerKey.toLocaleString() + ' combinations on ' + esc(A.D.gen2.platform_keys[ctx.platformKey] ? A.D.gen2.platform_keys[ctx.platformKey].name : ctx.platformKey) + ' (' + r.states + ' RTC state' + (r.states === 1 ? '' : 's') + ' x ' + r.bins + ' bins). ' +
+        (r.total === 0
+          ? 'Nor does any other console: 0 of the ' + r.combos.toLocaleString() + ' over all ' + r.keys.length + ' platform keys ' + esc(ctx.gameInfo.name) + ' runs on, so no platform or RTC state offered above reaches one.'
+          : 'Other platform keys of this game do: ' + others.map(function (k) { return esc(A.D.gen2.platform_keys[k].name) + ' (' + r.perKey[k] + ')'; }).join(', ') + '. Pick one above if that is the console the cartridge was in.') + '</p>';
+      h += '<p class="small muted">' +
+        // .every() is true of an empty list, so with no sets in force this used to assert a fact about sets
+        // that were not there
+        (ctx.sets.length && ctx.sets.every(function (s) { return s.protocol === 'community-script'; }) ? 'Every set in force is published for a community multi-step script rather than for this single tap, which is what their notes above say. ' : '') +
+        'There is nothing on this tab to pick, so no cue can be built from it. Instead: open <b>Typed IDs</b>, type a Trainer ID that ' + scopeLabel(ctx) + ' carries - it holds ' + cov.tids.toLocaleString() + ' of the ' + cov.space.toLocaleString() + ' - and press aim on the bin the lookup names; that bin builds the cue.' +
+        (pct !== null ? ' For an ID this table does not carry, the <b>Prescribed sequence</b> method on the method list reaches ' + pct + '% of all ' + cov.space.toLocaleString() + ' Trainer IDs on a Game Boy Player.' : '') + '</p>';
+      return h + '<p><button type="button" class="secondary small" data-g2-mode="tid">Open Typed IDs</button></p>';
     }
     function targetsHtml(ctx) {
       var mode = p('targetMode', 'set'), hasSid = ctx.gameInfo.ids.indexOf('sid') !== -1;
@@ -114,15 +185,19 @@
       if (mode === 'set') {
         h += '<p class="small muted">Target sets in force: ' + ctx.sets.map(function (s) { return esc(A.G2.setDescribe(s)); }).join('; ') + '.</p>';
         ctx.sets.forEach(function (s) { if (s.note) h += '<p class="small muted">' + esc(s.key) + ': ' + esc(s.note) + '</p>'; });
-        var hits = hitsAllStates(A.G2, A.D, ctx);
-        h += hits.length ? '<table class="tbl">' + head + hits.map(function (r) { return rowHtml(ctx, r); }).join('') + '</table>' : '<p class="warn">No (RTC state, bin) of this platform produces a member of the sets in force under the single-tap methodology.</p>';
+        h += ctx.hits.length ? '<table class="tbl">' + head + ctx.hits.map(function (r) { return rowHtml(ctx, r); }).join('') + '</table>' : emptyTargetsHtml(ctx);
       } else {
-        var cov = coverage(A.D, ctx.game);
-        if (cov) h += '<p class="small muted">This method - hold START from power-on, release at the menu, one short A tap on NEW GAME - reaches <b>' +
-          cov.tids.toLocaleString() + '</b> of the 65,536 Trainer IDs on ' + esc(ctx.gameInfo.name) + ' (' + cov.pct.toFixed(1) + '%). ' +
-          'It is one press from one hold, so most IDs are simply not on it. The community\'s Gen 2 manips are multi-step scripts - a gfwait or movie-end hold, backouts, timed waits, then NEW GAME - and those reach IDs this cannot. ' +
+        var cov = coverage(A.D, A.G2, ctx.game, ctx.platformKey, ctx.state);
+        // the method's own name, not a paraphrase of one of them: this read "hold START from power-on" on every
+        // platform, which is the wrong protocol on the DMG late-start one, where the data says "press START
+        // during the copyright text"
+        h += '<p class="small muted">This method - ' + esc(ctx.meth.name) + ' - reaches <b>' +
+          cov.tids.toLocaleString() + '</b> of the ' + cov.space.toLocaleString() + ' Trainer IDs (' + cov.pct.toFixed(1) + '%) on ' + esc(ctx.gameInfo.name) + ' in ' + scopeLabel(ctx) + ': the ' + cov.entries + ' bins a press can land in. ' +
+          'It is one press from one hold, so most IDs are simply not on it. ' +
+          (cov.allTids ? 'The ' + cov.allTables + ' distinct tables of this game, over every platform and RTC state, reach ' + cov.allTids.toLocaleString() + ' (' + cov.allPct.toFixed(1) + '%) between them, but a press can only land in the one the cartridge and console are actually in. ' : '') +
+          'The community\'s Gen 2 manips are multi-step scripts - a gfwait or movie-end hold, backouts, timed waits, then NEW GAME - and those reach IDs this cannot. ' +
           ((A.D.gen2psr && A.D.gen2psr.games && A.D.gen2psr.games[ctx.game])
-            ? 'This helper now has one: pick <b>Prescribed sequence</b> from the method list. Buffered backouts, a measured wait and the NEW GAME press held out instead of tapped reach ' + A.D.gen2psr.games[ctx.game].gbp.coverage.percent + '% of all 65,536 Trainer IDs on a Game Boy Player.'
+            ? 'This helper now has one: pick <b>Prescribed sequence</b> from the method list. Buffered backouts, a measured wait and the NEW GAME press held out instead of tapped reach ' + A.D.gen2psr.games[ctx.game].gbp.coverage.percent + '% of all ' + cov.space.toLocaleString() + ' Trainer IDs on a Game Boy Player.'
             : 'If the ID you want is not here, that is the reason, and their scripts are where to get it.') + '</p>';
         h += '<div class="row"><label class="field">Trainer ID<input type="text" id="g2-tid" value="' + esc(p('tid', '')) + '" placeholder="28489 or $6F49"></label><label class="field">Lucky ID (optional)<input type="text" id="g2-lid" value="' + esc(p('lid', '')) + '" placeholder="01001 or $03E9"></label></div><div id="g2-tid-result">' + tidResultHtml(ctx) + '</div>';
       }
@@ -135,12 +210,13 @@
       var cands = invertTyped(A.G2, A.D, ctx, tid, lid), hasSid = ctx.gameInfo.ids.indexOf('sid') !== -1;
       var h = '<p>' + esc(A.fmtTid(tid)) + (lid !== null ? ' + Lucky ID ' + esc(fmtLid(lid)) : '') + ': ' + esc(A.G2.verdictText(tid, lid, null, ctx.sets)) + '.</p>' + A.sourcesHtml(ctx.game, tid, 'derived');
       if (!cands.length) {
-        var c2 = coverage(A.D, ctx.game);
-        return h + '<p class="warn">Not in the ' + esc(ctx.platform.name) + ' table for RTC state ' + esc(ctx.state) + ' (' + esc(ctx.methId) + ').</p>' +
-          (c2 ? '<p class="small muted">Most likely nothing you did: this single-press method only reaches ' + c2.tids.toLocaleString() +
-            ' of 65,536 Trainer IDs on ' + esc(ctx.gameInfo.name) + ' (' + c2.pct.toFixed(1) + '%), so an ID picked in advance is usually not on it. ' +
+        var c2 = coverage(A.D, A.G2, ctx.game, ctx.platformKey, ctx.state);
+        return h + '<p class="warn">Not in ' + scopeLabel(ctx) + ' (' + esc(ctx.methId) + ').</p>' +
+          '<p class="small muted">Most likely nothing you did: that table is ' + c2.entries + ' bins carrying ' + c2.tids.toLocaleString() +
+            ' of the ' + c2.space.toLocaleString() + ' Trainer IDs (' + c2.pct.toFixed(1) + '%), so an ID picked in advance is almost never on it. ' +
+            (c2.allTids ? 'The ' + c2.allTables + ' distinct tables of this game, over every platform and RTC state, reach ' + c2.allTids.toLocaleString() + ' (' + c2.allPct.toFixed(1) + '%) between them, but a press can only land in the one the cartridge and console are actually in. ' : '') +
             'Reaching an arbitrary ID needs the community\'s multi-step scripts, which this tool does not implement. ' +
-            'Also note a buffered or held-out A press is longer than the 4-8 frame tap these tables are indexed by, so it lands outside them entirely.</p>' : '');
+            'Also note a buffered or held-out A press is longer than the 4-8 frame tap these tables are indexed by, so it lands outside them entirely.</p>';
       }
       return h + '<table class="tbl"><tr><th>RTC state</th><th>bin</th><th>offsets</th><th>TID</th><th>Lucky ID</th>' + (hasSid ? '<th>SID</th>' : '') + '<th></th></tr>' + cands.map(function (c) { return rowHtml(ctx, { state: ctx.state, bin: c.bin, offsets: c.offsets, tid: c.tid, lid: c.lid, sid: c.sid, reachable: c.reachableAfterFirstBoot }); }).join('') + '</table>';
     }
@@ -156,7 +232,25 @@
       else lines.push('RTC: ' + g2.rtc.crystal);
       lines.push('Tap rule: ' + g2.held_input.rule);
       lines.push('Window: ' + g2.held_input.window + '.');
-      if (s) lines.push('Cue: ' + ctx.beeps + ' count-in beep' + (ctx.beeps === 1 ? '' : 's') + ' then the long high beep at ' + A.fmtS(s.tA) + ' after the anchor; the bin accepts an A that goes down ' + A.fmtS(s.aWindow[0]) + '-' + A.fmtS(s.aWindow[1]) + ' after ' + (ctx.anchor === 'menu' ? 'the visible box' : 'the anchor') + '; tap for ' + s.tapMs[0].toFixed(0) + '-' + s.tapMs[1].toFixed(0) + ' ms and press nothing for ' + s.rollSettleS + ' s. The beep is ' + A.fmtMs(ctx.correction) + ' early (the correction).' + (s.droppedCountIn ? ' (' + s.droppedCountIn + ' count-in beep(s) left out: they would have sounded before the menu.)' : ''));
+      // Say how many count-in beeps will actually SOUND. countInCues drops a beep whenever it would fall before
+      // the count-in floor - the anchor itself on the menu anchor, the menu plus COUNT_IN_CLEAR_S on power-on
+      // and reset - and this line used to print ctx.beeps, the number typed in the box above, beside a
+      // parenthetical naming the drops. At this page's defaults (4 beeps, 1.0 s spacing, the data's
+      // corrections) 1,479 of the 13,734 buildable schedules drop at least one beep and 449 drop all four, so
+      // gold/gbp/hold-start-v1 bin 3 on the menu anchor promised "4 count-in beeps then the long high beep at
+      // 0.043 s" over a program that held the A tone alone. page-gen1-timed.js prints beeps - droppedCountIn in
+      // both of its branches for the same reason.
+      if (s) {
+        var dropped = s.droppedCountIn, played = ctx.beeps - dropped;
+        var why = (dropped === 1 ? 'it would have been due ' : 'they would have been due ') + (ctx.anchor === 'menu' ? 'before your tap on the box' : 'before the menu');
+        // Losing EVERY beep is not a shorter count-in, it is no count-in: the program becomes one tone, and the
+        // press it marks still has to be frame-exact. Printing "0 count-in beeps" would leave the runner waiting
+        // for a rhythm that never starts, so this case says so outright and points at the preview.
+        var tail = dropped === 0 ? ''
+          : played === 0 ? ' No count-in at all: all ' + ctx.beeps + ' beep' + (ctx.beeps === 1 ? ' was' : 's were') + ' left out because ' + why + '. The long high beep is the whole cue, so there is nothing to count into and no run-up to the tap. Preview it before you run it.'
+          : ' (' + dropped + ' count-in beep' + (dropped === 1 ? '' : 's') + ' left out: ' + why + '.)';
+        lines.push('Cue: ' + (played === 0 ? 'the long high beep alone, at ' + A.fmtS(s.tA) : played + ' count-in beep' + (played === 1 ? '' : 's') + ' then the long high beep at ' + A.fmtS(s.tA)) + ' after the anchor; the bin accepts an A that goes down ' + A.fmtS(s.aWindow[0]) + '-' + A.fmtS(s.aWindow[1]) + ' after ' + (ctx.anchor === 'menu' ? 'the visible box' : 'the anchor') + '; tap for ' + s.tapMs[0].toFixed(0) + '-' + s.tapMs[1].toFixed(0) + ' ms and press nothing for ' + s.rollSettleS + ' s. The beep is ' + A.fmtMs(ctx.correction) + ' early (the correction).' + tail);
+      }
       lines.push('Afterwards type the Trainer ID (and the Lucky ID from the Radio Tower lottery screen, if you read it) below.');
       return A.list(lines.map(esc)) + A.details('The methodology\'s own protocol text', '<p class="small">' + esc(ctx.meth.protocol) + '</p>');
     }
@@ -170,6 +264,23 @@
       ]) + A.details('Validity conditions (' + m.validity.length + ')', '<ol class="plain">' + m.validity.map(function (v) { return '<li>' + esc(v) + '</li>'; }).join('') + '</ol>') +
         A.details('Lucky ID conditions', '<p class="small">' + esc(A.D.gen2.lid_rules.summary) + '</p><ol class="plain">' + A.D.gen2.lid_rules.conditions.map(function (c) { return '<li>' + esc(c.text) + '</li>'; }).join('') + '</ol>');
     }
+    // THE CUE CARD'S FALLBACK IS AN INSTRUCTION, so it has to name somewhere the runner can carry it out. It
+    // read "Pick a target to build the cue" whenever no bin was aimed, including when the Route targets tab it
+    // was pointing at had nothing on it to pick - which on Crystal is always. That sentence is how the missing
+    // Crystal cue stayed unnoticed: the page looked like it was waiting for the runner rather than like it had
+    // nothing to offer, and following it led back to an empty tab.
+    function noTargetHtml(ctx) {
+      // which tab is open matters. This sentence names the Route targets tab as the reason there is no cue,
+      // which is only true while that tab is the one on screen: a runner on Typed IDs who has not yet entered
+      // an ID was being told about a tab they had already left. That is the same defect this whole branch
+      // exists to fix - an instruction that does not match where the reader is standing.
+      if (p('targetMode', 'set') !== 'set') return '<p class="muted">Enter a Trainer ID in section 3 and press aim on the bin the lookup names: the cue is built from that bin.</p>';
+      if (ctx.hits.length) return '<p class="muted">Pick a target to build the cue.</p>';
+      var where = ctx.reach && ctx.reach.total === 0
+        ? esc(ctx.gameInfo.name) + ' under this methodology, on any of the ' + ctx.reach.keys.length + ' platform keys it runs on'
+        : esc(ctx.platform.name) + ' under this methodology';
+      return '<p class="muted">No cue can be built from the Route targets tab: no route target is reachable on ' + where + '. Open <b>Typed IDs</b> instead, type a Trainer ID ' + scopeLabel(ctx) + ' carries, and press aim on the bin the lookup names: the cue is built from that bin.</p>';
+    }
     function render(el, game) {
       var ctx = ctxFor(game), g2 = A.D.gen2;
       var h = '<h2>Timed tap method: ' + esc(g2.games[game].name) + '</h2>';
@@ -181,7 +292,7 @@
       h += A.card('<h3>4. Target</h3>' + targetsHtml(ctx));
       h += A.card('<h3>5. Correction and calibration</h3>' + A.widgets.calibrationHtml('g2-cal', ctx.calKey, ctx.methId, ctx.defaultMs, A.G2.POLL_PERIOD_FRAMES * A.G1.FRAME_MS, 'After an attempt, type the Trainer ID (and Lucky ID) you got; the engine finds the bin, measures the miss in frames between bin centres and updates the correction.', 'a ' + A.G2.POLL_PERIOD_FRAMES + '-frame poll bin'));
       h += A.card('<h3>6. Protocol</h3>' + protocolHtml(ctx));
-      h += A.card('<h3>7. Cue and storyboard</h3>' + (ctx.schedError ? '<p class="bad">' + esc(ctx.schedError) + '</p>' : ctx.sched ? A.widgets.storyWidgetHtml('g2-story', ANCHOR_BUTTON[ctx.anchor], null) : '<p class="muted">Pick a target to build the cue.</p>') +
+      h += A.card('<h3>7. Cue and storyboard</h3>' + (ctx.schedError ? '<p class="bad">' + esc(ctx.schedError) + '</p>' : ctx.sched ? A.widgets.storyWidgetHtml('g2-story', ANCHOR_BUTTON[ctx.anchor], null) : noTargetHtml(ctx)) +
         A.toolsHtml(['flowtimer'], 'This count-in and long beep is what the speedrunning community plays with FlowTimer for the Gold/Silver/Crystal manips, and the correction plays the part of its offset:'));
       h += A.sourcesCard(game);
       h += A.card('<h3>Status (from the data)</h3>' + statusHtml(ctx));

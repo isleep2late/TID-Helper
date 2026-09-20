@@ -22,11 +22,19 @@ test('Gen 1 timed: the page schedule equals ShinyGen1Tid.schedule for GBP 358 (m
     assert.ok(ctx.anchors.includes(anchor), pk + ' offers ' + anchor);
     const corr = g1.defaults.correction_ms[anchor], beeps = g1.defaults.count_in_beeps, sp = g1.defaults.count_in_spacing_s;
     const mine = T.schedule(G1, ctx, anchor, offset, corr, beeps, sp);
-    const theirs = G1.schedule(anchor, offset, corr, { family: g1.methodologies[ctx.methId].timing, beeps, spacingS: sp, resetModel: anchor === 'reset' ? g1.reset_models[g1.platforms[pk].reset] : undefined, methodology: g1.methodologies[ctx.methId] });
+    // the lag between the harness's menu detector and the frame the NEW GAME box is drawn on: the page anchors on
+    // the box, because that is the only one of the two a runner can see, and context() resolves it per methodology
+    const sc = D.scenes.methodologies[ctx.methId].events, lag = (sc.menu_visible - sc.menu_open) / (4194304 / 70224);
+    assert.ok(Math.abs(ctx.visibleLagS - lag) < 1e-12, ctx.methId + ': context() carries the detector-to-box lag');
+    const theirs = G1.schedule(anchor, offset, corr, { family: g1.methodologies[ctx.methId].timing, beeps, spacingS: sp, visibleLagS: lag, resetModel: anchor === 'reset' ? g1.reset_models[g1.platforms[pk].reset] : undefined, methodology: g1.methodologies[ctx.methId] });
     assert.deepEqual(mine, theirs, pk + ' ' + anchor + ' ' + offset);
     assert.equal(mine.cues[mine.cues.length - 1].kind, 'A');
-    if (anchor === 'menu') assert.ok(Math.abs(mine.tA - (G1.targetSeconds(offset) - corr / 1000)) < 1e-12);
-    else assert.ok(Math.abs(mine.tA - (mine.menu + G1.targetSeconds(offset) - corr / 1000)) < 1e-12);
+    if (anchor === 'menu') assert.ok(Math.abs(mine.tA - (G1.targetSeconds(offset) - lag - corr / 1000)) < 1e-12);
+    else {
+      assert.ok(Math.abs(mine.tA - (mine.menu + G1.targetSeconds(offset) - corr / 1000)) < 1e-12, 'the power-on aim is counted from the detector, which the lag does not move');
+      const blip = mine.cues.filter((c) => c.kind === 'menu');
+      assert.ok(Math.abs(blip[0].t - (mine.menu + lag)) < 1e-12, 'the MENU blip marks the box, not the detector');
+    }
     assert.deepEqual(ctx.derivation, G1.derivationPlatform(g1, 'red', ctx.methId, g1.games.red.default_target_sets), 'the derivation descriptor is the engine\'s');
     assert.deepEqual(T.invertTid(G1, ctx, ctx.table[offset]), G1.invert(ctx.table, ctx.table[offset]));
   }

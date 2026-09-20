@@ -31,9 +31,13 @@
   // spec: {id, timeline() -> tl | {error}, program(mode) -> Cue program (cues, visuals, endT, clock, label), anchorLabel,
   //        gameName, previewLead (seconds before the timeline start to begin the preview; default 0.5)}
   var widgets = {};
+  // The canvas is drawn ONLY when there is a timeline to draw. A mode with a cue and no storyboard - a
+  // prescribed sequence is composed of several boots, and the canvas draws scenes measured from one - used to
+  // get the element anyway, so the page showed 360 by 331 pixels of nothing above the note explaining why it
+  // was empty. An empty frame reads as a picture that failed to load, which is worse than no frame at all.
   function storyWidgetHtml(id, anchorLabel, noTimelineReason) {
     return '<div class="story" id="' + esc(id) + '">' +
-      '<canvas id="' + esc(id) + '-canvas" width="360" height="330"></canvas>' +
+      (noTimelineReason ? '' : '<canvas id="' + esc(id) + '-canvas" width="360" height="330"></canvas>') +
       '<div class="row story-controls">' +
         '<button type="button" class="secondary small" data-story="' + esc(id) + '" data-act="preview"' + (noTimelineReason ? ' disabled' : '') + '>Preview (1x, no game)</button>' +
         '<button type="button" class="small anchor" data-story="' + esc(id) + '" data-act="run">Run: tap at ' + esc(anchorLabel) + '</button>' +
@@ -64,8 +68,17 @@
     canvas.style.width = w + 'px'; canvas.style.height = Math.round(w * 0.92) + 'px';
     canvas.width = Math.round(w * dpr); canvas.height = Math.round(w * 0.92 * dpr);
   }
+  // A mode may legitimately have a cue and no storyboard - a prescribed sequence is composed of several boots,
+  // and the canvas draws scenes measured from one. That case used to arrive here as a spec with no `timeline`
+  // field at all, whose call threw, and the widget printed "spec.timeline is not a function" into the notes
+  // under a blank canvas beside a Preview button that returned immediately. A missing timeline is now a stated
+  // reason rather than a TypeError, and the caller supplies the sentence.
   function timelineOf(spec) {
     if (spec._tl !== undefined) return spec._tl;
+    if (typeof spec.timeline !== 'function') {
+      spec._tl = { error: spec.noTimelineReason || 'This mode has no storyboard: the cue below is the whole of it.', noTimeline: true };
+      return spec._tl;
+    }
     try { spec._tl = spec.timeline(); } catch (e) { spec._tl = { error: A.errMsg(e) }; }
     return spec._tl;
   }

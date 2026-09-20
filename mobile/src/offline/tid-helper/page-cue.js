@@ -16,6 +16,17 @@
     count: { text: function (c) { return c.label.replace('count-', ''); }, cls: 'v-white', durS: 0.3 },
     A: { text: function () { return 'A!'; }, cls: 'v-green', durS: A_HOLD_S },
     hold: { text: function () { return 'HOLD START'; }, cls: 'v-blue', durS: 0.5 },
+    // 'keep' is a step where the right action is to CHANGE NOTHING - carry on holding what is already held, or
+    // touch nothing at all. It exists because the Gen 1 buffer guide was sounding a press tone on exactly those
+    // steps: hop0 straight after gfskip is the Game Freak skip still being held, and a new press there moves the
+    // Trainer ID. A cue that says "now" on a do-nothing step is worse than no cue, so this one says what to keep
+    // doing and is given a tone of its own by the caller.
+    keep: { text: function (c) { return c.label; }, cls: 'v-blue', durS: 0.8 },
+    // 'rolled' is an event, not an instruction: the frame the Trainer ID is written to memory, with nothing on
+    // screen and nothing for the runner to do. The Gen 1 buffer guide marked it with the same 990 Hz tone and the
+    // same amber flash as every press in the route, which is the one thing a marker for "it is over" must not
+    // look or sound like.
+    rolled: { text: function () { return 'ID rolled'; }, cls: 'v-white', durS: 0.6 },
     menu: { text: function () { return 'MENU'; }, cls: 'v-amber', durS: 0.3 },
     reset: { text: function () { return 'RESET'; }, cls: 'v-red', durS: 0.3 },
     abeat: { text: function () { return 'A'; }, cls: 'v-green', durS: 0.3 },

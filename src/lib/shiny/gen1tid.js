@@ -113,7 +113,7 @@
     return { t: Number(t), freq: Number(freq), ms: Number(ms), label: label, kind: kind };
   }
 
-  function makeSchedule(anchor, cues, tA, holdLo, holdHi, menu, droppedCountIn) {
+  function makeSchedule(anchor, cues, tA, holdLo, holdHi, menu, droppedCountIn, menuVisible, visibleLagS) {
     var sorted = cues.slice().sort(function (a, b) { return a.t - b.t; });   // stable (node 12+)
     var s = {
       anchor: anchor,
@@ -122,6 +122,8 @@
       holdLo: isNil(holdLo) ? null : holdLo,
       holdHi: isNil(holdHi) ? null : holdHi,
       menu: isNil(menu) ? null : menu,
+      menuVisible: isNil(menuVisible) ? null : menuVisible,
+      visibleLagS: visibleLagS || 0.0,
       droppedCountIn: droppedCountIn || 0
     };
     s.countInTimes = countInTimes(s);
@@ -162,22 +164,35 @@
     return { cues: cues, dropped: dropped };
   }
 
-  function menuSchedule(offset, correctionMs, beeps, spacingS) {
+  // THE MENU ANCHOR IS WHAT THE RUNNER CAN SEE. A table's press frame is menu_open + MENU_TO_TABLE_FRAMES +
+  // offset, where menu_open is the derivation harness's menu DETECTOR (Gen 1: wSaveFileStatus == 1). Nobody can
+  // see that frame. What a person sees is the NEW GAME box being drawn, which scene-timelines measures as
+  // menu_visible - 46 to 53 frames, 0.77 to 0.89 s, later on Red, Blue and Yellow. Every Gen 1 protocol tells the
+  // runner to start the cue the instant the menu appears, so a schedule that does not give that lag back puts
+  // every press about three quarters of a second late and no attempt can land. Gen 2 carries the same distinction
+  // in its own data (visible_menu_frame, visible_menu_lag_frames) and both its front ends use it; Gen 1's data was
+  // generated before the distinction was found, so the lag is passed in from scene-timelines - the measured source
+  // for both generations - rather than duplicated into a generated file. visibleLagS 0 = anchor on the detector
+  // frame itself, which is what a harness does and what this function used to assume of a human.
+  function menuSchedule(offset, correctionMs, beeps, spacingS, visibleLagS) {
     if (isNil(beeps)) beeps = 4;
     if (isNil(spacingS)) spacingS = 1.0;
-    var tA = cueDelaySeconds(offset, correctionMs);
-    if (tA <= 0) fail("the A cue would be due before the anchor (offset " + offset + ", correction " + correctionMs + " ms)");
+    visibleLagS = isNil(visibleLagS) ? 0.0 : checkNumber(visibleLagS, "the visible-menu lag (s)");
+    if (visibleLagS < 0) fail("the visible-menu lag cannot be negative (got " + visibleLagS + " s)");
+    var tA = cueDelaySeconds(offset, correctionMs) - visibleLagS;
+    if (tA <= 0) fail("the A cue would be due before the anchor (offset " + offset + ", correction " + correctionMs + " ms, visible-menu lag " + Math.round(visibleLagS * 1000) + " ms)");
     var ci = countInCues(tA, beeps, spacingS);
     var cues = ci.cues.slice();
     cues.push(cue(tA, A_CUE_TONE[0], A_CUE_TONE[1], "A", "A"));
-    return makeSchedule(ANCHOR_MENU, cues, tA, null, null, null, ci.dropped);
+    return makeSchedule(ANCHOR_MENU, cues, tA, null, null, null, ci.dropped, 0.0, visibleLagS);
   }
 
   // family: {hold_lo_frame, hold_hi_frame, menu_frame} (a methodology's "timing" block)
-  function poweronSchedule(family, offset, correctionMs, beeps, spacingS, extraS, anchor) {
+  function poweronSchedule(family, offset, correctionMs, beeps, spacingS, extraS, anchor, visibleLagS) {
     if (isNil(beeps)) beeps = 4;
     if (isNil(spacingS)) spacingS = 1.0;
     if (isNil(extraS)) extraS = 0.0;
+    visibleLagS = isNil(visibleLagS) ? 0.0 : checkNumber(visibleLagS, "the visible-menu lag (s)");
     if (isNil(anchor)) anchor = ANCHOR_POWERON;
     if (!family || typeof family !== "object") fail("the " + anchor + " anchor needs the family's boot timing");
     offset = checkOffset(offset);
@@ -186,18 +201,24 @@
     var holdLo = framesToSeconds(checkNumber(family.hold_lo_frame, "hold_lo_frame")) + extraS;
     var holdHi = framesToSeconds(checkNumber(family.hold_hi_frame, "hold_hi_frame")) + extraS;
     var menu = framesToSeconds(checkNumber(family.menu_frame, "menu_frame")) + extraS;
+    // tA is unchanged by the lag: both menu and the table's press frame are counted from the detector, so the
+    // arithmetic from power-on is already right. What WAS wrong is the blip. The runner is told a menu far from
+    // the blip means START was held outside its window and the attempt is dead - a comparison they make with
+    // their eyes, against the box. Sounding it on the detector frame put it 0.77 to 0.89 s before anything
+    // appeared on Red, Blue and Yellow, so a correctly held attempt looked like a failed one every time.
+    var menuVisible = menu + visibleLagS;
     var tA = menu + targetSeconds(offset) - correctionMs / 1000.0;
     if (tA <= menu) fail("the A cue would be due before the menu (offset " + offset + ", correction " + correctionMs + " ms)");
     var cues = [
       cue(holdLo, HOLD_TONE[0], HOLD_TONE[1], "hold-start", "hold"),
       cue((holdLo + holdHi) / 2.0, HOLD_TONE[0], HOLD_TONE[1], "hold-centre", "hold"),
-      cue(menu, MENU_MARK_TONE[0], MENU_MARK_TONE[1], "menu", "menu"),
-      cue(menu + 0.08, MENU_MARK_TONE[0], MENU_MARK_TONE[1], "menu-2", "menu")
+      cue(menuVisible, MENU_MARK_TONE[0], MENU_MARK_TONE[1], "menu", "menu"),
+      cue(menuVisible + 0.08, MENU_MARK_TONE[0], MENU_MARK_TONE[1], "menu-2", "menu")
     ];
-    var ci = countInCues(tA, beeps, spacingS, menu + COUNT_IN_CLEAR_S);
+    var ci = countInCues(tA, beeps, spacingS, menuVisible + COUNT_IN_CLEAR_S);
     cues = cues.concat(ci.cues);
     cues.push(cue(tA, A_CUE_TONE[0], A_CUE_TONE[1], "A", "A"));
-    return makeSchedule(anchor, cues, tA, holdLo, holdHi, menu, ci.dropped);
+    return makeSchedule(anchor, cues, tA, holdLo, holdHi, menu, ci.dropped, menuVisible, visibleLagS);
   }
 
   function resetAnchorExtraSeconds(resetModel) {
@@ -207,7 +228,9 @@
   }
 
   // schedule(anchor, offset, correctionMs, options): options.family (the timing block; needed
-  // for the power-on and reset anchors), options.beeps, options.spacingS, options.resetExtraS
+  // for the power-on and reset anchors), options.visibleLagS (menu_visible - menu_open in seconds, from
+  // scene-timelines: see menuSchedule; 0 anchors on the detector frame, which no human can see),
+  // options.beeps, options.spacingS, options.resetExtraS
   // (or options.resetModel, from which it is computed), options.methodology (the gen1-tid.json
   // record: an anchor it does not list is refused, as RNG Solution's cue --anchor refuses it).
   function schedule(anchor, offset, correctionMs, options) {
@@ -220,17 +243,18 @@
         fail("this methodology has no " + JSON.stringify(anchor) + " anchor (its anchors: " + allowed.join(", ") + ")");
       }
     }
-    if (anchor === ANCHOR_MENU) return menuSchedule(offset, correctionMs, beeps, spacing);
+    var visibleLagS = isNil(o.visibleLagS) ? 0.0 : o.visibleLagS;
+    if (anchor === ANCHOR_MENU) return menuSchedule(offset, correctionMs, beeps, spacing, visibleLagS);
     if (anchor === ANCHOR_POWERON) {
       if (!o.family) fail("the power-on anchor needs the family's boot timing");
-      return poweronSchedule(o.family, offset, correctionMs, beeps, spacing, 0.0, ANCHOR_POWERON);
+      return poweronSchedule(o.family, offset, correctionMs, beeps, spacing, 0.0, ANCHOR_POWERON, visibleLagS);
     }
     if (anchor === ANCHOR_RESET) {
       var extra = o.resetExtraS;
       if (isNil(extra) && o.resetModel) extra = resetAnchorExtraSeconds(o.resetModel);
       if (isNil(extra)) fail("the reset anchor needs the console's reset delay (fade + stall)");
       if (!o.family) fail("the reset anchor needs the family's boot timing");
-      return poweronSchedule(o.family, offset, correctionMs, beeps, spacing, extra, ANCHOR_RESET);
+      return poweronSchedule(o.family, offset, correctionMs, beeps, spacing, extra, ANCHOR_RESET, visibleLagS);
     }
     fail("unknown anchor " + JSON.stringify(anchor));
   }

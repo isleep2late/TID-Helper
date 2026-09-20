@@ -69,7 +69,7 @@
     return s;
   }
   function isHaltedState(state) { return state.indexOf("halt") === 0; }
-  var ID_MAX = 0xFFFF;
+  var ID_MAX = 0xFFFF;   // the Trainer ID space; exported so a page can say "of 65,536" without inlining it
   var FAMILIES = ["all", "running", "halted"];
   // Typed IDs are integers 0..65535; a hex string, NaN or an out-of-range number is a caller bug, not "absent from the tables".
   function id16(x, name) {
@@ -456,7 +456,7 @@
   }
 
   return {
-    FPS: FPS, FRAME_MS: FRAME_MS, VISIBLE_MENU_LAG_FRAMES: VISIBLE_MENU_LAG_FRAMES, BIN_COUNT: BIN_COUNT, OFFSET_MAX: OFFSET_MAX,
+    FPS: FPS, FRAME_MS: FRAME_MS, VISIBLE_MENU_LAG_FRAMES: VISIBLE_MENU_LAG_FRAMES, BIN_COUNT: BIN_COUNT, OFFSET_MAX: OFFSET_MAX, ID_MAX: ID_MAX,
     POLL_PERIOD_FRAMES: POLL_PERIOD_FRAMES, TAP_FRAMES: TAP_FRAMES, TAP_MS: TAP_MS, ROLL_SETTLE_S: ROLL_SETTLE_S, OUTLIER_FRAMES: OUTLIER_FRAMES,
     TWO_STATE_PRIOR: TWO_STATE_PRIOR, ANCHOR_MENU: ANCHOR_MENU, ANCHOR_POWERON: ANCHOR_POWERON, ANCHOR_RESET: ANCHOR_RESET, ANCHORS: ANCHORS,
     game: game, binRule: binRule, methodology: methodology, methodologyFor: methodologyFor, stateIds: stateIds, stateInfo: stateInfo,

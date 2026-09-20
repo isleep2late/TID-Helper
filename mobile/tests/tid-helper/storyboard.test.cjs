@@ -25,7 +25,9 @@ test('red/gba/hold-start-v1: the scene list equals scene-timelines.json in secon
   assert.deepEqual(secs.map((s) => [s.id, s.label, s.startF, s.endF]), e.scenes.map((s) => [s.id, s.label, s.start, s.end]));
   secs.forEach((s, i) => { near(s.startS, e.scenes[i].start / fps); near(s.endS, e.scenes[i].end / fps); });
   const tracedOffset = e.events.offset_used;
-  for (const [anchor, originF, extra] of [['menu', e.events.menu_open, 0], ['poweron', 0, 0], ['reset', 0, E.G1.resetAnchorExtraSeconds(D.gen1.reset_models['gbp-fade'])]]) {
+  // the menu anchor's origin is menu_VISIBLE - the frame the box is drawn on, the only one a runner can react to -
+  // and not menu_open, the harness's detector, which fires 48 frames earlier here with nothing yet on screen
+  for (const [anchor, originF, extra] of [['menu', e.events.menu_visible, 0], ['poweron', 0, 0], ['reset', 0, E.G1.resetAnchorExtraSeconds(D.gen1.reset_models['gbp-fade'])]]) {
     const tl = S.gen1Timeline(D, id, tracedOffset, anchor, extra);
     assert.equal(tl.segments.length, e.scenes.length, anchor + ': one segment per scene');
     tl.segments.forEach((s, i) => {
@@ -67,8 +69,12 @@ test('Gen 1 press marker == the cue\'s A tone: press.t equals ShinyGen1Tid.sched
   for (const [mid, offset] of [['red/gba/hold-start-v1', 358], ['red/dmg/hold-start-v1', 100]]) {
     const timing = D.gen1.methodologies[mid].timing, e = D.scenes.methodologies[mid];
     const menu = S.gen1Timeline(D, mid, offset, 'menu', 0), pw = S.gen1Timeline(D, mid, offset, 'poweron', 0);
-    near(menu.press.t, E.G1.schedule('menu', offset, 0).tA, mid + ' menu anchor: press.t == tA');
-    near(menu.press.t, E.G1.targetSeconds(offset), mid + ' menu anchor: targetSeconds');
+    // The menu anchor is the frame the box is DRAWN on, so both the timeline and the cue owe the runner the
+    // detector-to-box lag. The invariant the test exists for - marker and tone on the same instant - is what
+    // caught the two going out of step when only one of them started giving it back.
+    const lag = (e.events.menu_visible - e.events.menu_open) / fps;
+    near(menu.press.t, E.G1.schedule('menu', offset, 0, { visibleLagS: lag }).tA, mid + ' menu anchor: press.t == tA');
+    near(menu.press.t, E.G1.targetSeconds(offset) - lag, mid + ' menu anchor: targetSeconds less the detector-to-box lag');
     near(pw.press.t, E.G1.schedule('poweron', offset, 0, { family: timing }).tA, mid + ' power-on anchor: press.t == tA');
     assert.equal(menu.press.frame, e.events.menu_open + E.G1.pressFrameFromMenu(offset), mid + ': the marker frame is the engine\'s');
     assert.equal(menu.press.frame + 1, e.events.press_a + (offset - e.events.offset_used), mid + ': the trace\'s A-down frame is one index later');
@@ -95,7 +101,10 @@ test('Gen 2: press window = the engine\'s pressFrames, roll = rollFrame for the 
   // R/S
   const g = D.gen3rs.games.sapphire, a = g.model.anchor, gfps = 16777216 / 280896;
   const rs = S.rsTimeline(D, 'sapphire', 4500, g.model.p_min_frames);
-  near(rs.press.t, (4500 - a.first_game_frame_to_copyright_visible) / gfps);
+  // the R/S origin is the frame the copyright text is FULLY DRAWN, not the first non-white frame of the fade
+  // out of white: 17 frames apart, on a target where one frame is a different Trainer ID
+  near(rs.press.t, (4500 - a.first_game_frame_to_copyright_text_fully_visible) / gfps);
+  near(rs.segments[1].t0, (a.first_game_frame_to_copyright_visible - a.first_game_frame_to_copyright_text_fully_visible) / gfps, 'the fade starts before t = 0');
   assert.deepEqual(rs.segments.map((s) => s.id), ['white', 'copyright-fade', 'copyright', 'fade-black', 'opening', 'lastbox', 'write']);
   assert.equal(rs.segments[2].f0, a.first_game_frame_to_copyright_text_fully_visible); assert.equal(rs.segments[3].f1, a.first_game_frame_to_black_after_copyright);
   assert.equal(rs.segments[6].f1, 4500 + g.model.press_to_write_frames);

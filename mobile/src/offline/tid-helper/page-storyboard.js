@@ -51,11 +51,17 @@
   function gen1Timeline(D, methId, offset, anchor, extraS) {
     var e = sceneEntry(D, methId), ev = e.events, fps = fpsOf(D.scenes.fps_expression);
     var m2t = D.gen1.menu_to_table_frames;
-    var originF = anchor === 'menu' ? ev.menu_open : 0;
+    // The menu anchor's t = 0 is the box a person can SEE (menu_visible), not the harness's detector frame
+    // (menu_open). They are 46 to 53 frames apart on Red, Blue and Yellow, and the protocol asks the runner to
+    // start the cue the instant the menu appears - so anchoring the timeline on the detector drew every event
+    // three quarters of a second from where the runner would experience it, and disagreed with the cue by the
+    // same amount. Gen 2's timeline has always anchored on its visible box (gen2Timeline, menu_visible); this
+    // one was written first, before the two frames were known to differ.
+    var originF = anchor === 'menu' ? ev.menu_visible : 0;
     var x = mk(fps, originF, anchor === 'reset' ? (extraS || 0) : 0);
     var pressF = ev.menu_open + m2t + offset;
     var delta = pressF + 1 - ev.press_a;
-    var tl = base('gen1', fps, anchor === 'menu' ? 'the NEW GAME menu (detector frame ' + ev.menu_open + ')' : anchor === 'reset' ? 'the reset press (fade + stall added)' : 'power-on');
+    var tl = base('gen1', fps, anchor === 'menu' ? 'the NEW GAME box being drawn (frame ' + ev.menu_visible + ', ' + (ev.menu_visible - ev.menu_open) + ' frames after the detector)' : anchor === 'reset' ? 'the reset press (fade + stall added)' : 'power-on');
     tl.methodologyId = methId; tl.offset = offset; tl.offsetUsed = ev.offset_used; tl.anchor = anchor;
     e.scenes.forEach(function (s) {
       var sF = s.start, eF = s.end;
@@ -65,14 +71,17 @@
     });
     tl.events.push({ t: x(ev.hold_lo), t1: x(ev.hold_hi), kind: 'hold', label: 'START must go down in this window (frames ' + ev.hold_lo + '-' + ev.hold_hi + ')' });
     if (typeof ev.flash_visible_start === 'number') tl.events.push({ t: x(ev.flash_visible_start), t1: x(ev.flash_last_white + 1), kind: 'flash', label: 'white flash (visible ' + ev.flash_visible_start + '-' + ev.flash_last_white + ')' });
-    tl.events.push({ t: x(ev.menu_open), kind: 'menu', label: 'menu detector (frame ' + ev.menu_open + ')' });
-    tl.events.push({ t: x(ev.menu_visible), kind: 'menu-visible', label: 'NEW GAME box drawn (frame ' + ev.menu_visible + ')' });
+    tl.events.push({ t: x(ev.menu_open), kind: 'menu', label: 'menu detector (frame ' + ev.menu_open + '): nothing is on screen yet' });
+    tl.events.push({ t: x(ev.menu_visible), kind: 'menu-visible', label: 'NEW GAME box drawn (frame ' + ev.menu_visible + '): this is what you anchor on' });
     tl.events.push({ t: x(pressF), kind: 'press', label: 'press A: the cue\'s A tone (frame ' + pressF + ' = menu_open + ' + m2t + ' + ' + offset + ', the engine\'s press frame; the trace reads A down on the next frame)' });
     tl.events.push({ t: x(ev.roll + delta), kind: 'roll', label: 'Trainer ID rolled (A-down frame + ' + ev.roll_minus_press + ' frames, measured at offset ' + ev.offset_used + ')' });
     tl.inputs.push({ t0: x(ev.hold_lo), t1: x(ev.start_release), text: 'HOLD START', cls: 'blue', kind: 'hold' });
     tl.inputs.push({ t0: x(pressF), t1: x(pressF + (ev.press_a_release - ev.press_a)), text: 'A', cls: 'green', kind: 'press' });
     tl.press = { t: x(pressF), frame: pressF, tracedADownFrame: pressF + 1 }; tl.roll = { t: x(ev.roll + delta), frame: ev.roll + delta };
+    tl.visibleLagFrames = ev.menu_visible - ev.menu_open;
+    tl.visibleLagS = (ev.menu_visible - ev.menu_open) / fps;
     tl.notes.push('Press convention: the marker, the A band and the cue\'s A tone all sit on the engine\'s press frame menu_open + ' + m2t + ' + offset (harness index ' + pressF + '); the trace\'s first A-down frame is the next index (' + (pressF + 1) + ').');
+    tl.notes.push('The menu detector fires ' + tl.visibleLagFrames + ' frames (' + tl.visibleLagS.toFixed(2) + ' s) before the NEW GAME box is drawn (scene-timelines menu_visible: the first non-blank frame after the detector). The table\'s offsets are counted from the detector; everything you are asked to do is counted from the box, because the box is what you can see.');
     tl.notes.push(D.scenes.frame_convention);
     if (ev.roll_minus_press_note) tl.notes.push(ev.roll_minus_press_note);
     tl.notes.push(D.scenes.status);
@@ -158,8 +167,9 @@
     steps.forEach(function (st, i) {
       if (st.action === 'boot') {
         var bw = bf.windows.boot[platform] && bf.windows.boot[platform][st.token];
-        var inp = bootInput(st.token, bw);
-        if (inp) tl.inputs.push({ t0: xf(inp[0]), t1: xf(inp[1]), text: st.token, cls: 'amber', kind: 'boot', step: i });
+        bootBands(st.token, bw).forEach(function (bb) {
+          tl.inputs.push({ t0: xf(bb.from), t1: xf(bb.to), text: bb.text, cls: bb.act === 'nothing' ? 'grey' : 'amber', kind: 'boot', act: bb.act, token: st.token, step: i, openF: bb.from, regF: bb.to - 1 });
+        });
         return;
       }
       var next = st.next_start, e = st.scene === 'title' ? null : wm.scenes[st.scene][st.action], regS = null, nextS, from;
@@ -205,14 +215,123 @@
     tl.notes.push(bf.windows.note);
     return finalize(tl);
   }
-  function bootInput(token, bw) {
-    if (!bw) return null;
-    if (bw.no_input) return [bw.no_input[0], bw.no_input[1] + 1];
-    if (bw.release_between && !bw.hold_through) return [0, bw.release_between[1] + 1];
-    if (bw.hold_through) return [0, bw.hold_through + 1];
-    if (bw.a_or_b_down_between) return [bw.a_or_b_down_between[0], bw.a_or_b_down_between[1] + 1];
-    if (bw.a_or_b_press_between) return [0, bw.direction_through + 1];
-    return null;
+  // A boot (palette) token is not always ONE action. pal(ab) is two - a direction held from power-on, and an
+  // A or B press inside a fifteen-frame window in the middle of it - and this used to return a single band
+  // spanning the direction hold, so the screen showed a two-and-a-half second bar for a press the data gives
+  // 70-85 (251 ms) for, and the cue had nothing precise to sound on. Each band now says which ACT it is, so a
+  // caller can cue the ones that are timed and leave alone the ones that are not:
+  //   'nothing' touch nothing in this span   'hold' put it down and keep it there   'press' a timed press
+  //   'release' let go inside this span
+  // Frames are boot frames after power-on, the units gen1-buffer.json's windows.boot block is written in.
+  function bootBands(token, bw) {
+    if (!bw) return [];
+    var out = [];
+    if (bw.no_input) return [{ from: bw.no_input[0], to: bw.no_input[1] + 1, act: 'nothing', text: token }];
+    if (bw.direction_down_by != null || bw.direction_from != null) {
+      // three different fields can end the direction band and they mean different things: hold_through and
+      // direction_through are "still down at this frame", direction_down_by is only a deadline for putting it
+      // down (pal releases it again inside its own window), so the band is named after the field that ended it.
+      var through = bw.hold_through != null ? bw.hold_through : bw.direction_through, why = 'direction held';
+      if (through == null) { through = bw.direction_down_by; why = 'direction down by frame ' + bw.direction_down_by; }
+      out.push({ from: bw.direction_from == null ? 0 : bw.direction_from, to: through + 1, act: 'hold', text: token + ': ' + why });
+    }
+    if (bw.release_between) out.push({ from: bw.release_between[0], to: bw.release_between[1] + 1, act: 'release', text: token + ': let go' });
+    if (bw.a_or_b_down_between) out.push({ from: bw.a_or_b_down_between[0], to: bw.a_or_b_down_between[1] + 1, act: 'press', text: token + ': A or B' });
+    if (bw.a_or_b_press_between) out.push({ from: bw.a_or_b_press_between[0], to: bw.a_or_b_press_between[1] + 1, act: 'press', text: token + ': A or B, then keep both held' });
+    if (!out.length && bw.hold_through != null) out.push({ from: 0, to: bw.hold_through + 1, act: 'hold', text: token });
+    return out;
+  }
+
+  // ---- Gen 2 prescribed sequence: a COMPOSED route, not a traced boot ------------------------------
+  // There is no single trace behind a psr route. It is a plateau's START hold, `pre` buffered backouts, a
+  // measured wait, an optional OPTION step, `post` more backouts, and the NEW GAME press held out - so the
+  // timeline is composed the way the Gen 1 buffer guide's is, from the data's own measured step costs, in the
+  // order gen2-psr.json's `steps` list gives them. Every span below is one of those constants:
+  //   step_frames.backout            109  detector to detector, constant across all sixteen plateaus
+  //   step_frames.option             94   the whole OPTION step, over 288,000 rows
+  //   step_frames.ng_press_after_menu 1   the NEW GAME press after the menu it returns to
+  //   backout_b_frames               16   B down, then START this many frames later
+  //   option_down_to_a_frames        8    DOWN, then A this many frames later
+  //   accept_to_roll_frames          14   the accepting poll to the roll
+  // Nothing is measured here and nothing is invented; where the data says the composition runs a frame or two
+  // out (the 0.06% of buffered steps that run long) its own note is carried into the timeline's notes.
+  //
+  // ANCHOR: t = 0 is the menu box VISIBLE - the instant the runner taps Run, and the instant the cue is built
+  // from. The route's wait W is counted from the menu DETECTOR, which fires visible_menu_lag_frames earlier.
+  // The timed press is not recomputed here: the caller passes the second the cue sounds it, so the marker on
+  // the canvas and the tone in the ear cannot drift apart.
+  function gen2PsrTimeline(D, r, opts) {
+    var o = opts || {};
+    if (typeof o.pressSeconds !== 'number' || !isFinite(o.pressSeconds)) fail('gen2PsrTimeline needs the cue\'s press second, so the marker and the tone stay the same instant');
+    var m = r.methodology;
+    if (!m || !m.step_frames) fail('this psr methodology carries no step_frames, so no route can be composed');
+    var fps = fpsOf(D.gen2psr.fps_expression), sf = m.step_frames;
+    var lag = (D.gen2 && D.gen2.visible_menu_lag_frames) || 0;
+    var bo = sf.backout, op = sf.option, ngAfter = sf.ng_press_after_menu;
+    var bB = m.backout_b_frames, oA = m.option_down_to_a_frames, toRoll = m.accept_to_roll_frames;
+    var x = function (f) { return f / fps; };                 // frames from the visible box -> seconds
+    var tl = base('gen2psr', fps, 'the main menu box appearing (the box, not the detector ' + lag + ' frames before it)');
+    tl.route = { tid: r.tid, lid: r.lid, plateau: r.plateauIndex, pre: r.pre, opt: !!r.opt, post: r.post, waitFrames: r.waitFrames };
+
+    var menuDetF = -lag;                                      // the detector of the menu the wait is counted from
+    var firstMenuDetF = menuDetF - r.pre * bo;                // before the pre-backouts
+    var powerOnF = firstMenuDetF - r.plateau.menu_frame;      // menu_frame is power-on -> that detector
+    var pressF = o.pressSeconds * fps;
+
+    tl.segments.push({ id: 'power_on', label: 'power-on, START held to the main menu (plateau ' + r.plateauIndex + ')', t0: x(powerOnF), t1: x(firstMenuDetF), f0: 0, f1: r.plateau.menu_frame });
+    tl.events.push({ t: x(powerOnF + r.plateau.hold_lo_frame), t1: x(powerOnF + r.plateau.hold_hi_frame), kind: 'hold', label: 'START must go down in this plateau (frames ' + r.plateau.hold_lo_frame + '-' + r.plateau.hold_hi_frame + ' from power-on)' });
+    tl.inputs.push({ t0: x(powerOnF + r.plateau.hold_lo_frame), t1: x(firstMenuDetF), text: 'HOLD START', cls: 'blue', kind: 'hold' });
+
+    // each backout: B at the menu, START backout_b_frames later, the title replaying in between
+    function backout(startF, n) {
+      tl.segments.push({ id: 'title', label: 'backout ' + n + ': the title screen replays', t0: x(startF), t1: x(startF + bo) });
+      tl.inputs.push({ t0: x(startF), t1: x(startF + 1), text: 'B', cls: 'amber', kind: 'press' });
+      tl.inputs.push({ t0: x(startF + bB), t1: x(startF + bo), text: 'HOLD START', cls: 'blue', kind: 'hold' });
+      tl.events.push({ t: x(startF + bB), kind: 'press', label: 'backout ' + n + ': START goes down ' + bB + ' frames after B (anywhere in ' + m.backout_b_tolerance[0] + '-' + m.backout_b_tolerance[1] + ', but not once the title has finished appearing)' });
+      return startF + bo;
+    }
+    var at = firstMenuDetF, k;
+    for (k = 0; k < r.pre; k++) at = backout(at, k + 1);
+    tl.segments.push({ id: 'menu', label: 'the main menu: wait ' + r.waitFrames + ' frames from the detector (' + (r.waitFrames - lag) + ' from the box you can see)', t0: x(menuDetF), t1: x(pressF) });
+    tl.events.push({ t: 0, kind: 'menu', label: 'the NEW GAME / OPTION box is drawn: this is the anchor' });
+
+    var endBtn = o.endButton || (r.opt ? 'DOWN' : (r.post > 0 ? 'B' : 'A'));
+    tl.events.push({ t: x(pressF), kind: 'press', label: 'the timed press: ' + endBtn + (o.endWhat ? ' - ' + o.endWhat : '') + ' (the cue\'s tone)' });
+    tl.inputs.push({ t0: x(pressF), t1: x(pressF + 1), text: endBtn, cls: 'green', kind: 'press' });
+    tl.press = { t: x(pressF), frame: pressF, button: endBtn };
+
+    var lastMenuDetF;
+    if (r.opt) {
+      tl.segments.push({ id: 'option', label: 'the OPTION screen, then START back to the menu', t0: x(pressF), t1: x(pressF + op) });
+      tl.inputs.push({ t0: x(pressF + oA), t1: x(pressF + oA + 1), text: 'A', cls: 'green', kind: 'press' });
+      tl.events.push({ t: x(pressF + oA), kind: 'press', label: 'A goes down ' + oA + ' frames after DOWN (window ' + m.option_down_to_a_tolerance[0] + '-' + m.option_down_to_a_tolerance[1] + ')' });
+      lastMenuDetF = pressF + op;
+      for (k = 0; k < r.post; k++) lastMenuDetF = backout(lastMenuDetF, r.pre + k + 1);
+    } else if (r.post > 0) {
+      lastMenuDetF = backout(pressF, r.pre + 1);              // the timed press IS this backout's B
+      for (k = 1; k < r.post; k++) lastMenuDetF = backout(lastMenuDetF, r.pre + k + 1);
+    } else {
+      lastMenuDetF = null;                                    // the timed press IS the held NEW GAME press
+    }
+
+    var ngF = lastMenuDetF === null ? pressF : lastMenuDetF + ngAfter;
+    if (lastMenuDetF !== null) {
+      tl.segments.push({ id: 'menu', label: 'back at the main menu', t0: x(lastMenuDetF), t1: x(ngF) });
+      tl.inputs.push({ t0: x(ngF), t1: x(ngF + toRoll), text: 'HOLD A', cls: 'green', kind: 'press' });
+      tl.events.push({ t: x(ngF), kind: 'press', label: 'A on NEW GAME, HELD (' + ngAfter + ' frame after the menu returns)' });
+    } else {
+      tl.inputs.push({ t0: x(ngF), t1: x(ngF + toRoll), text: 'HOLD A', cls: 'green', kind: 'press' });
+    }
+    var rollF = ngF + toRoll;
+    tl.segments.push({ id: 'newgame', label: 'NEW GAME: A is still held', t0: x(ngF), t1: x(rollF) });
+    tl.segments.push({ id: 'roll', label: 'the IDs are rolled', t0: x(rollF), t1: x(rollF + 60) });
+    tl.events.push({ t: x(rollF), kind: 'roll', label: 'Trainer ID ' + r.tid + ' and Lucky ID ' + r.lid + ' are rolled (' + toRoll + ' frames after the accepting poll)' });
+    tl.roll = { t: x(rollF), frame: rollF };
+
+    tl.notes.push('Composed from the data\'s measured step costs, not from one traced boot: backout ' + bo + ' frames, OPTION ' + op + ', NEW GAME ' + ngAfter + ' frame after the menu, roll ' + toRoll + ' after the accepting poll.');
+    if (sf.note) tl.notes.push(sf.note);
+    tl.notes.push(D.gen2psr.frame_convention);
+    return finalize(tl);
   }
 
   // ---- Ruby / Sapphire: the copyright anchor, the wait, the press, the write --------------------------
@@ -220,12 +339,20 @@
     var g = D.gen3rs.games[game];
     if (!g) fail('no gen3-rs game ' + game);
     var a = g.model.anchor, fps = fpsOf(D.gen3rs.gba_fps_expression);
-    var originF = a.first_game_frame_to_copyright_visible;
+    // t = 0 is the frame the copyright text is FULLY DRAWN, not the first frame with a non-white pixel. The
+    // data defines first_game_frame_to_copyright_visible as one step of a sixteen-step palette fade out of
+    // white - a frame-differ's threshold, and by the data's own note not yet readable - while
+    // ..._text_fully_visible is the one stated as something a person can check. They are 17 frames, 284.6 ms,
+    // apart on a target where one frame is a different Trainer ID. The cue was moved to the readable frame
+    // because that is what the instruction had always named; this origin follows it, so the storyboard and the
+    // cue still mark the same instant, exactly as gen1Timeline was moved to menu_visible.
+    var originF = a.first_game_frame_to_copyright_text_fully_visible;
+    var fadeF = a.first_game_frame_to_copyright_visible;
     var x = mk(fps, originF, 0);
-    var tl = base('rs', fps, 'the copyright screen appearing (frame ' + originF + ' after the first frame of game code)');
+    var tl = base('rs', fps, 'the copyright text fully drawn (frame ' + originF + ' after the first frame of game code; the fade out of white starts ' + (originF - fadeF) + ' frames earlier, on frame ' + fadeF + ')');
     tl.game = game; tl.P = P; tl.pMin = pMin;
-    tl.segments.push({ id: 'white', label: 'white (frames 0-' + (originF - 1) + ', before the anchor)', t0: x(0), t1: x(originF), f0: 0, f1: originF });
-    tl.segments.push({ id: 'copyright-fade', label: 'copyright fading in', t0: x(originF), t1: x(a.first_game_frame_to_copyright_text_fully_visible), f0: originF, f1: a.first_game_frame_to_copyright_text_fully_visible });
+    tl.segments.push({ id: 'white', label: 'white (frames 0-' + (fadeF - 1) + ', before the fade)', t0: x(0), t1: x(fadeF), f0: 0, f1: fadeF });
+    tl.segments.push({ id: 'copyright-fade', label: 'copyright fading in', t0: x(fadeF), t1: x(originF), f0: fadeF, f1: originF });
     tl.segments.push({ id: 'copyright', label: 'copyright text', t0: x(a.first_game_frame_to_copyright_text_fully_visible), t1: x(a.first_game_frame_to_copyright_fade_to_black_begins), f0: a.first_game_frame_to_copyright_text_fully_visible, f1: a.first_game_frame_to_copyright_fade_to_black_begins });
     tl.segments.push({ id: 'fade-black', label: 'fade to black', t0: x(a.first_game_frame_to_copyright_fade_to_black_begins), t1: x(a.first_game_frame_to_black_after_copyright), f0: a.first_game_frame_to_copyright_fade_to_black_begins, f1: a.first_game_frame_to_black_after_copyright });
     tl.segments.push({ id: 'opening', label: 'the opening (intro, title, NEW GAME, Birch, the name): play it through', t0: x(a.first_game_frame_to_black_after_copyright), t1: x(pMin), f0: a.first_game_frame_to_black_after_copyright, f1: pMin });
@@ -383,5 +510,5 @@
   }
 
   return { fpsOf: fpsOf, scenesSeconds: scenesSeconds, gen1Timeline: gen1Timeline, gen2Timeline: gen2Timeline, bufferTimeline: bufferTimeline, rsTimeline: rsTimeline,
-    segmentAt: segmentAt, inputsAt: inputsAt, draw: draw, SEG_COLORS: SEG_COLORS, GB: GB };
+    bootBands: bootBands, gen2PsrTimeline: gen2PsrTimeline, segmentAt: segmentAt, inputsAt: inputsAt, draw: draw, SEG_COLORS: SEG_COLORS, GB: GB };
 });

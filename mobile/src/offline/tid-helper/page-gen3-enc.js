@@ -16,10 +16,21 @@
 // So the advance offset is a CALIBRATION the runner resolves from one attempt, exactly as the R/S Trainer
 // ID page resolves its own correction. Until they do, the table is "advance n gives this", not "press at
 // this second". UMD: the pure part runs under node.
+//
+// The calibration itself - card 4, "What did you get?" - was missing until 2026-09-19. matchesFor was
+// written and exported, the intro told the runner to "run the manip once, find what you got in the table",
+// and nothing in the UI ever called it, so the one loop this page prescribes was the one thing it would not
+// do. The panel converts an observed encounter into the advance(s) that generate it, stores the chosen
+// advance as a per-game preference, and reads the table relative to it. It converts in one direction only:
+// an encounter becomes an advance number. Nothing here turns an advance into a second, a frame count or a
+// cue, because that is exactly the number this project has not measured for Ruby and Sapphire.
+//
+// core (rng.js) is here for NATURES, so the nature picker is the engine's own list rather than a second copy
+// that can drift from the one the generator names a nature from.
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory(root, require('../../../../src/lib/shiny/generators.js'));
-  else root.TidHelperGen3Enc = factory(root, root.ShinyGenerators);
-})(typeof globalThis !== 'undefined' ? globalThis : (typeof self !== 'undefined' ? self : this), function (root, GEN) {
+  if (typeof module === 'object' && module.exports) module.exports = factory(root, require('../../../../src/lib/shiny/generators.js'), require('../../../../src/lib/shiny/rng.js'));
+  else root.TidHelperGen3Enc = factory(root, root.ShinyGenerators, root.ShinyCore);
+})(typeof globalThis !== 'undefined' ? globalThis : (typeof self !== 'undefined' ? self : this), function (root, GEN, core) {
   'use strict';
   function fail(msg) { throw new Error(msg); }
   var ENC_KINDS = [
@@ -56,6 +67,13 @@
       return { species: sp, minLevel: s.min_level, maxLevel: s.max_level };
     });
   }
+  // the map's own encounter rate for this kind, which is where gen3Wild's Rock Smash odds roll gets its
+  // threshold: WildEncounterCheck compares Random() % 2880 against rate * 16, so passing no rate means
+  // every Rock Smash advance fails and the whole kind renders as "no encounter". The number is the data's.
+  function rateOf(m, kind) {
+    var b = (kind === 'land' || kind === 'water' || kind === 'rock_smash') ? m[kind] : m.fishing;
+    return b && b.rate != null ? b.rate : 0;
+  }
   // advance n -> what the game would generate. `n` is the raw LCRNG advance count from the boot seed;
   // turning a press into an n needs the calibration this data does not contain.
   function encountersAt(D, game, m, kind, from, count, opts) {
@@ -64,7 +82,7 @@
     var k = ENC_KINDS.filter(function (x) { return x.id === kind; })[0];
     var o = opts || {};
     return GEN.gen3Wild(o.seed === undefined ? deadBatterySeed(D) : o.seed, {
-      game: game, encounter: k.gen, slots: slots, method: o.method || 'H1',
+      game: game, encounter: k.gen, slots: slots, method: o.method || 'H1', rate: rateOf(m, kind),
       tid: o.tid || 0, sid: o.sid || 0, frameStart: from, frameCount: count });
   }
   // the runner reports what they actually got; find which advances in a window could have produced it
@@ -72,6 +90,11 @@
     var rows = encountersAt(D, game, m, kind, from, count, opts), out = [];
     for (var i = 0; i < rows.length; i++) {
       var r = rows[i];
+      // an advance that generated nothing cannot be the one a runner saw an encounter at. gen3Wild reports
+      // those as {valid:false, reason} - Rock Smash rolls its odds before anything else - and they used to
+      // fall through every `want` test that was left blank and come back as matches with no species, level
+      // or IVs on them, which is the same shape of bug as the crash fixed in 1713d078.
+      if (!r || r.valid === false || !r.ivArray) continue;
       if (want.species != null && r.species !== want.species) continue;
       if (want.level != null && r.level !== want.level) continue;
       if (want.nature != null && r.nature !== want.nature) continue;
@@ -80,13 +103,50 @@
     return out;
   }
   var pure = { ENC_KINDS: ENC_KINDS, data: data, gameOf: gameOf, deadBatterySeed: deadBatterySeed,
-               mapsWith: mapsWith, slotsOf: slotsOf, encountersAt: encountersAt, matchesFor: matchesFor };
+               mapsWith: mapsWith, slotsOf: slotsOf, rateOf: rateOf, encountersAt: encountersAt, matchesFor: matchesFor,
+               NATURES: core.NATURES };
 
   // ---- UI -------------------------------------------------------------------------------------------
   var A = root.TidHelperApp;
   if (A && typeof document !== 'undefined') {
     var esc = A.esc, SEC = 'gen3enc';
+    // how far the match search looks, in advances. A window over the page's own table, not a statement about
+    // the game: nothing here knows where a given routine lands, so the runner widens or narrows it by hand.
+    var SPAN_DEFAULT = 1000;
+    // Both of these are costs of drawing a page, not statements about Ruby or Sapphire, and neither is used in
+    // any arithmetic about the game. SPAN_MAX exists because the search runs the generator synchronously inside
+    // render(): the field had a min and no max, and a span of five million typed into it froze the page for the
+    // best part of ten seconds. MATCH_ROWS is how many candidates the table draws before it stops.
+    var SPAN_MAX = 200000, MATCH_ROWS = 40;
     function p(k, game, d) { var v = A.pref(SEC, k + '.' + game); return v === undefined ? d : v; }
+    function errText(e) { return A.errMsg ? A.errMsg(e) : String(e.message || e); }
+    function kindLabel(id) { var k = ENC_KINDS.filter(function (x) { return x.id === id; })[0]; return k ? k.label : String(id); }
+    function speciesName(D, dex) { var sp = data(D).species[String(dex)]; return sp ? (sp.name || sp.constant) : String(dex); }
+    function natureName(i) { return core.NATURES[i] === undefined ? String(i) : core.NATURES[i]; }
+    function num(v) { return v === '' || v === null || v === undefined || isNaN(Number(v)) ? null : Number(v); }
+    // what the runner says the attempt produced, in matchesFor's `want` shape. Every field may be blank: a
+    // nature cannot be read off a wild Pokemon without a synchroniser lead or a check after the catch.
+    function wantFor(game) {
+      return { species: num(p('gotSpecies', game, '')), level: num(p('gotLevel', game, '')), nature: num(p('gotNature', game, '')) };
+    }
+    // the advance the runner accepted as their own, stored per game by A.setPref like every other setting here
+    // Checked WHOLE. Only `advance` used to be validated, so a malformed record - one arriving through the
+    // prefs bridge, or left by an older version of this page - rendered "advance 9 on  (undefined) - undefined
+    // Lv undefined", and the mode's one-line summary claimed an attempt was on record.
+    function landedFor(game) {
+      var v = p('landed', game, null);
+      if (!A.isObj(v)) return null;
+      if (typeof v.advance !== 'number' || !isFinite(v.advance) || v.advance < 0 || Math.floor(v.advance) !== v.advance) return null;
+      if (typeof v.map !== 'string' || !v.map) return null;
+      if (!ENC_KINDS.some(function (k) { return k.id === v.kind; })) return null;
+      if (typeof v.species !== 'number' || !data(A.D).species[String(v.species)]) return null;
+      if (typeof v.level !== 'number' || !isFinite(v.level)) return null;
+      if (typeof v.nature !== 'number' || !isFinite(v.nature)) return null;
+      if (typeof v.mapName !== 'string' || !v.mapName) return null;
+      // stored by recordLanded as the engine's six IVs joined with slashes, which is the form the table prints
+      if (typeof v.ivs !== 'string' || v.ivs.split('/').length !== 6 || v.ivs.split('/').some(function (x) { return x === '' || isNaN(Number(x)); })) return null;
+      return v;
+    }
     function ctxFor(game) {
       var D = A.D, kind = p('kind', game, 'land');
       if (!ENC_KINDS.some(function (x) { return x.id === kind; })) kind = 'land';
@@ -94,26 +154,149 @@
       var mapId = p('map', game, maps.length ? maps[0].map : null);
       var m = maps.filter(function (x) { return x.map === mapId; })[0] || maps[0] || null;
       var from = Math.max(0, Number(p('from', game, 0)) || 0);
-      return { D: D, game: game, kind: kind, maps: maps, m: m, from: from, count: 20 };
+      var spanRaw = Number(p('span', game, SPAN_DEFAULT)) || SPAN_DEFAULT;
+      var span = Math.min(SPAN_MAX, Math.max(1, Math.floor(spanRaw)));
+      var landed = landedFor(game);
+      return { D: D, game: game, kind: kind, maps: maps, m: m, from: from, count: 20, span: span,
+               want: wantFor(game), landed: landed,
+               // an advance count is a count of RNG calls on one route through one map: the attempt recorded
+               // somewhere else is not on the same axis and the table must not pretend otherwise
+               rel: !!(landed && m && landed.map === m.map && landed.kind === kind) };
+    }
+    // the advance of a row read against the recorded attempt: "+3" is three advances later than the runner
+    // managed last time. A distance, never a duration - see relNoteHtml.
+    function relCell(c, n) {
+      if (!c.rel) return '';
+      var d = n - c.landed.advance;
+      return '<td>' + (d === 0 ? 'your attempt' : (d > 0 ? '+' : '-') + Math.abs(d)) + '</td>';
     }
     function tableHtml(c) {
       if (!c.m) return '<p class="muted">No map in this game has that kind of encounter.</p>';
       var rows;
       try { rows = encountersAt(c.D, c.game, c.m, c.kind, c.from, c.count); }
-      catch (e) { return '<p class="muted">' + esc(A.errMsg ? A.errMsg(e) : String(e.message || e)) + '</p>'; }
-      var d = data(c.D);
-      var h = '<table class="tbl"><tr><th>Advance</th><th>Pokemon</th><th>Lv</th><th>Nature</th><th>IVs (HP/At/Df/SA/SD/Sp)</th></tr>';
+      catch (e) { return '<p class="muted">' + esc(errText(e)) + '</p>'; }
+      var h = '<table class="tbl"><tr><th>Advance</th>' + (c.rel ? '<th>vs your attempt</th>' : '')
+        + '<th>Pokemon</th><th>Lv</th><th>Nature</th><th>IVs (HP/At/Df/SA/SD/Sp)</th></tr>';
+      var none = 0;
       for (var i = 0; i < rows.length; i++) {
-        var r = rows[i], sp = d.species[String(r.species)];
-        h += '<tr><td>' + (c.from + i) + '</td><td>' + esc(sp ? (sp.name || sp.constant) : String(r.species)) + '</td><td>'
+        var r = rows[i], n = c.from + i, tr = '<tr' + (c.rel && n === c.landed.advance ? ' class="sel"' : '') + '><td>' + n + '</td>' + relCell(c, n);
+        // not every advance produces an encounter: Rock Smash rolls its odds first, and the generator
+        // reports that as {valid:false, reason}. Say so rather than rendering a half-built row.
+        if (!r || r.valid === false || !r.ivArray) {
+          none++;
+          h += tr + '<td colspan="4" class="muted">no encounter'
+            + (r && r.reason ? ' (' + esc(String(r.reason).replace(/_/g, ' ')) + ')' : '') + '</td></tr>';
+          continue;
+        }
+        h += tr + '<td>' + esc(speciesName(c.D, r.species)) + '</td><td>'
           + r.level + '</td><td>' + esc(r.natureName) + '</td><td>' + r.ivArray.join('/') + '</td></tr>';
       }
-      return h + '</table>';
+      h += '</table>';
+      if (none === rows.length) h += '<p class="warn">No advance in this window produces an encounter here. '
+        + 'Rock Smash rolls its odds before anything else, so most advances fail it.</p>';
+      return h;
+    }
+    // the recorded attempt, above the table: what it was, and what the comparison column does and does not mean
+    function relNoteHtml(c) {
+      var L = c.landed;
+      if (!L) return '<p class="small muted">No attempt recorded yet, so the advance column is the raw count from the boot seed. '
+        + 'Record one in <b>4</b> below and this table can also be read against it.</p>';
+      var h = '<p class="small">Your recorded attempt: advance <b>' + L.advance + '</b> on ' + esc(L.mapName || L.map)
+        + ' (' + esc(kindLabel(L.kind)) + ') - ' + esc(speciesName(c.D, L.species)) + ' Lv ' + L.level + ', ' + esc(natureName(L.nature))
+        + (L.ivs ? ', IVs ' + esc(L.ivs) : '') + '. '
+        + '<button type="button" class="secondary small" data-g3e-show-landed="1">show the table around it</button> '
+        + '<button type="button" class="secondary small" data-g3e-forget="1">forget it</button></p>';
+      if (!c.rel) return h + '<p class="warn">It was recorded on ' + esc(L.mapName || L.map) + ' (' + esc(kindLabel(L.kind))
+        + ') and this table is ' + esc(c.m ? c.m.name : '-') + ' (' + esc(kindLabel(c.kind)) + '). A different map or a different '
+        + 'encounter type is a different trip through the RNG, so the two advance counts do not belong on one axis and the '
+        + 'comparison column is left out.</p>';
+      return h + '<p class="small muted">The <b>vs your attempt</b> column is that row minus your advance: <b>+n</b> is n advances '
+        + 'later than you managed, <b>-n</b> is n earlier. That is all the offset buys you. The page still cannot say what to change '
+        + 'to move by n advances, because how many advances separate a press from the encounter - and how fast they pass - is exactly '
+        + 'what has not been measured for these games.</p>';
+    }
+    // the species the runner can possibly have got here: this map's own slot list for this kind, so the picker
+    // cannot offer a Pokemon the table could never produce
+    function speciesChoices(c) {
+      var slots = slotsOf(c.D, c.m, c.kind) || [], seen = {}, out = [];
+      for (var i = 0; i < slots.length; i++) {
+        var sp = slots[i].species, key = String(sp.dex);
+        if (seen[key]) continue;
+        seen[key] = 1;
+        out.push({ id: key, title: sp.name || sp.constant });
+      }
+      out.sort(function (a, b) { return a.title < b.title ? -1 : a.title > b.title ? 1 : 0; });
+      return out;
+    }
+    // everything about a candidate a person could still check on the Pokemon they caught: its level, its
+    // nature and its IVs. Not the PID or the advance, which nothing in the game shows.
+    function checkableKey(r) { return r.level + '/' + r.nature + '/' + (r.ivArray ? r.ivArray.join('/') : '?'); }
+    // Several advances can generate the same species, and some of them generate the SAME Pokemon: the PID
+    // loop rerolls until the personality matches the nature it drew, so it consumes a variable number of
+    // calls and two advances can arrive at the same PID and IV state (ruby, Meteor Falls 1F 1R, advances 267
+    // and 275 are one such pair). Those are not separable by any check, and the page says so instead of
+    // offering a tie-break that does not exist.
+    function disambiguateHtml(c, hits) {
+      var seen = {}, i, unique = 0;
+      for (i = 0; i < hits.length; i++) { var k = checkableKey(hits[i]); seen[k] = (seen[k] || 0) + 1; }
+      for (i = 0; i < hits.length; i++) if (seen[checkableKey(hits[i])] === 1) unique++;
+      var h = '<p class="small"><b>What tells them apart.</b> ' + (unique === hits.length
+        ? 'Every candidate above differs from the others in its level, nature or IVs, so the Pokemon you caught is exactly one of them: put its stats through an IV calculator, or read the save in PKHeX, and the row is decided.'
+        : unique + ' of the ' + hits.length + ' candidates can be told apart that way (by level, nature and IVs). The rest fall into groups that generate the '
+          + 'same Pokemon at different advances, and no check on the Pokemon can separate the members of a group.');
+      if (c.want.nature == null) h += ' The nature is blank: filling it in, if you can still check it, usually cuts the list sharply.';
+      if (c.want.level == null) h += ' So does the level.';
+      return h + '</p><p class="small muted">Running the manip a second time does not settle it on its own. Two candidate lists can only be '
+        + 'lined up against each other if you know how many advances pass between attempts, and that rate has not been measured here. '
+        + 'What narrows the list is another fact about the Pokemon you already have.</p>';
+    }
+    // 4. the loop the page prescribes: an observed encounter in, the advance(s) that generate it out.
+    function matchPanelHtml(c) {
+      if (!c.m) return '<p class="muted">No map in this game has that kind of encounter.</p>';
+      var h = '<p class="small">Run the manip once on <b>' + esc(c.m.name) + '</b> (' + esc(kindLabel(c.kind)) + '), then say what you actually got. '
+        + 'The page generates the same table again and reports every advance in the search window that produces it - that advance is where '
+        + 'your own routine lands, which is the number this data cannot supply. Leave a field blank if you do not know it.</p>';
+      var choices;
+      try { choices = speciesChoices(c); } catch (e) { return h + '<p class="muted">' + esc(errText(e)) + '</p>'; }
+      h += A.select('g3e-got-species', [{ id: '', title: '(not set)' }].concat(choices),
+        c.want.species == null ? '' : String(c.want.species), 'Pokemon you got');
+      h += '<div class="row"><label class="field">Level<input type="number" min="1" max="100" id="g3e-got-level" value="'
+        + (c.want.level == null ? '' : c.want.level) + '"></label>'
+        + A.select('g3e-got-nature', [{ id: '', title: '(not known)' }].concat(core.NATURES.map(function (n, i) { return { id: String(i), title: n }; })),
+            c.want.nature == null ? '' : String(c.want.nature), 'Nature')
+        + '<label class="field">Search advance 0 to<input type="number" min="1" max="' + SPAN_MAX + '" id="g3e-span" value="' + c.span + '"></label></div>'
+        + (c.span >= SPAN_MAX ? '<p class="small muted">The window stops at ' + SPAN_MAX.toLocaleString() + ' advances: the search runs while the page is drawn, and a wider one would simply stall it. If your attempt is not in here, the advance count is larger than this page can usefully enumerate.</p>' : '');
+      if (c.want.species == null) return h + '<p class="small muted">Pick the Pokemon first: with no species every advance matches and the answer says nothing.</p>';
+      var hits;
+      try { hits = matchesFor(c.D, c.game, c.m, c.kind, c.want, 0, c.span); }
+      catch (e) { return h + '<p class="muted">' + esc(errText(e)) + '</p>'; }
+      var what = speciesName(c.D, c.want.species) + (c.want.level == null ? '' : ' Lv ' + c.want.level)
+        + (c.want.nature == null ? '' : ' ' + natureName(c.want.nature));
+      if (!hits.length) return h + '<p class="warn">No advance between 0 and ' + (c.span - 1) + ' generates ' + esc(what) + ' here. '
+        + 'Either your attempt fell outside the search window, or it was not this map or this encounter type. Widen the window, or check 1 and 2.</p>';
+      var shown = hits.slice(0, MATCH_ROWS);
+      // "All of them are listed" was printed unconditionally, forty rows above a line saying how many were NOT
+      // listed. Say which it is.
+      h += '<p class="' + (hits.length === 1 ? 'good' : 'warn') + '">' + (hits.length === 1
+        ? 'One advance between 0 and ' + (c.span - 1) + ' generates ' + esc(what) + ': advance ' + hits[0].frame + '.'
+        : hits.length + ' advances between 0 and ' + (c.span - 1) + ' generate ' + esc(what) + '. '
+          + (hits.length > shown.length ? 'The first ' + shown.length + ' are listed below.' : 'All of them are listed.')
+          + ' This page will not pick one for you.') + '</p>';
+      h += '<div class="scroll"><table class="tbl"><tr><th>Advance</th><th>Lv</th><th>Nature</th><th>IVs (HP/At/Df/SA/SD/Sp)</th><th></th></tr>'
+        + shown.map(function (r) {
+            return '<tr' + (c.rel && c.landed.advance === r.frame ? ' class="sel"' : '') + '><td>' + r.frame + '</td><td>' + r.level
+              + '</td><td>' + esc(r.natureName) + '</td><td>' + (r.ivArray ? r.ivArray.join('/') : '') + '</td>'
+              + '<td><button type="button" class="secondary small" data-g3e-landed="' + r.frame + '">this was mine</button></td></tr>';
+          }).join('') + '</table></div>';
+      if (hits.length > shown.length) h += '<p class="small muted">' + (hits.length - shown.length)
+        + ' further candidates are not listed. Narrow the search window, or fill in the level and nature.</p>';
+      if (hits.length > 1) h += disambiguateHtml(c, hits);
+      return h;
     }
     function render(el, game) {
       var D = A.D, c;
       try { c = ctxFor(game); } catch (e) {
-        el.innerHTML = A.card('<h3>Not derived for this game</h3><p class="small">' + esc(A.errMsg ? A.errMsg(e) : String(e.message || e)) + '</p>');
+        el.innerHTML = A.card('<h3>Not derived for this game</h3><p class="small">' + esc(errText(e)) + '</p>');
         return;
       }
       var d = data(D), sm = d.seed_model;
@@ -124,9 +307,12 @@
         + 'On a <b>dead battery</b> the clock returns its dummy value every boot, so the seed is the same number every '
         + 'time - <b>' + deadBatterySeed(D) + '</b> (0x' + deadBatterySeed(D).toString(16).toUpperCase() + ') - and the table below is fixed.</p>'
         + '<p class="small"><b>What is missing, and it matters.</b> ' + esc(d.not_derived[0]) + '</p>'
-        + '<p class="small muted">So read this as "advance n gives this", not "press at this second". Run the manip once, '
-        + 'find what you got in the table, and the advance it sits at is your own offset - after which the same table '
-        + 'tells you how much earlier or later to act.</p>');
+        + '<p class="small muted">So read this as "advance n gives this", not "press at this second". Run the manip once, type what you got '
+        + 'into <b>4</b>, and the page finds the advance that produces it: that advance is where your own routine lands, and the table above '
+        + 'it is then read as "this many advances earlier or later than you managed".</p>'
+        + '<p class="small muted">What it still will not do, in either direction: turn an advance into a moment. There is no second, no frame '
+        + 'count and no beep on this page, because the advances-per-press figure has not been derived for these games. The offset tells you how '
+        + 'far a row is from where you landed; it does not tell you what to do differently to get there.</p>');
       h += A.card('<h3>Why only Ruby and Sapphire</h3>'
         + '<p class="small muted"><b>Emerald.</b> ' + esc(sm.emerald.why) + '</p>'
         + '<p class="small muted"><b>FireRed / LeafGreen.</b> ' + esc(sm['firered-leafgreen'].why) + '</p>');
@@ -136,7 +322,8 @@
       h += A.card('<h3>2. Where</h3>'
         + A.select('g3e-map', c.maps.map(function (m) { return { id: m.map, title: m.name }; }), c.m ? c.m.map : '', 'Map')
         + '<label class="field">First advance to show<input type="number" min="0" id="g3e-from" value="' + c.from + '"></label>');
-      h += A.card('<h3>3. What you would get</h3>' + tableHtml(c));
+      h += A.card('<h3>3. What you would get</h3>' + relNoteHtml(c) + tableHtml(c));
+      h += A.card('<h3>4. What did you get?</h3>' + matchPanelHtml(c));
       h += A.card('<h3>Credit</h3>'
         + '<ul class="plain small">' + d.credits.map(function (cr) {
             return '<li><b>' + esc(cr.who) + '</b> - ' + esc(cr.role) + '.<br>' + esc(cr.what)
@@ -148,25 +335,62 @@
           ['Reseeds on Continue', String(sm['ruby-sapphire'].reseeded_on_continue)],
           ['Encounter engine', 'ShinyGenerators.gen3Wild (Gen 3 Wild Method H)'],
           ['Encounter tables', 'pret pokeruby commit ' + gameOf(D, game).commit],
+          ['Your attempt', c.landed ? 'advance ' + c.landed.advance + ' on ' + (c.landed.mapName || c.landed.map) + ' (' + kindLabel(c.landed.kind) + '), recorded on this device'
+            : 'not recorded; the advance offset is not known for your routine'],
           ['Species carried', String(d.species_count)], ['Source', d.source]])
         + A.details('Seed citations', '<ul class="plain small">' + sm['ruby-sapphire'].citations.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>')
         + A.details('What has NOT been derived (' + d.not_derived.length + ')', '<ul class="plain small">' + d.not_derived.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>'));
       el.innerHTML = h;
     }
+    // the runner accepts one of the candidate advances as their own. What gets stored is the row the engine
+    // generates at that advance, not what they typed: a blank nature or level would otherwise be stored as
+    // blank and printed as blank for ever after.
+    function recordLanded(game, n) {
+      var c = ctxFor(game);
+      if (!c.m || !isFinite(n) || n < 0) return null;
+      var row = encountersAt(c.D, c.game, c.m, c.kind, n, 1)[0];
+      if (!row || row.valid === false || !row.ivArray) return null;   // an advance with no encounter is nobody's attempt
+      var o = {};
+      o['landed.' + game] = { advance: n, map: c.m.map, mapName: c.m.name, kind: c.kind,
+        species: row.species, level: row.level, nature: row.nature, ivs: row.ivArray.join('/') };
+      A.setPref(SEC, o);
+      return 'render';
+    }
     function onEvent(ev, game) {
       var t = ev.target;
       if (ev.type === 'click') {
         var k = t.closest('[data-choice="g3e-kind"]');
-        if (k) { var o = {}; o['kind.' + game] = k.getAttribute('data-id'); o['map.' + game] = undefined; A.setPref(SEC, o); return 'render'; }
+        // the species picker lists the slots of ONE map and kind, so the choice cannot outlive them: it used to,
+        // and the panel went on searching for a species the new map has no slot for while the picker showed
+        // nothing selected
+        if (k) { var o = {}; o['kind.' + game] = k.getAttribute('data-id'); o['map.' + game] = undefined; o['gotSpecies.' + game] = undefined; A.setPref(SEC, o); return 'render'; }
+        var lb = t.closest('[data-g3e-landed]');
+        if (lb) return recordLanded(game, Number(lb.getAttribute('data-g3e-landed')));
+        if (t.closest('[data-g3e-show-landed]')) {
+          var L = landedFor(game);
+          // five rows of lead-in, so the recorded advance sits inside the window rather than at its edge
+          if (L) { var o4 = {}; o4['from.' + game] = Math.max(0, L.advance - 5); A.setPref(SEC, o4); }
+          return 'render';
+        }
+        if (t.closest('[data-g3e-forget]')) { var o5 = {}; o5['landed.' + game] = undefined; A.setPref(SEC, o5); return 'render'; }
       } else {
-        if (t.id === 'g3e-map') { var o2 = {}; o2['map.' + game] = t.value; A.setPref(SEC, o2); return 'render'; }
+        if (t.id === 'g3e-map') { var o2 = {}; o2['map.' + game] = t.value; o2['gotSpecies.' + game] = undefined; A.setPref(SEC, o2); return 'render'; }
         if (t.id === 'g3e-from') { var o3 = {}; o3['from.' + game] = Number(t.value); A.setPref(SEC, o3); return 'render'; }
+        // a blank field is stored as undefined, which setPref deletes: "I do not know it" is not "0"
+        if (t.id === 'g3e-got-species') { var o6 = {}; o6['gotSpecies.' + game] = t.value === '' ? undefined : Number(t.value); A.setPref(SEC, o6); return 'render'; }
+        if (t.id === 'g3e-got-level') { var o7 = {}; o7['gotLevel.' + game] = t.value === '' ? undefined : Number(t.value); A.setPref(SEC, o7); return 'render'; }
+        if (t.id === 'g3e-got-nature') { var o8 = {}; o8['gotNature.' + game] = t.value === '' ? undefined : Number(t.value); A.setPref(SEC, o8); return 'render'; }
+        if (t.id === 'g3e-span') { var o9 = {}; o9['span.' + game] = Number(t.value); A.setPref(SEC, o9); return 'render'; }
       }
       return null;
     }
     A.registerMode({ id: 'gen3-enc', title: 'Wild encounters (dead battery)', games: ['ruby', 'sapphire'],
       render: render, onEvent: onEvent,
-      line: function () { return 'seed-derived; the advance offset is yours to calibrate'; },
+      line: function (game) {
+        var L = landedFor(game);
+        return L ? 'seed-derived; your attempt landed on advance ' + L.advance + ', and the table is read against it'
+                 : 'seed-derived; the advance offset is yours to calibrate';
+      },
       sub: function (game) { try { return gameOf(A.D, game).map_count + ' maps'; } catch (e) { return null; } } });
   }
   return pure;

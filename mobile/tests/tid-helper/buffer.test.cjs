@@ -186,7 +186,18 @@ test('verification wording is the data\'s; set search returns >= 10 rows, simple
     assert.ok(ka[0] < kb[0] || (ka[0] === kb[0] && (ka[1] < kb[1] || (ka[1] === kb[1] && ka[2] <= kb[2]))), 'sorted at ' + i);
   }
   for (const row of r.rows) assert.equal(row.entry.seq, E.BD.lookup(D.buffer, 'red', 'gbp', row.tid).entries[0].seq, 'the row is the table\'s own best entry');
-  const cues = B.cueProgram(E.G1, H.page('page-storyboard.js').bufferTimeline(D, E.BD, 'red', 'gbp', B.lookup(D, E.BD, 'red', 'gbp', 16589).entries[0]), 0);
-  assert.deepEqual(cues.map((c) => c.label), ['gfskip', 'hop0', 'title1', 'A', 'rolled']);
+  // This sequence is gfskip_hop0_title1_newgame. hop0 straight after gfskip is the Game Freak skip still being
+  // held, not a press - so its tone says keep holding and carries the low HOLD tone, while the presses either
+  // side carry the mark tone. The assertion used to read 'hop0' here, which is what a press cue on a do-nothing
+  // step looks like when a test is written from the code rather than from the grammar.
+  const tl16589 = H.page('page-storyboard.js').bufferTimeline(D, E.BD, 'red', 'gbp', B.lookup(D, E.BD, 'red', 'gbp', 16589).entries[0]);
+  const cues = B.cueProgram(E.G1, tl16589, 0);
+  assert.deepEqual(cues.map((c) => c.label), ['gfskip', 'keep holding', 'title1', 'A', 'rolled']);
+  assert.deepEqual(cues.map((c) => c.kind), ['mark', 'keep', 'mark', 'A', 'rolled']);
+  assert.equal(cues[1].freq, E.G1.HOLD_TONE[0], 'the do-nothing step is not given a press tone');
   assert.equal(cues[3].freq, E.G1.A_CUE_TONE[0]);
+  // the roll is an event with nothing on screen and nothing to do, so it carries neither the press tone nor the
+  // press flash - it used to carry both, which is what a marker for "it is over" must not look like
+  assert.equal(cues[4].freq, E.G1.RESET_BEAT_TONE[0], 'the roll is not given a press tone');
+  assert.notEqual(cues[4].freq, E.G1.MENU_MARK_TONE[0]);
 });

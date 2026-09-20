@@ -101,10 +101,16 @@ test('the printed script tells a person what is timed and to hold the A out', ()
   assert.match(lines, /START/);
   // a route with a wait must name the poll window; one without must say so
   const withWait = pick((r) => r.waitFrames > 0);
-  assert.match(M.scriptLines(D, withWait).join(' '), /land inside a 4-frame window/);
+  // the window is 4 frames but NOT centred on the printed value: measured -2..+1 on 100% of routes
+  assert.match(M.scriptLines(D, withWait).join(' '), /2 frames early or only 1 frame late/);
+  assert.match(M.scriptLines(D, withWait).join(' '), /NOT centred on the number above/);
   // the first plateau starts at power-on, so its script must not ask for a timed START
+  // found by content, not by index: the script gained a line naming the game and clock state it is for, and a
+  // positional assertion turns that into a failure in a test about something else entirely
   const onPlateau0 = pick((r) => r.plateauIndex === 0);
-  assert.match(M.scriptLines(D, onPlateau0)[1], /nothing to time here/);
+  const holdLine = M.scriptLines(D, onPlateau0).filter((l) => /Hold START|Press START/.test(l))[0];
+  assert.ok(holdLine, 'the script says what to do with START');
+  assert.match(holdLine, /nothing to time here/);
   }
 });
 
@@ -151,7 +157,9 @@ test('the wait is printed from the VISIBLE menu box, not the detector 4 frames e
     // the stored W counts from the detector; the box is 4 frames later, so the printed number is W-4
     assert.match(line, new RegExp('Wait ' + (r.waitFrames - 4) + ' frames'),
       game + ': the printed wait must be the stored ' + r.waitFrames + ' minus the 4-frame menu lag - ' + line);
-    assert.match(line, new RegExp('stored as ' + r.waitFrames + ' frames'), game + ': and must say what the stored figure is');
+    // and it must name which button ends the wait - it is NOT always A
+    assert.match(line, new RegExp('press ' + M.waitEndButton(r)), game + ': the timed line names the button - ' + line);
+    assert.match(line, /THE ONE TIMED PRESS/, game + ': the timed press is called out as the one timed thing');
   }
 });
 
@@ -160,9 +168,11 @@ test('the OPTION step states the DOWN-to-A gap, which is timed', () => {
     const m = M.meth(D, game);
     const r = (() => { for (let t = 0; t <= 0xFFFF; t++) { const x = M.routeFor(D, t, game); if (x && x.opt) return x; } })();
     if (!r) continue;
-    const line = M.scriptLines(D, r).find((x) => /OPTION/.test(x));
-    assert.match(line, new RegExp('A ' + m.option_down_to_a_frames + ' frames later'), game + ': the OPTION line gives the gap - ' + line);
-    assert.match(line, /timed/, game + ': and says it is timed');
+    // the wait line also mentions OPTION now, so find the line that gives the DOWN-to-A gap specifically
+    const line = M.scriptLines(D, r).find((x) => new RegExp('A ' + m.option_down_to_a_frames + ' frames later').test(x));
+    assert.ok(line, game + ': a line gives the DOWN-to-A gap');
+    assert.match(line, /cue sounds a second time/, game + ': and says the second press is cued too');
+    assert.equal(M.waitEndButton(r), 'DOWN', game + ': an OPTION route ends its wait on DOWN, not A');
   }
 });
 
@@ -182,7 +192,19 @@ test('the step list says the console is powered off first, so frame 0 has a mean
     const m = M.meth(D, game);
     assert.match(m.steps[0], /POWER THE CONSOLE OFF|power the console off/i, game + ': step 1 establishes the frame-0 origin');
     const r = (() => { for (let t = 0; t <= 0xFFFF; t++) { const x = M.routeFor(D, t, game); if (x) return x; } })();
-    assert.match(M.scriptLines(D, r)[0], /turn the console OFF/i, game + ': and the printed script says so too');
+    const lines = M.scriptLines(D, r);
+    assert.ok(lines.some((l) => /turn the console OFF/i.test(l)), game + ': and the printed script says so too');
+    // the very first line names the game and the cartridge clock: a script read away from the screen has to
+    // say which cartridge it is for, because the three games' hold plateaus are in different places
+    assert.match(lines[0], new RegExp(M.meth(D, game).game.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), game + ': the script names its game first');
+    // only where the clock actually selects a table. Gold and Silver pick by the day bracket; Crystal is immune
+    // (gen2-tid.json rtc.crystal), so naming a clock state on a Crystal script asserts what the data denies.
+    const clockDependent = !!M.meth(D, game).rtc_tables;
+    if (clockDependent) assert.match(lines[0], /cartridge clock in state/, game + ': and the clock state it assumes');
+    else {
+      assert.doesNotMatch(lines[0], /clock in state/, game + ': Crystal has no clock state to name');
+      assert.match(lines[0], /does not depend on the cartridge clock/, game + ': and it says so');
+    }
   }
 });
 
@@ -308,4 +330,58 @@ test('only the RTC-dependent games carry extra clock states, and each is a compl
       game + ': days0 and days512 should give different routes for nearly every Trainer ID, got ' + differing + '/' + compared);
     assert.equal(M.routeFor(D, 0x1234, game, 'gbp', 'days0').rtcState, 'days0', game + ': the route reports its state');
   }
+});
+
+// ---- the cue: the aid whose absence made this mode unusable ------------------------------------------
+test('every covered route can build a cue, and it aims at the middle of the real window', () => {
+  const G1 = H.engines().G1 || require('../../../src/lib/shiny/gen1tid.js');
+  for (const game of GAMES) {
+    const m = M.meth(D, game);
+    let built = 0, uncueable = 0;
+    for (let t = 0; t < 65536; t += 211) {
+      const r = M.routeFor(D, t, game);
+      if (!r) continue;
+      const c = M.cueProgram(G1, D, r, 0, 4, 1.0);
+      if (!c) { uncueable++; continue; }
+      built++;
+      // a very short wait leaves no room for count-in beeps, so the press tone may be alone; what must
+      // always be there is the press itself, and countInCues reports what it had to drop
+      assert.ok(c.cues.length >= 1, game + ': a cue always has the press tone');
+      assert.ok(typeof c.dropped === 'number', game + ': dropped count-in beeps are reported, not silent');
+      // sorted, because the engine does not sort and overlap resolution depends on order
+      for (let i = 1; i < c.cues.length; i++) assert.ok(c.cues[i].t >= c.cues[i - 1].t, game + ': cues are sorted by t');
+      // the press tone carries the button that actually ends the wait
+      const press = c.cues.filter((x) => x.kind === 'A' || x.kind === 'press');
+      assert.ok(press.length >= 1, game + ': there is a press tone');
+      assert.equal(press[0].label, M.waitEndButton(r), game + ': the tone is labelled with the button to press');
+      if (r.opt) assert.equal(press.length, 2, game + ': an OPTION route gets a second tone for the A');
+      // the cue aims half a frame EARLIER than the printed wait, to centre the -2..+1 window
+      const f = 4194304 / 70224, lag = 4;
+      const naive = (r.waitFrames - lag) / f;
+      assert.ok(Math.abs(c.tPress - (naive - 0.5 / f)) < 1e-9,
+        game + ': the cue targets the window centre, not the printed value');
+    }
+    assert.ok(built > 200, game + ': built enough cues, got ' + built);
+    assert.ok(uncueable < built / 50, game + ': almost every route is cueable, ' + uncueable + ' were not');
+  }
+});
+
+test('the measured window is recorded, and is asymmetric', () => {
+  assert.deepEqual(M.WAIT_WINDOW, { early: 2, late: 1 },
+    'measured on 2,003 routes: a press works from W-2 to W+1 and nowhere else');
+  // a symmetric reading of it would be wrong, which is what the old text said
+  assert.notEqual(M.WAIT_WINDOW.early, M.WAIT_WINDOW.late);
+});
+
+test('the button that ends the wait is DOWN or B far more often than A', () => {
+  const seen = { DOWN: 0, B: 0, A: 0 };
+  for (let t = 0; t < 65536; t += 97) {
+    const r = M.routeFor(D, t, 'crystal');
+    if (r) seen[M.waitEndButton(r)]++;
+  }
+  const tot = seen.DOWN + seen.B + seen.A;
+  assert.ok(tot > 500);
+  // this is why telling someone to time "the A press" is wrong: it is not the timed press on most routes
+  assert.ok((seen.DOWN + seen.B) / tot > 0.7,
+    'most routes end the wait on DOWN or B, not A: ' + JSON.stringify(seen));
 });

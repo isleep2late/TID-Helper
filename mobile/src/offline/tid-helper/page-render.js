@@ -112,7 +112,24 @@
       A.Cue.sound = A.pref('cue', 'sound', true) !== false;
       document.addEventListener('click', onClick);
       document.addEventListener('input', onInput);
-      document.addEventListener('change', function (ev) { if (ev.target && (ev.target.tagName === 'SELECT' || ev.target.type === 'date' || ev.target.type === 'time')) onInput(ev); });
+      // 'change' used to reach a mode only from a SELECT or a date / time input, on the reasoning that those are
+      // the controls whose value arrives in one piece. But a mode that wants a text or number field's COMMITTED
+      // value - rather than one event per keystroke, which would re-render the field out from under the caret -
+      // then had nothing to listen to at all: the SC Metronome's "Interval (ms)" and "Attempt every (s)" handlers
+      // both open with `if (ev.type !== 'change') return null`, so every number typed into them was dropped on the
+      // floor while the field went on displaying it.
+      // It is forwarded for the controls where 'change' says something 'input' does not - a value that is TYPED,
+      // arriving a keystroke at a time on 'input' and complete on 'change' - and not for the rest. A checkbox or
+      // radio fires both events for one click with the same value each time, so forwarding those would hand a mode
+      // two events for one act: the first cut of this fix did exactly that, and the metronome's sound and flash
+      // toggles began saving twice and re-rendering twice per click.
+      var TYPED = { text: 1, number: 1, search: 1, tel: 1, url: 1, email: 1, password: 1, date: 1, time: 1 };
+      document.addEventListener('change', function (ev) {
+        var t = ev.target;
+        if (!t) return;
+        if (t.tagName === 'SELECT' || t.tagName === 'TEXTAREA') return onInput(ev);
+        if (t.tagName === 'INPUT' && TYPED[t.type]) return onInput(ev);
+      });
       root.addEventListener('resize', function () { A.widgets.refit(); });
       var nav = A.prefs.nav;
       if (A.isObj(nav) && nav.game && nav.mode && A.modes[nav.mode] && A.modes[nav.mode].games.indexOf(nav.game) !== -1) { A.screen = 'mode'; A.game = nav.game; A.mode = nav.mode; }
