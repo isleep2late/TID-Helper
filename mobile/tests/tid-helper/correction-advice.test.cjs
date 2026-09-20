@@ -8,9 +8,20 @@
 //    minus is gone. "-170" therefore became +170: the cue fired 170 ms LATER when the runner needed it
 //    170 ms EARLIER. Ten attempts on a GBA SP were spent on that. The rule is now: a typed field never
 //    returns 'render'.
-// 2. THE ADVICE MUST ADD BACK THE CORRECTION ALREADY APPLIED. If you are 10 frames late, dial in -10 and
-//    are then 3 frames late, your intrinsic lateness is 13, not 3. Averaging raw errors converges to
-//    nothing; averaging (error - correctionApplied) converges at once.
+// 2. THE ADVICE MUST ADD BACK THE CORRECTION ALREADY APPLIED. If you are 10 frames late, dial in the
+//    correction and are then 3 frames late, your intrinsic lateness is 13, not 3. Averaging raw errors
+//    converges to nothing.
+// 3. THE SIGN OF BOTH OF THOSE, which was inverted until 2026-09-20 in BOTH the psr page and the shared
+//    A.attempts component. The house convention (page-gen1-buffer.js, page-gen3-rs.js, rs.test.cjs) is
+//    that the cue fires at press - correction, so POSITIVE cues EARLIER and a late presser needs a
+//    POSITIVE number. The recommender returned a negative one AND subtracted the applied correction
+//    instead of adding it, and the two mistakes compounded instead of cancelling: over four real rounds
+//    on a GBA SP the advice went -170 -> -639 -> -1175 -> -2151 ms while the error went 28 -> 116 frames
+//    LATE. Every round made it worse and the app kept confidently recommending more.
+//
+// The sign tests below therefore run the REAL recommender against the REAL cue program and check the
+// loop CLOSES. The previous version of this file reimplemented the arithmetic inline, which is why it
+// passed green through all four of those divergent attempts: it was testing a copy, not the code.
 const test = require('node:test');
 const assert = require('node:assert');
 const path = require('path');
@@ -58,50 +69,103 @@ test('the cue program reads the correction live, not from a render-time capture'
     'the correction must be read from prefs inside program(), or not re-rendering leaves the tones stale');
 });
 
-// ---- the advice maths, against the owner's real GBA SP attempts -------------------------------------
-const App = { prefs: {} };
-function recommend(attempts, fps) {
-  // the same arithmetic A.attempts.recommend does, exercised directly
-  const msPerFrame = 1000 / fps;
-  const used = attempts.map(a => a.errorFrames - (a.corrMs || 0) / msPerFrame);
-  const mean = used.reduce((x, y) => x + y, 0) / used.length;
-  return { mean, ms: -Math.round(mean * msPerFrame) };
+// ---- the advice maths, run against the REAL functions ----------------------------------------------
+const H = require('./helpers.cjs');
+const D = H.data();
+const M = H.page('page-gen2-psr.js');
+const G1 = H.engines().G1 || require('../../../src/lib/shiny/gen1tid.js');
+const TARGET = 28489;                       // the owner's route: plateau 11, two backouts
+const m = M.meth(D, 'crystal');
+const route = M.routeFor(D, TARGET, 'crystal');
+const FPS = M.fps(D);
+const MS_PER_FRAME = 1000 / FPS;
+
+// A Trainer ID that this route really produces `offset` frames away from the prescribed wait, taken from
+// the shipped reverse table - so the tests below are driven by real rolls, not by invented error values.
+function gotAtOffset(offset) {
+  const rev = M.reverseTable(m);
+  const fi = rev.idx[M.famKey(route)];
+  const wi = (route.waitFrames + offset) / rev.step;
+  const tid = M.revTidAt(rev, fi, wi);
+  assert.ok(tid >= 0, 'the reverse table has no roll at offset ' + offset + ', pick another');
+  return tid;
 }
-const FPS = 4194304 / 70224;
 
-test('a late presser is told to cue EARLIER (the sign that was backwards on hardware)', () => {
-  const r = recommend([{ errorFrames: +8, corrMs: 0 }], FPS);
-  assert.ok(r.mean > 0, 'a late press is a positive error');
-  assert.ok(r.ms < 0, 'the correction for a late press must be NEGATIVE (cue earlier)');
-  assert.strictEqual(r.ms, -134);
+test('a late presser is told to cue EARLIER, and the cue actually moves earlier by that much', () => {
+  const LATE = 8;
+  const rec = M.recommendCorrection(D, m, route, [{ got: gotAtOffset(LATE), corrMs: 0 }]);
+  assert.equal(rec.n, 1);
+  assert.ok(rec.meanFrames > 0, 'a late press is a positive error');
+  assert.ok(rec.ms > 0, 'the correction for a late press must be POSITIVE - positive cues earlier');
+  assert.strictEqual(rec.ms, Math.round(LATE * MS_PER_FRAME));
+  // THE CLOSED LOOP: feed the recommendation to the real cue and check the press tone moved EARLIER,
+  // by the error it was meant to cancel. This is the assertion the old inline version could not make.
+  const base = M.cueProgram(G1, D, route, 0, 4, 1.0).tPress;
+  const fixed = M.cueProgram(G1, D, route, rec.ms, 4, 1.0).tPress;
+  assert.ok(fixed < base, 'the recommendation must move the press tone EARLIER for a late presser');
+  assert.ok(Math.abs((base - fixed) - LATE / FPS) < 0.5 / FPS,
+    'it must move by the measured error, not some other amount');
 });
 
-test('an early presser is told to cue LATER', () => {
-  const r = recommend([{ errorFrames: -6, corrMs: 0 }], FPS);
-  assert.ok(r.ms > 0, 'the correction for an early press must be POSITIVE');
+test('an early presser is told to cue LATER, and the cue moves later', () => {
+  const rec = M.recommendCorrection(D, m, route, [{ got: gotAtOffset(-8), corrMs: 0 }]);
+  assert.ok(rec.meanFrames < 0, 'an early press is a negative error');
+  assert.ok(rec.ms < 0, 'the correction for an early press must be NEGATIVE');
+  const base = M.cueProgram(G1, D, route, 0, 4, 1.0).tPress;
+  const fixed = M.cueProgram(G1, D, route, rec.ms, 4, 1.0).tPress;
+  assert.ok(fixed > base, 'the recommendation must move the press tone LATER for an early presser');
 });
 
-test('the correction already applied is added back, or the advice never converges', () => {
-  // same runner, same 10-frame lateness, measured once raw and once with -10 frames already dialled in
-  const raw = recommend([{ errorFrames: +10, corrMs: 0 }], FPS);
-  const after = recommend([{ errorFrames: 0, corrMs: raw.ms }], FPS);
-  assert.strictEqual(after.ms, raw.ms,
-    'a runner who is now on target WITH a correction applied still needs that same correction');
-  // negative control: ignoring the applied correction would wrongly say "you need nothing"
-  const naive = -Math.round((0 / 1) * (1000 / FPS));
-  assert.notStrictEqual(naive, raw.ms, 'ignoring the applied correction gives 0, which is the bug');
+test('the loop CONVERGES: a runner with a fixed bias is corrected, not driven away', () => {
+  // exactly what happened on hardware: a runner who is consistently N frames late takes the advice each
+  // round. With the signs inverted this walked 20 -> 40 -> 80 frames late. It must walk to zero.
+  const INTRINSIC = 20;                       // frames late, a multiple of the 4-frame poll period
+  let corr = 0;
+  const attempts = [], seen = [];
+  for (let round = 0; round < 4; round++) {
+    // a positive correction cues earlier, so it removes that many frames from the runner's lateness
+    const err = Math.round(INTRINSIC - corr / MS_PER_FRAME);
+    seen.push(err);
+    attempts.push({ got: gotAtOffset(err), corrMs: corr });
+    corr = M.recommendCorrection(D, m, route, attempts).ms;
+  }
+  assert.ok(Math.abs(seen[seen.length - 1]) <= 2,
+    'the error must converge on the target; it went ' + seen.join(' -> ') + ' frames');
+  assert.ok(Math.abs(seen[seen.length - 1]) < Math.abs(seen[0]),
+    'the error must shrink, not grow: ' + seen.join(' -> '));
 });
 
-test("the owner's seven timed GBA SP attempts give a usable bias", () => {
-  const f = 1000 / FPS;
-  const attempts = [
-    { errorFrames: 4, corrMs: 0 }, { errorFrames: 8, corrMs: 0 },
-    { errorFrames: 12, corrMs: 0 }, { errorFrames: 16, corrMs: 0 },
-    { errorFrames: 4, corrMs: 170 }, { errorFrames: 28, corrMs: 170 },
-    { errorFrames: 16, corrMs: 170 },
-  ];
-  const r = recommend(attempts, FPS);
-  assert.ok(r.mean > 5 && r.mean < 12, 'the measured bias was about +8 frames, got ' + r.mean.toFixed(1));
-  assert.ok(r.ms < -100 && r.ms > -180, 'so the advice is about -137 ms, got ' + r.ms);
-  assert.ok(Math.abs(f - 16.74) < 0.01, 'one frame is 16.74 ms');
+test("the owner's four real diverging attempts recover one consistent bias", () => {
+  // got, and the correction that was in the box at the time, straight off the phone on 2026-09-20
+  const real = [[22097, -170], [5901, -639], [27232, -1175], [4010, -1666]];
+  const rec = M.recommendCorrection(D, m, route, real.map(([got, corrMs]) => ({ got, corrMs })));
+  assert.equal(rec.n, 4, 'all four were timing misses on this route');
+  // Under the fixed signs these four collapse onto one bias of about 19-20 frames. Under the broken ones
+  // they read as 128.5 frames with a 177-frame spread, which is what the phone showed.
+  assert.ok(rec.meanFrames > 14 && rec.meanFrames < 25,
+    'the four attempts must recover one consistent bias, got ' + rec.meanFrames.toFixed(1) + ' frames');
+  assert.ok(rec.spreadFrames < 15,
+    'a spread of ' + rec.spreadFrames.toFixed(1) + ' frames means the model still does not fit');
+  assert.ok(rec.ms > 250 && rec.ms < 450, 'the advice should be about +330 ms, got ' + rec.ms);
+});
+
+test('both recommenders agree: the shared component and the psr page use the same signs', () => {
+  const A = H.app();
+  const attempts = [{ got: gotAtOffset(12), corrMs: -100 }];
+  const mine = M.recommendCorrection(D, m, route, attempts);
+  // drive A.attempts.recommend over the same attempts through a locate() backed by the same diagnosis
+  const o = {
+    section: 'test', game: 'crystal', targetKey: String(TARGET), fps: FPS, corrMs: -100,
+    locate: (got) => {
+      const d = M.diagnose(m, route, got);
+      if (d.kind === 'target') return { kind: 'target', errorFrames: 0 };
+      if (d.kind === 'wait') return { kind: 'timing', errorFrames: d.errorFrames };
+      return { kind: 'other' };
+    },
+  };
+  A.attempts.set(o, attempts);
+  const theirs = A.attempts.recommend(o);
+  assert.strictEqual(theirs.ms, mine.ms,
+    'the two implementations disagree (' + theirs.ms + ' vs ' + mine.ms + ') - one of them has the sign back to front');
+  assert.ok(Math.abs(theirs.meanFrames - mine.meanFrames) < 1e-9, 'the two implementations disagree on the bias');
 });

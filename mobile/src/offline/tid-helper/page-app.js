@@ -243,6 +243,18 @@
   function attKey(o) { return 'tries.' + o.game + '.' + o.targetKey; }
   ATT.list = function (o) { var v = pref(o.section, attKey(o)); return Array.isArray(v) ? v : []; };
   ATT.set = function (o, list) { var patch = {}; patch[attKey(o)] = list; setPref(o.section, patch); };
+  // SIGN. The house convention, set by page-gen1-buffer.js ("every beep this much earlier") and
+  // page-gen3-rs.js and pinned by rs.test.cjs, is that the cue fires at press - correction: a POSITIVE
+  // correction cues EARLIER. So a runner who presses late needs a POSITIVE number, and the correction
+  // already applied has moved them EARLIER by that many frames, which is why it is ADDED to the observed
+  // error to recover the intrinsic lateness rather than subtracted.
+  //
+  // Both of those signs were inverted until 2026-09-20 and the two errors did not cancel - they compounded.
+  // A runner 18 frames late was told -170 ms, which cued him 10 frames LATER; the next attempt measured 28
+  // frames late, which the same inverted add-back read as 38 frames of intrinsic lateness and answered with
+  // -639 ms. Four rounds took the advice from -170 to -2151 ms and the error from 28 to 116 frames late.
+  // Any change here must keep the closed-loop test in correction-advice.test.cjs passing: it drives a
+  // simulated runner through several rounds and requires the error to CONVERGE.
   // attempts that locate() could place on the timed axis, converted to intrinsic error in frames
   ATT.recommend = function (o) {
     var msPerFrame = 1000 / o.fps, used = [];
@@ -250,14 +262,14 @@
       var d = o.locate(t.got);
       if (!d || (d.kind !== 'timing' && d.kind !== 'target')) return;
       var err = d.kind === 'target' ? 0 : d.errorFrames;
-      used.push(err - (Number(t.corrMs) || 0) / msPerFrame);
+      used.push(err + (Number(t.corrMs) || 0) / msPerFrame);
     });
     if (!used.length) return { n: 0, msPerFrame: msPerFrame };
     var sum = 0, lo = used[0], hi = used[0];
     used.forEach(function (u) { sum += u; if (u < lo) lo = u; if (u > hi) hi = u; });
     var mean = sum / used.length;
     return { n: used.length, meanFrames: mean, spreadFrames: hi - lo, msPerFrame: msPerFrame,
-             ms: -Math.round(mean * msPerFrame) };
+             ms: Math.round(mean * msPerFrame) };
   };
   ATT.panelHtml = function (o) {
     var id = o.idPrefix, list = ATT.list(o), rec = ATT.recommend(o), out = [];

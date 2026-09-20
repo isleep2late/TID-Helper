@@ -388,6 +388,18 @@
     }
     return others.length ? { kind: 'elsewhere', found: others } : { kind: 'unreachable' };
   }
+  // SIGN. The house convention, set by page-gen1-buffer.js ("every beep this much earlier") and
+  // page-gen3-rs.js and pinned by rs.test.cjs, is that the cue fires at press - correction: a POSITIVE
+  // correction cues EARLIER. So a runner who presses late needs a POSITIVE number, and the correction
+  // already applied has moved them EARLIER by that many frames, which is why it is ADDED to the observed
+  // error to recover the intrinsic lateness rather than subtracted.
+  //
+  // Both of those signs were inverted until 2026-09-20 and the two errors did not cancel - they compounded.
+  // A runner 18 frames late was told -170 ms, which cued him 10 frames LATER; the next attempt measured 28
+  // frames late, which the same inverted add-back read as 38 frames of intrinsic lateness and answered with
+  // -639 ms. Four rounds took the advice from -170 to -2151 ms and the error from 28 to 116 frames late.
+  // Any change here must keep the closed-loop test in correction-advice.test.cjs passing: it drives a
+  // simulated runner through several rounds and requires the error to CONVERGE.
   // Turn a list of attempts into the correction to dial in next.
   // Each attempt is { got: <Trainer ID>, corrMs: <the correction that was in the box at the time> }.
   // The runner's INTRINSIC lateness is what they would do with no correction at all, so the correction
@@ -399,14 +411,14 @@
       var d = diagnose(m, r, attempts[i].got);
       if (d.kind !== 'wait' && d.kind !== 'target') continue;             // a wrong hold window says nothing about press timing
       var errFrames = d.kind === 'target' ? 0 : d.errorFrames;
-      used.push(errFrames - (Number(attempts[i].corrMs) || 0) / msPerFrame);
+      used.push(errFrames + (Number(attempts[i].corrMs) || 0) / msPerFrame);
     }
     if (!used.length) return { n: 0 };
     var sum = 0; for (var j = 0; j < used.length; j++) sum += used[j];
     var mean = sum / used.length, lo = used[0], hi = used[0];
     for (var k = 1; k < used.length; k++) { if (used[k] < lo) lo = used[k]; if (used[k] > hi) hi = used[k]; }
     return { n: used.length, meanFrames: mean, spreadFrames: hi - lo,
-             ms: -Math.round(mean * msPerFrame), msPerFrame: msPerFrame };
+             ms: Math.round(mean * msPerFrame), msPerFrame: msPerFrame };
   }
   function coverage(D, game, platform) { var m = meth(D, game, platform); return m.coverage; }
   var pure = { meth: meth, routeFor: routeFor, routeForPair: routeForPair, lidsFor: lidsFor, altTables: altTables,
@@ -725,10 +737,10 @@
           + ', and the press to make is <b>' + esc(waitEndButton(rCur)) + '</b>'
           + (rCur.opt ? ', followed by a second tone for the A' : '') + '.</p>'
           + A.widgets.storyWidgetHtml('g2psr-story', 'the menu box appearing', null)
-          + '<div class="row"><label class="field">Correction (ms, + = cue later)'
+          + '<div class="row"><label class="field">Correction (ms, + = cue earlier)'
           + '<input type="number" step="1" inputmode="numeric" id="g2psr-corr" value="' + corrMs + '"></label></div>'
-          + '<p class="small"><button type="button" data-g2psr-nudge="-1">1 frame earlier</button> '
-          + '<button type="button" data-g2psr-nudge="1">1 frame later</button> '
+          + '<p class="small"><button type="button" data-g2psr-nudge="earlier">1 frame earlier</button> '
+          + '<button type="button" data-g2psr-nudge="later">1 frame later</button> '
           + '<span class="muted">one frame is ' + frameMs.toFixed(1) + ' ms. If you keep landing on the Trainer ID one bin off, nudge and try again.</span></p>'
           + triesHtml(game, rCur)
           + A.toolsHtml(['flowtimer'], 'This count-in and tone is the job FlowTimer does for the Gen 1 and Gen 2 manips:')
@@ -816,7 +828,10 @@
       // same treatment. Patch the one span that depends on it and leave the DOM alone.
       var nudge = ev.type === 'click' && ev.target && ev.target.closest && ev.target.closest('[data-g2psr-nudge]');
       if (nudge) {
-        var by = Number(nudge.getAttribute('data-g2psr-nudge')) * (1000 / fps(A.D));
+        // named, not +-1: the attribute used to be a signed number that read as a CUE direction and was
+        // then added to the correction, which is the opposite sign. "1 frame earlier" moved the cue later.
+        var dir = nudge.getAttribute('data-g2psr-nudge') === 'earlier' ? 1 : -1;
+        var by = dir * (1000 / fps(A.D));
         var next = Math.round((Number(p('corr', game, 0)) || 0) + by);
         var o4 = {}; o4['corr.' + game] = next; A.setPref(SEC, o4);
         var box = A.$('g2psr-corr'); if (box) box.value = next;   // the buttons and the box are one value
