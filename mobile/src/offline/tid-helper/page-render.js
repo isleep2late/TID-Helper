@@ -28,12 +28,11 @@
           return '<button type="button" class="choice mode" data-game="' + esc(g.key) + '" data-mode="' + esc(m.id) + '"><span class="ct">' + esc(m.title) + '</span>' + (sub ? '<span class="cs mono">' + esc(sub) + '</span>' : '') + '<span class="cs clamp">' + esc(line) + '</span></button>';
         }).join('') + '</div>';
     });
-    // Gen 4 / Gen 5: nothing to time here. On the DS the Trainer ID comes from the boot seed, so it is a seed search on
-    // Shiny Solution's Gen 4 and Gen 5 tabs; each button opens the matching tab (openShiny below).
-    h += '<div class="card game"><div class="gh"><span class="gen">Nintendo DS</span><span class="gn">Gen 4 / Gen 5</span></div>' +
-      '<p class="small muted">On the DS the Trainer ID comes from the boot seed (Gen 4: the DS clock plus a frame delay; Gen 5: the clock, the console\'s MAC address and per-console timer constants), so it is a seed search on Shiny Solution\'s Gen 4 and Gen 5 tabs rather than a timed press here; on hardware the Gen 4 delay and the Gen 5 boot second are hit with EonTimer, whose Gen 4 and Gen 5 timers those tabs\' targets are written for.</p>' + A.toolsHtml(['eontimer'], '') +
-      '<button type="button" class="choice mode" data-open-shiny="g4"><span class="ct">Diamond, Pearl, Platinum, HeartGold, SoulSilver</span><span class="cs clamp">Open Shiny Solution\'s Gen 4 tab: seed and TID search by delay, the two-phase timer</span></button>' +
-      '<button type="button" class="choice mode" data-open-shiny="g5"><span class="ct">Black, White, Black 2, White 2</span><span class="cs clamp">Open Shiny Solution\'s Gen 5 tab: TID targets by boot second, profile calibration</span></button></div>';
+    // WHERE THE LIST STOPS. This used to be a card saying the DS games were "a seed search on Shiny
+    // Solution's Gen 4 and Gen 5 tabs rather than a timed press here", with two buttons that left the app.
+    // Both generations are modes in this app now, so that card was not merely redundant - it was false, and
+    // it sat directly above the very buttons it was telling people did not exist.
+    h += A.beyondHtml();
     h += '<div class="card"><h3>Settings</h3>' +
       '<label class="check"><input type="checkbox" id="set-flash"' + (A.pref('cue', 'flash', true) ? ' checked' : '') + '> Full-screen flashes with the beeps</label>' +
       '<label class="check"><input type="checkbox" id="set-sound"' + (A.pref('cue', 'sound', true) ? ' checked' : '') + '> Sound</label>' +
@@ -41,7 +40,7 @@
       A.signButtonHtml('set-visual') +
       '<label class="field">Hold A (s): how long the green A! stays up (Gen 1)<input type="number" step="0.5" min="0.5" id="set-ahold" value="' + esc(A.pref('gen1timed', 'aHoldS', A.Cue.A_HOLD_S)) + '"></label>' +
       '<p class="small muted" id="cuestate"></p></div>';
-    h += '<div class="card"><h3>Data</h3><p class="small muted">gen1-tid.json, gen2-tid.json, gen3-sid.json, gen1-buffer.json, gen3-rs.json, scene-timelines.json and tid-sources.json (the published-manipulation citations and the timer credits) are embedded verbatim; the engines are the site\'s (rng.js, gen1tid.js, gen2tid.js, tid-sources.js) and RNG Solution\'s buffer-decode.js. Page ' + esc(A.version) + '.</p></div>';
+    h += '<div class="card"><h3>Data</h3><p class="small muted">gen1-tid.json, gen2-tid.json, gen2-psr.json, gen3-enc.json, gen3-sid.json, gen1-buffer.json, gen3-rs.json, gen4-tid.json, gen5-tid.json, scene-timelines.json and tid-sources.json (the published-manipulation citations and the timer credits) are embedded verbatim; the engines are the site\'s (rng.js, gen1tid.js, gen2tid.js, gen4.js, seedtime4.js, gen5.js, tid-sources.js) and RNG Solution\'s buffer-decode.js. Page ' + esc(A.version) + '.</p></div>';
     return h;
   }
   // A RE-RENDER MUST NOT THROW THE KEYBOARD AWAY. Thirteen typed fields across six modes return 'render'
@@ -96,7 +95,10 @@
     if (A.isObj(nav) && nav.game && nav.mode && A.modes[nav.mode] && A.modes[nav.mode].games.indexOf(nav.game) !== -1) { A.screen = 'mode'; A.game = nav.game; A.mode = nav.mode; }
     render();
   };
-  // the Gen 4 / Gen 5 card: inside the app the screen navigates to Shiny Solution (TidHelperScreen handles 'open-shiny');
+  // KEPT, THOUGH THE HOME SCREEN NO LONGER EMITS IT. Gen 4 and Gen 5 are modes in this app now, so the card
+  // that used to send people to Shiny Solution is gone. The 'open-shiny' message is still part of the host
+  // protocol (tidHelperProtocol.ts, TidHelperScreen.tsx) and the site's tabs still do things this app does
+  // not - the Method-1 shiny search, the Cute Charm table - so the door is left open rather than bricked up.
   // on the website the page is a plain document, so it goes to the Shiny Solution page with the tab in the query
   function openShiny(tab) {
     if (root.ReactNativeWebView) { A.post({ type: 'open-shiny', tab: tab }); return; }

@@ -29,6 +29,24 @@
       if (!/^https:\/\//.test(e.url)) throw new Error("tid-sources: entry " + i + " url is not https");
       if (["video", "wiki", "guide", "forum", "list", "route"].indexOf(e.kind) < 0) throw new Error("tid-sources: entry " + i + " has kind " + e.kind);
     });
+    // beyond: the generations this app does NOT cover, and where to go instead. It is data rather than prose
+    // in a page so that a status cannot be softened in one place and left stale in another - "not possible"
+    // is a claim about the game and has to be checkable.
+    if (data.beyond !== undefined) {
+      var b = data.beyond;
+      if (!isObj(b)) throw new Error("tid-sources: beyond is not an object");
+      ["why", "also", "checked"].forEach(function (k) { if (typeof b[k] !== "string" || !b[k]) throw new Error("tid-sources: beyond lacks " + k); });
+      if (!Array.isArray(b.generations) || !b.generations.length) throw new Error("tid-sources: beyond.generations is empty");
+      var OK = ["possible-with-homebrew", "not-possible", "not-established-here"];
+      b.generations.forEach(function (g, i) {
+        ["gen", "games", "console", "status", "what"].forEach(function (k) { if (typeof g[k] !== "string" || !g[k]) throw new Error("tid-sources: beyond.generations[" + i + "] lacks " + k); });
+        if (OK.indexOf(g.status) < 0) throw new Error("tid-sources: beyond.generations[" + i + "] status " + g.status + " is not one of " + OK.join(", "));
+        if (!Array.isArray(g.links) || !g.links.length) throw new Error("tid-sources: beyond.generations[" + i + "] offers no link, which is the whole point of the block");
+        g.links.forEach(function (l) { if (!isObj(l) || typeof l.title !== "string" || !l.title || !/^https:\/\//.test(String(l.url))) throw new Error("tid-sources: beyond.generations[" + i + "] has a bad link"); });
+      });
+      if (!Array.isArray(b.general) || !b.general.length) throw new Error("tid-sources: beyond.general must offer somewhere to start");
+      b.general.forEach(function (l) { if (!isObj(l) || typeof l.title !== "string" || !l.title || !/^https:\/\//.test(String(l.url))) throw new Error("tid-sources: beyond.general has a bad link"); });
+    }
     // tools: the community programs a page's own cue or timer stands in for (EonTimer, FlowTimer), credited by id
     if (data.tools !== undefined) {
       if (!Array.isArray(data.tools)) throw new Error("tid-sources: tools is not a list");
@@ -90,5 +108,6 @@
     if (e.kind !== "video") s += " (" + e.kind + ")";
     return s;
   }
-  return { bind: bind, build: build, check: check, forTid: forTid, general: general, gameName: gameName, tools: tools, tool: tool, describe: describe, cite: cite, hex4: hex4 };
+  function beyond() { var ix = need(); return ix.data.beyond || null; }
+  return { bind: bind, build: build, check: check, beyond: beyond, forTid: forTid, general: general, gameName: gameName, tools: tools, tool: tool, describe: describe, cite: cite, hex4: hex4 };
 });

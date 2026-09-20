@@ -256,6 +256,38 @@
       return h + ': ' + esc(t.what);
     }).join(' ') + '</p>';
   }
+  // ---- where this app stops, and where to go next ----------------------------------------------------
+  // Asked whether there was a guide for the 3DS or Switch games, the honest answer had three parts and only
+  // one of them was "no". Gen 6 and 7 are solved and tooled and need homebrew to read the seed; Brilliant
+  // Diamond and Shining Pearl likewise; Sword/Shield and Legends: Arceus cannot be done AT ALL, because the
+  // Trainer ID comes from a cryptographically secure generator. Someone who only sees this app end at Gen 5
+  // has no way to tell those apart, so the page says which is which and hands over the links.
+  //
+  // The statuses are in the data, not in this function, because "not possible" is a claim about a game and
+  // has to be checkable and datable rather than softened by whoever edits the page next.
+  function beyondHtml() {
+    if (!A.TS || typeof A.TS.beyond !== 'function') return '';
+    var b = A.TS.beyond();
+    if (!b) return '';
+    var LABEL = { 'possible-with-homebrew': 'possible, with homebrew', 'not-possible': 'not possible at all',
+                  'not-established-here': 'not established here' };
+    var CLS = { 'possible-with-homebrew': '', 'not-possible': ' warn', 'not-established-here': ' warn' };
+    var inner = '<h3>Gen 6 and later: why this stops, and where to go</h3>'
+      + '<p class="small">' + esc(b.why) + '</p>'
+      + '<p class="small">' + esc(b.also) + '</p>'
+      + '<ul class="srcs">' + b.generations.map(function (g) {
+          return '<li><b>' + esc(g.gen) + ' - ' + esc(g.games) + '</b> <span class="small muted">' + esc(g.console) + '</span>'
+            + ' <span class="tag' + (CLS[g.status] || '') + '">' + esc(LABEL[g.status] || g.status) + '</span>'
+            + '<span class="sm">' + esc(g.what) + '</span>'
+            + '<span class="sm">' + g.links.map(function (l) { return linkHtml(l.url, l.title); }).join(' &middot; ') + '</span></li>';
+        }).join('') + '</ul>'
+      + '<p class="small">Start here: ' + b.general.map(function (l) { return linkHtml(l.url, l.title); }).join(' &middot; ') + '.</p>'
+      + '<p class="small muted">Checked ' + esc(b.checked) + '. These are other people\'s tools and guides, not this project\'s, '
+      + 'and unlike everything above they need a connection.</p>';
+    return card(details('Gen 6 and later: X / Y, ORAS, Sun / Moon, Sword / Shield, BDSP, Legends: Arceus, Scarlet / Violet', inner));
+  }
+  A.beyondHtml = beyondHtml;
+
   // the per-game card every mode appends before its status card: the sources that document the method itself
   function sourcesCard(game) {
     if (!A.TS) return '';
@@ -429,6 +461,6 @@
 
   A.registerMode = registerMode; A.modesFor = modesFor; A.go = go;
   A.card = card; A.statusBlock = statusBlock; A.choices = choices; A.select = select; A.details = details; A.list = list;
-  A.sourcesHtml = sourcesHtml; A.sourcesCard = sourcesCard; A.linkHtml = linkHtml; A.toolsHtml = toolsHtml;
+  A.sourcesHtml = sourcesHtml; A.sourcesCard = sourcesCard; A.beyondHtml = beyondHtml; A.linkHtml = linkHtml; A.toolsHtml = toolsHtml;
   return A;
 });

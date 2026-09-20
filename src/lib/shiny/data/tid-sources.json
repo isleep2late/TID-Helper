@@ -2955,5 +2955,116 @@
    "license": "none stated",
    "verified": "2026-09-17"
   }
- ]
+ ],
+ "beyond": {
+  "why": "Every method in this app is the same shape: a stock console, a clock you can read, and a moment to press a button. That shape runs out after Gen 5. From Gen 6 the Trainer ID still comes from a seed, but nothing on screen tells you what the seed is - the community reads it off the running console with homebrew instead. There is no press for this app to hand you, so it stops rather than pretend.",
+  "also": "And two of the Switch games are not waiting on anyone: their Trainer ID comes from a cryptographically secure generator, which is not manipulable by construction. That is a fact about the games, not a gap in the tooling.",
+  "checked": "2026-09-20",
+  "generations": [
+   {
+    "gen": "Gen 6",
+    "games": "X, Y, Omega Ruby, Alpha Sapphire",
+    "console": "Nintendo 3DS",
+    "status": "possible-with-homebrew",
+    "what": "Trainer ID manipulation is solved and tooled. 3DSRNGTool covers Gen 6 ID RNG directly. What it cannot do is tell you the seed: that is read off the running console by a plugin under NTR custom firmware.",
+    "links": [
+     {
+      "title": "3DSRNGTool",
+      "url": "https://github.com/wwwwwwzx/3DSRNGTool"
+     },
+     {
+      "title": "pokeCalcNTR (the seed reader)",
+      "url": "https://gbatemp.net/threads/pokecalcntr-for-gen-6-the-rng-tool-suite-for-the-3ds.473221/"
+     },
+     {
+      "title": "PKMN-NTR",
+      "url": "https://github.com/jackmax/PKMN-NTR"
+     }
+    ]
+   },
+   {
+    "gen": "Gen 7",
+    "games": "Sun, Moon, Ultra Sun, Ultra Moon",
+    "console": "Nintendo 3DS",
+    "status": "possible-with-homebrew",
+    "what": "The same picture as Gen 6: 3DSRNGTool covers Gen 7 ID RNG, and the seed comes from a homebrew reader rather than from anything visible in the game.",
+    "links": [
+     {
+      "title": "3DSRNGTool",
+      "url": "https://github.com/wwwwwwzx/3DSRNGTool"
+     },
+     {
+      "title": "PKMN-NTR",
+      "url": "https://github.com/jackmax/PKMN-NTR"
+     }
+    ]
+   },
+   {
+    "gen": "Gen 8",
+    "games": "Sword, Shield",
+    "console": "Nintendo Switch",
+    "status": "not-possible",
+    "what": "The Trainer ID and Secret ID are drawn from a cryptographically secure generator. There is no seed to predict and no timing that changes the answer. Other RNG in these games (raid dens) is a separate and very much solved subject - the Trainer ID is not.",
+    "links": [
+     {
+      "title": "Pseudorandom number generation (Bulbapedia)",
+      "url": "https://bulbapedia.bulbagarden.net/wiki/Pseudorandom_number_generation"
+     }
+    ]
+   },
+   {
+    "gen": "Gen 8",
+    "games": "Brilliant Diamond, Shining Pearl",
+    "console": "Nintendo Switch",
+    "status": "possible-with-homebrew",
+    "what": "The exception among the Switch games: Trainer ID and Secret ID manipulation does work here, and the community has written it up. It still needs custom firmware to see the state.",
+    "links": [
+     {
+      "title": "BDSP TID/SID RNG (PokemonRNG.com)",
+      "url": "https://www.pokemonrng.com/cfw-bdsp-tidandsid/"
+     },
+     {
+      "title": "CaptureSight",
+      "url": "https://github.com/zaksabeast/CaptureSight"
+     }
+    ]
+   },
+   {
+    "gen": "Gen 8",
+    "games": "Legends: Arceus",
+    "console": "Nintendo Switch",
+    "status": "not-possible",
+    "what": "Same as Sword and Shield for the Trainer ID: a cryptographically secure generator, so there is nothing to manipulate. Plenty of OTHER RNG manipulation works in this game - outbreaks and mass outbreaks - which is why it is easy to read that it 'has RNG manip' and assume the Trainer ID is included.",
+    "links": [
+     {
+      "title": "PokemonRNG.com",
+      "url": "https://www.pokemonrng.com/"
+     }
+    ]
+   },
+   {
+    "gen": "Gen 9",
+    "games": "Scarlet, Violet",
+    "console": "Nintendo Switch",
+    "status": "not-established-here",
+    "what": "This project did not find a clear answer for the Trainer ID in Scarlet and Violet, so it is not going to state one. Raid seed manipulation in these games is well documented; whether the Trainer ID can be targeted is a separate question and the place to ask it is the community, not this page.",
+    "links": [
+     {
+      "title": "PokemonRNG.com",
+      "url": "https://www.pokemonrng.com/"
+     }
+    ]
+   }
+  ],
+  "general": [
+   {
+    "title": "PokemonRNG.com - guides for every generation",
+    "url": "https://www.pokemonrng.com/"
+   },
+   {
+    "title": "Smogon RNG guides (Gen 3-5)",
+    "url": "https://www.smogon.com/ingame/rng/"
+   }
+  ]
+ }
 }
