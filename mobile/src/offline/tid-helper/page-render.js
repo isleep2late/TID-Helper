@@ -36,6 +36,7 @@
       '<label class="check"><input type="checkbox" id="set-flash"' + (A.pref('cue', 'flash', true) ? ' checked' : '') + '> Full-screen flashes with the beeps</label>' +
       '<label class="check"><input type="checkbox" id="set-sound"' + (A.pref('cue', 'sound', true) ? ' checked' : '') + '> Sound</label>' +
       '<label class="field">Visual offset (ms, positive = draw later)<input type="number" step="10" id="set-visual" value="' + esc(A.pref('cue', 'visualOffsetMs', 0)) + '"></label>' +
+      A.signButtonHtml('set-visual') +
       '<label class="field">Hold A (s): how long the green A! stays up (Gen 1)<input type="number" step="0.5" min="0.5" id="set-ahold" value="' + esc(A.pref('gen1timed', 'aHoldS', A.Cue.A_HOLD_S)) + '"></label>' +
       '<p class="small muted" id="cuestate"></p></div>';
     h += '<div class="card"><h3>Data</h3><p class="small muted">gen1-tid.json, gen2-tid.json, gen3-sid.json, gen1-buffer.json, gen3-rs.json, scene-timelines.json and tid-sources.json (the published-manipulation citations and the timer credits) are embedded verbatim; the engines are the site\'s (rng.js, gen1tid.js, gen2tid.js, tid-sources.js) and RNG Solution\'s buffer-decode.js. Page ' + esc(A.version) + '.</p></div>';
@@ -85,6 +86,9 @@
     if (mb) { A.widgets.clearCalMsgs(); A.go('mode', mb.getAttribute('data-game'), mb.getAttribute('data-mode')); return; }
     var sb = t.closest && t.closest('[data-story]'); if (sb) { A.widgets.onStoryClick(sb); return; }
     var cb = t.closest && t.closest('[data-cal]'); if (cb) { A.widgets.onCalClick(cb); return; }
+    // handled here rather than per mode: the button belongs to whichever field names it, and flipping
+    // fires the field's own 'input' event, so the mode's existing handler does the saving.
+    var sf = t.closest && t.closest('[data-sign]'); if (sf) { A.flipSign(sf.getAttribute('data-sign')); return; }
     if (t.closest && t.closest('#runstop')) { A.widgets.stopAll(); return; }
     if (A.screen === 'mode' && A.modes[A.mode] && A.modes[A.mode].onEvent) {
       var r = A.modes[A.mode].onEvent(ev, A.game);

@@ -738,7 +738,8 @@
           + (rCur.opt ? ', followed by a second tone for the A' : '') + '.</p>'
           + A.widgets.storyWidgetHtml('g2psr-story', 'the menu box appearing', null)
           + '<div class="row"><label class="field">Correction (ms, + = cue earlier)'
-          + '<input type="number" step="1" inputmode="numeric" id="g2psr-corr" value="' + corrMs + '"></label></div>'
+          + '<input type="number" step="1" inputmode="numeric" id="g2psr-corr" value="' + corrMs + '"></label>'
+          + A.signButtonHtml('g2psr-corr') + '</div>'
           + '<p class="small"><button type="button" data-g2psr-nudge="earlier">1 frame earlier</button> '
           + '<button type="button" data-g2psr-nudge="later">1 frame later</button> '
           + '<span class="muted">one frame is ' + frameMs.toFixed(1) + ' ms. If you keep landing on the Trainer ID one bin off, nudge and try again.</span></p>'

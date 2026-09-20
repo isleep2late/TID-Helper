@@ -197,7 +197,7 @@
       var ri; try { ri = A.G1.resetInterval(rm, preset, null, adjust); } catch (e) { return '<p class="bad">' + esc(A.errMsg(e)) + '</p>'; }
       return '<p class="small muted">' + esc(rm.description) + ' Reset model status for this platform: ' + esc(ctx.platform.reset_status) + '.</p>' +
         '<div class="row">' + A.select('g1-reset-path', Object.keys(rm.paths).map(function (k) { return { id: k, title: k + ': ' + rm.paths[k].description }; }), preset, 'Save path') +
-        '<label class="field">Adjust (frames)<input type="number" step="0.5" id="g1-reset-adjust" value="' + adjust + '"></label><label class="field">Pairs<input type="number" step="1" min="1" id="g1-reset-pairs" value="' + pairs + '"></label></div>' +
+        '<label class="field">Adjust (frames)<input type="number" step="0.5" id="g1-reset-adjust" value="' + adjust + '"></label>' + A.signButtonHtml('g1-reset-adjust') + '<label class="field">Pairs<input type="number" step="1" min="1" id="g1-reset-pairs" value="' + pairs + '"></label></div>' +
         '<p>' + esc(ri.order.join(' then ')) + ': interval ' + A.fmtMs(ri.centreMs) + ' (centre of the physical window ' + A.fmtMs(ri.physLoMs) + ' to ' + A.fmtMs(ri.physHiMs) + '; boundary ' + A.fmtMs(ri.boundaryLoMs) + ' to ' + A.fmtMs(ri.boundaryHiMs) + '), one pair every ' + A.D.gen1.defaults.reset_cadence_s + ' s.</p>' +
         '<button type="button" class="secondary small" data-g1-metro="start">Start the metronome</button> <button type="button" class="secondary small" data-g1-metro="stop">Stop</button>';
     }

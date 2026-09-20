@@ -145,6 +145,7 @@
     var h = '<div class="calib" id="' + esc(id) + '">';
     h += '<p><span class="lbl">Correction in force:</span> <b>' + A.fmtMs(correction) + '</b>' + (c.override != null ? ' (your override; the mean of your samples is ' + A.fmtMs(meanCorr) + ')' : mine.length ? ' (mean of ' + mine.length + ' sample' + (mine.length === 1 ? '' : 's') + ')' : ' (the data\'s default for this anchor; no samples yet)') + '.</p>';
     h += '<div class="row"><label class="field">Override (ms, blank = use the mean)<input type="number" step="1" id="' + esc(id) + '-override" value="' + (c.override != null ? c.override : '') + '"></label>' +
+      A.signButtonHtml(id + '-override') +
       '<button type="button" class="secondary small" data-cal="' + esc(id) + '" data-act="override">Set</button><button type="button" class="secondary small" data-cal="' + esc(id) + '" data-act="clear-override">Clear</button></div>';
     // headline is the engine's {p, centred}: print the percentage and the same qualifier the site prints
     if (haveSd) h += '<p class="small">Spread of your implied corrections: sd ' + A.fmtMs(stats.sdMs) + ' over ' + stats.n + ' samples. ' + (headline ? 'P(hit): ' + A.pct(headline.p) + (headline.centred ? ' (centred on the frame)' : ' (phase-averaged: fewer than 5 samples)') + '.' : '') + '</p>';

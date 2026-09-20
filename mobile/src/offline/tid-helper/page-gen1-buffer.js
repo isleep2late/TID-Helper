@@ -379,6 +379,7 @@
         (mode === 'tid' ? '<label class="field">Trainer ID (decimal or $hex)<input type="text" id="buffer-tid" value="' + esc(p('tid', '')) + '" placeholder="16589 or $40CD"></label>' :
           A.select('buffer-set', sets.map(function (s) { return { id: s.key, title: s.name + ' (' + s.tids.length + ')' }; }), p('set', sets.length ? sets[0].key : ''), 'Target set')) +
         '<label class="field">Correction (ms): every beep this much earlier, for your reaction and the audio delay<input type="number" step="10" id="buffer-corr" value="' + esc(p('correctionMs', 0)) + '"></label>' +
+        A.signButtonHtml('buffer-corr') +
         '<label class="field">Count-in beeps before the first step<input type="number" min="0" max="9" id="buffer-beeps" value="' + esc(p('beeps', A.D.gen1.defaults.count_in_beeps)) + '"></label>' +
         A.toolsHtml(['flowtimer'], 'The storyboard cues below mark each buffered window; the community runs these routes with FlowTimer, whose offsets the videos quote:'));
       h += '<div id="buffer-results">' + resultsHtml(game, platform) + '</div>';

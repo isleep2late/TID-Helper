@@ -333,6 +333,45 @@
     }
     return undefined;
   };
+  // ---- signed number fields ------------------------------------------------------------------------
+  // A phone's numeric keypad has NO MINUS KEY. `inputmode="numeric"` asks for exactly that keypad, so
+  // every signed field in this app was unreachable below zero on the device it is built for: the owner
+  // could only go negative by tapping "1 frame earlier" repeatedly, ten or twenty times. Desktop browsers
+  // show a full keyboard, which is why this survived so long.
+  //
+  // The button does not persist anything itself. It flips the field and fires the SAME 'input' event that
+  // typing fires, so whatever already stores that field stores this too - one mechanism, and a page cannot
+  // acquire a sign button that silently fails to save.
+  //
+  // A BLANK FIELD STAYS BLANK. Some of these treat empty as "unset" ("Override (ms, blank = use the mean)"),
+  // and turning that into "0" would quietly change the meaning rather than the sign.
+  function flippedValue(raw) {
+    var t = String(raw == null ? '' : raw).trim();
+    if (t === '') return '';                       // blank is a value, not zero
+    var n = Number(t);
+    if (!isFinite(n)) return t;                    // a half-typed number: leave it alone
+    if (n === 0) return t;                         // -0 reads as 0; flipping it is a no-op, not a rewrite
+    return String(-n);
+  }
+  // `label` is optional: the default reads as what it does rather than as a maths symbol.
+  function signButtonHtml(inputId, label) {
+    return '<button type="button" class="signflip secondary small" data-sign="' + esc(inputId) + '"'
+      + ' aria-label="make the value above positive or negative">' + esc(label || '+ / -') + '</button>';
+  }
+  function flipSign(inputId) {
+    var el = $(inputId);
+    if (!el) return false;
+    var next = flippedValue(el.value);
+    if (next === el.value) return false;
+    el.value = next;
+    var ev;
+    try { ev = new Event('input', { bubbles: true }); }
+    catch (e) { ev = document.createEvent('Event'); ev.initEvent('input', true, false); }
+    el.dispatchEvent(ev);
+    return true;
+  }
+  A.flippedValue = flippedValue; A.signButtonHtml = signButtonHtml; A.flipSign = flipSign;
+
   A.attempts = ATT;
 
   A.registerMode = registerMode; A.modesFor = modesFor; A.go = go;
