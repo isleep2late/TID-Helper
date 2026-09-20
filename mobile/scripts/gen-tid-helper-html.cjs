@@ -19,8 +19,8 @@ const crypto = require('crypto');
 const MOBILE = path.resolve(__dirname, '..');
 const SITE_SHINY = path.resolve(MOBILE, '../src/lib/shiny');
 const PAGE_DIR = path.join(MOBILE, 'src/offline/tid-helper');
-const ENGINES = ['rng.js', 'gen1tid.js', 'gen2tid.js', 'generators.js', 'buffer-decode.js', 'tid-sources.js'];
-const PAGE_SCRIPTS = ['page-app.js', 'page-cue.js', 'page-storyboard.js', 'page-widgets.js', 'page-gen1-buffer.js', 'page-gen1-timed.js', 'page-gen2.js', 'page-gen2-psr.js', 'page-gen3-rs.js', 'page-gen3-sid.js', 'page-gen3-enc.js', 'page-sc-metronome.js', 'page-render.js'];
+const ENGINES = ['rng.js', 'gen1tid.js', 'gen2tid.js', 'generators.js', 'buffer-decode.js', 'tid-sources.js', 'gen4.js', 'seedtime4.js', 'gen5.js'];
+const PAGE_SCRIPTS = ['page-app.js', 'page-cue.js', 'page-storyboard.js', 'page-widgets.js', 'page-gen1-buffer.js', 'page-gen1-timed.js', 'page-gen2.js', 'page-gen2-psr.js', 'page-gen3-rs.js', 'page-gen3-sid.js', 'page-gen3-enc.js', 'page-gen4.js', 'page-gen5.js', 'page-sc-metronome.js', 'page-render.js'];
 const DATA_TS = path.join(MOBILE, 'src/offline/tidHelperDataJson.ts');
 const DATA_KEYS = ['gen1', 'gen2', 'gen2psr', 'gen3enc', 'gen3sid', 'buffer', 'gen3rs', 'scenes', 'sources'];
 

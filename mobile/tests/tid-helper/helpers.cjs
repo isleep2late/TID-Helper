@@ -11,8 +11,8 @@ const REPO = path.resolve(MOBILE, '..');
 const DATA_DIR = path.join(REPO, 'src', 'lib', 'shiny', 'data');
 const SHINY = path.join(REPO, 'src', 'lib', 'shiny');
 const PAGE_DIR = path.join(MOBILE, 'src', 'offline', 'tid-helper');
-const FILES = { gen1: 'gen1-tid.json', gen2: 'gen2-tid.json', gen2psr: 'gen2-psr.json', gen3enc: 'gen3-enc.json', gen3sid: 'gen3-sid.json', buffer: 'gen1-buffer.json', gen3rs: 'gen3-rs.json', scenes: 'scene-timelines.json', sources: 'tid-sources.json' };
-const PAGE_SCRIPTS = ['page-app.js', 'page-cue.js', 'page-storyboard.js', 'page-widgets.js', 'page-gen1-buffer.js', 'page-gen1-timed.js', 'page-gen2.js', 'page-gen2-psr.js', 'page-gen3-rs.js', 'page-gen3-sid.js', 'page-gen3-enc.js', 'page-sc-metronome.js', 'page-render.js'];
+const FILES = { gen1: 'gen1-tid.json', gen2: 'gen2-tid.json', gen2psr: 'gen2-psr.json', gen3enc: 'gen3-enc.json', gen3sid: 'gen3-sid.json', buffer: 'gen1-buffer.json', gen3rs: 'gen3-rs.json', gen4: 'gen4-tid.json', gen5: 'gen5-tid.json', scenes: 'scene-timelines.json', sources: 'tid-sources.json' };
+const PAGE_SCRIPTS = ['page-app.js', 'page-cue.js', 'page-storyboard.js', 'page-widgets.js', 'page-gen1-buffer.js', 'page-gen1-timed.js', 'page-gen2.js', 'page-gen2-psr.js', 'page-gen3-rs.js', 'page-gen3-sid.js', 'page-gen3-enc.js', 'page-gen4.js', 'page-gen5.js', 'page-sc-metronome.js', 'page-render.js'];
 
 const sha1 = (b) => crypto.createHash('sha1').update(b).digest('hex');
 let cache = null;
@@ -25,7 +25,8 @@ function sources() {
 }
 function data() { return sources().raw; }
 function engines() {
-  return { core: require(path.join(SHINY, 'rng.js')), G1: require(path.join(SHINY, 'gen1tid.js')), G2: require(path.join(SHINY, 'gen2tid.js')), BD: require(path.join(SHINY, 'buffer-decode.js')), TS: require(path.join(SHINY, 'tid-sources.js')) };
+  return { core: require(path.join(SHINY, 'rng.js')), G1: require(path.join(SHINY, 'gen1tid.js')), G2: require(path.join(SHINY, 'gen2tid.js')), BD: require(path.join(SHINY, 'buffer-decode.js')), TS: require(path.join(SHINY, 'tid-sources.js')),
+           G4: require(path.join(SHINY, 'gen4.js')), ST4: require(path.join(SHINY, 'seedtime4.js')), G5: require(path.join(SHINY, 'gen5.js')) };
 }
 function page(name) { return require(path.join(PAGE_DIR, name)); }
 // the app module bound to the data and engines (the pure part; no DOM)

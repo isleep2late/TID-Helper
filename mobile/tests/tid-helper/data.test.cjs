@@ -21,10 +21,10 @@ function loadMeta() {
   return { src, exports: m.exports };
 }
 
-test('tidHelperDataJson.ts: one string, eight members, each deep-equal to its source file; sha1 rows match the source bytes', () => {
+test('tidHelperDataJson.ts: one string, ten members, each deep-equal to its source file; sha1 rows match the source bytes', () => {
   const { src, jsonText } = H.dataModuleJson();
   const combined = JSON.parse(jsonText);
-  assert.deepEqual(Object.keys(combined), ['gen1', 'gen2', 'gen2psr', 'gen3enc', 'gen3sid', 'buffer', 'gen3rs', 'scenes', 'sources']);
+  assert.deepEqual(Object.keys(combined), ['gen1', 'gen2', 'gen2psr', 'gen3enc', 'gen3sid', 'buffer', 'gen3rs', 'gen4', 'gen5', 'scenes', 'sources']);
   const S = H.sources();
   for (const k of Object.keys(H.FILES)) {
     assert.deepEqual(combined[k], S.raw[k], k + ' is embedded verbatim (deep-equal to ' + H.FILES[k] + ')');

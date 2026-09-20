@@ -32,7 +32,7 @@ const check = argv.includes('--check');
 const dataDir = path.resolve(opt('--data-dir', path.join(repoRoot, 'src', 'lib', 'shiny', 'data')));
 const outDir = path.resolve(opt('--out-dir', path.join(mobileRoot, 'src', 'offline')));
 
-const FILES = { gen1: 'gen1-tid.json', gen2: 'gen2-tid.json', gen2psr: 'gen2-psr.json', gen3enc: 'gen3-enc.json', gen3sid: 'gen3-sid.json', buffer: 'gen1-buffer.json', gen3rs: 'gen3-rs.json', scenes: 'scene-timelines.json', sources: 'tid-sources.json' };
+const FILES = { gen1: 'gen1-tid.json', gen2: 'gen2-tid.json', gen2psr: 'gen2-psr.json', gen3enc: 'gen3-enc.json', gen3sid: 'gen3-sid.json', buffer: 'gen1-buffer.json', gen3rs: 'gen3-rs.json', gen4: 'gen4-tid.json', gen5: 'gen5-tid.json', scenes: 'scene-timelines.json', sources: 'tid-sources.json' };
 
 const gk4 = (label) => String(label).split('/')[0];
 function fail(msg) { console.error('gen-tid-helper-data: ' + msg); process.exit(1); }
@@ -260,6 +260,34 @@ function validate(raw) {
     if (/until the title/i.test(backoutStep)) fail('gen2-psr.json ' + label + ' backout step tells the runner to hold B until the title screen - the harness switches to START ' + pm.backout_b_frames + ' frames in, long before the title is visible');
   }
   if (!Array.isArray(psr.timed_elements) || psr.timed_elements.length < 4) fail('gen2-psr.json timed_elements must name all four timed things (START, each backout, the OPTION gap, the wait)');
+  // ---- Gen 4 and Gen 5: CALCULATED, so what is validated is the prose and the shape, not a table --------
+  // These two ship no swept data at all, which makes their honesty text the only thing standing between a
+  // runner and the belief that this project derived something it did not. So the claims are required.
+  const g4 = raw.gen4, g5 = raw.gen5;
+  for (const k of ['what_this_is', 'source', 'seed_formula', 'id_formula', 'status', 'validation', 'not_derived', 'timer', 'verification', 'games', 'defaults', 'credits']) if (!(k in g4)) fail('gen4-tid.json lacks ' + k);
+  for (const k of ['what_this_is', 'source', 'seed_formula', 'id_formula', 'status', 'validation', 'not_derived', 'profile', 'games', 'defaults', 'credits']) if (!(k in g5)) fail('gen5-tid.json lacks ' + k);
+  for (const [label, blk] of [['gen4-tid.json', g4], ['gen5-tid.json', g5]]) {
+    // STRUCTURAL, not a phrase match: tests/tid-helper/html.test.cjs forbids retyping a validation phrase
+    // anywhere in the code, precisely so a claim can never be asserted by the app instead of by the data.
+    if (blk.hardware_sample !== false) fail(label + ' must declare hardware_sample: false - these are calculators, not measurements');
+    if (!str(blk.status) || !str(blk.validation)) fail(label + ' must say in its own words what was and was not checked');
+    if (!Array.isArray(blk.credits) || blk.credits.length < 4) fail(label + ' credits must name the community and the tools it ports');
+    if (!/community/i.test(blk.credits[0].who)) fail(label + ' credits must lead with the Pokemon RNG community, whose methodology this is');
+    if (!/PokeFinder/i.test(JSON.stringify(blk.credits))) fail(label + ' must credit PokeFinder, which both engines are transcribed from');
+    for (const c of blk.credits) for (const k of ['who', 'role', 'what']) if (!str(c[k])) fail(label + ' credit entry lacks ' + k);
+    if (!isObj(blk.games) || !Object.keys(blk.games).length) fail(label + ' ships no games');
+    for (const [gk, gv] of Object.entries(blk.games)) { if (!str(gv.name)) fail(label + ' game ' + gk + ' has no name'); if (!str(gv.family)) fail(label + ' game ' + gk + ' has no family'); }
+  }
+  if (Object.keys(g4.games).length !== 5) fail('gen4-tid.json must cover all five Gen 4 games');
+  if (Object.keys(g5.games).length !== 4) fail('gen5-tid.json must cover all four Gen 5 games');
+  for (const [gk, gv] of Object.entries(g4.games)) if (!['dppt', 'hgss'].includes(gv.family)) fail('gen4-tid.json ' + gk + ' family must be dppt or hgss');
+  for (const k of ['dppt', 'hgss']) if (!str(g4.verification[k])) fail('gen4-tid.json verification.' + k + ' is missing: a mode that cannot be checked is a mode that cannot be corrected');
+  for (const k of ['phase1', 'phase2', 'total_rule', 'calibration']) if (!str(g4.timer[k])) fail('gen4-tid.json timer.' + k + ' is missing');
+  if (!str(g5.profile.why) || !str(g5.profile.mac) || !str(g5.profile.cgear)) fail('gen5-tid.json profile must explain itself, name where the MAC is found, and say the C-Gear must be off');
+  if (!Array.isArray(g5.profile.ds_type) || !g5.profile.ds_type.length) fail('gen5-tid.json profile.ds_type must list the consoles');
+  // the Gen 5 defaults are an emulator's; saying so is the difference between a starting point and a lie
+  if (!/melonDS|emulator/i.test(String(g5.defaults_note || ''))) fail('gen5-tid.json defaults_note must say the shipped profile defaults are an emulator\'s, not any real console\'s');
+
   for (const k of ['source', 'generated', 'lcrng', 'gba_fps_expression', 'frame_convention', 'live_battery_seed', 'games']) if (!(k in rs)) fail('gen3-rs.json lacks ' + k);
   if (rs.gba_fps_expression !== '16777216/280896') fail('gen3-rs.json: unexpected gba_fps_expression');
   if (rs.lcrng.mult !== '0x41C64E6D' || rs.lcrng.add !== '0x6073' || rs.lcrng.output !== 'hi16') fail('gen3-rs.json lcrng block is not the LCRNG the engine implements');
@@ -354,7 +382,7 @@ function metadata(raw) {
 function build() {
   const { files, raw } = loadSources();
   validate(raw);
-  const combined = { gen1: raw.gen1, gen2: raw.gen2, gen2psr: raw.gen2psr, gen3enc: raw.gen3enc, gen3sid: raw.gen3sid, buffer: raw.buffer, gen3rs: raw.gen3rs, scenes: raw.scenes, sources: raw.sources };
+  const combined = { gen1: raw.gen1, gen2: raw.gen2, gen2psr: raw.gen2psr, gen3enc: raw.gen3enc, gen3sid: raw.gen3sid, buffer: raw.buffer, gen3rs: raw.gen3rs, gen4: raw.gen4, gen5: raw.gen5, scenes: raw.scenes, sources: raw.sources };
   const minified = JSON.stringify(combined);
   const literal = JSON.stringify(minified).replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
   const jsonSha1 = sha1(minified);
@@ -381,7 +409,7 @@ function build() {
     '// tests/tid-helper/data.test.cjs recomputes every export from the sources.',
     '',
     'export interface TidHelperSourceFile { file: string; path: string; sha1: string; bytes: number; }',
-    'export const tidHelperDataSources: Record<"gen1" | "gen2" | "gen2psr" | "gen3enc" | "gen3sid" | "buffer" | "gen3rs" | "scenes" | "sources", TidHelperSourceFile> = ' + JSON.stringify(files) + ';',
+    'export const tidHelperDataSources: Record<"gen1" | "gen2" | "gen2psr" | "gen3enc" | "gen3sid" | "buffer" | "gen3rs" | "gen4" | "gen5" | "scenes" | "sources", TidHelperSourceFile> = ' + JSON.stringify(files) + ';',
     'export const tidHelperDataJsonSha1 = ' + JSON.stringify(jsonSha1) + ';',
     'export const tidHelperDataJsonModule = ' + JSON.stringify(relJson) + ';',
     'export interface TidHelperGen1Methodology { id: string; family: string; status: string; statusShort: string | null; anchors: string[]; version: number; date: string; }',

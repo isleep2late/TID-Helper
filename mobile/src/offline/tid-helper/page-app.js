@@ -121,16 +121,22 @@
   // ---- data binding -----------------------------------------------------------------------------
   function bindData(data, engines) {
     if (!isObj(data)) throw new Error('window.TID_HELPER_DATA is missing');
-    for (var i = 0; i < ['gen1', 'gen2', 'gen3sid', 'buffer', 'gen3rs', 'scenes', 'sources'].length; i++) {
-      var k = ['gen1', 'gen2', 'gen3sid', 'buffer', 'gen3rs', 'scenes', 'sources'][i];
+    for (var i = 0; i < ['gen1', 'gen2', 'gen3sid', 'buffer', 'gen3rs', 'gen4', 'gen5', 'scenes', 'sources'].length; i++) {
+      var k = ['gen1', 'gen2', 'gen3sid', 'buffer', 'gen3rs', 'gen4', 'gen5', 'scenes', 'sources'][i];
       if (!isObj(data[k])) throw new Error('TID_HELPER_DATA lacks ' + k);
     }
     if (!engines.G1 || typeof engines.G1.schedule !== 'function') throw new Error('ShinyGen1Tid engine missing');
     if (!engines.G2 || typeof engines.G2.scheduleGen2 !== 'function') throw new Error('ShinyGen2Tid engine missing');
     if (!engines.BD || typeof engines.BD.lookup !== 'function') throw new Error('BufferDecode missing');
     if (!engines.TS || typeof engines.TS.describe !== 'function') throw new Error('TidSources missing');
+    // Gen 4 and Gen 5 are CALCULATED, not looked up: no swept table ships for them, so the engine is the
+    // whole methodology and a missing one is not a degraded mode, it is no mode at all.
+    if (!engines.G4 || typeof engines.G4.tidSid !== 'function') throw new Error('ShinyGen4 engine missing');
+    if (!engines.ST4 || typeof engines.ST4.seedToTimes !== 'function') throw new Error('ShinySeedTime4 missing');
+    if (!engines.G5 || typeof engines.G5.initialSeed !== 'function') throw new Error('ShinyGen5 engine missing');
     engines.TS.bind(data.sources);
     A.D = data; A.G1 = engines.G1; A.G2 = engines.G2; A.BD = engines.BD; A.TS = engines.TS;
+    A.G4 = engines.G4; A.ST4 = engines.ST4; A.G5 = engines.G5;
     A.fps = { gb: parseFps(data.gen1.fps_expression), gba: parseFps(data.gen3rs.gba_fps_expression) };
     if (Math.abs(A.fps.gb - engines.G1.FPS) > 1e-9) throw new Error('the data fps_expression does not match the engine FPS');
     return A;

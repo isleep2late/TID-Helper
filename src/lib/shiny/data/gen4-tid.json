@@ -1,0 +1,42 @@
+{
+  "what_this_is": "Gen 4 Trainer ID: the DS boot seed, and the (date, time, delay) that reaches a target Trainer ID. Unlike Gens 1-3 this ships NO swept table, because it needs none - the Trainer ID is a closed-form function of the seed, and the seed is a closed-form function of the clock and the boot delay. Everything here is computed on the device.",
+  "source": "gen4.js and seedtime4.js, the site's own engines, ported from PokeFinder (Utilities4::calcSeed, SeedToTimeCalculator4) and EonTimer (the two-phase Gen 4 timer model, MIT).",
+  "generated": "2026-09-20",
+  "seed_formula": "seed = ((month*day + minute + second) & 0xFF) << 24 | (hour & 0xFF) << 16, plus (year - 2000) + delay, all u32. `delay` is the number of DS frames between powering the game on and the A press that ends the intro.",
+  "id_formula": "Mersenne Twister seeded with that u32; the FIRST output is discarded and the SECOND is taken: Trainer ID = low 16 bits, Secret ID = high 16 bits.",
+  "nds_fps": "59.8261",
+  "frame_convention": "delay counts DS VBlanks from power-on. One delay is 1000/59.8261 = 16.715 ms.",
+  "hardware_sample": false,
+  "status": "computed, not swept: there is no emulator-derived table here and none is needed. The formulas are ports of PokeFinder's, cross-checked in this repo against 3,800,000 random (date, time, delay) seed agreements between the two independent implementations shipped here, and 304,000 seedToTimes round-trips, with no disagreement. NOT confirmed on hardware by this project.",
+  "validation": "STRUCTURAL: gen4.seed() and seedtime4.calcSeed() are independent transcriptions of the same PokeFinder routine and agree on 3,800,000 random inputs. seedToTimes() inverts calcSeed() on 304,000 returned rows. NO HARDWARE SAMPLE: nobody has run these numbers on a DS for this project.",
+  "not_derived": "This project has not derived anything for Gen 4. It computes what the community's tools compute, with the community's formulas, and says so. The value it adds is that the computation, the timer and the published-manipulation citations are in one offline place.",
+  "timer": {
+    "model": "EonTimer's Gen 4 two-phase timer, ported in gen4.js:timerPhases().",
+    "phase1": "from pressing the clock-confirm button to STARTING THE GAME. Wound forward in whole minutes until it is at least 14 s, so there is time to actually start the console.",
+    "phase2": "from starting the game to the A PRESS that ends the intro and latches the seed.",
+    "total_rule": "phase1 + phase2 always equals targetSecond*1000 + 200 ms + N*60000, so the press lands 200 ms into the target second of the target minute.",
+    "default_calibrated_delay": 500,
+    "default_calibrated_second": 14,
+    "calibration": "gen4.calibrate(calibratedDelay, targetDelay, hitDelay): the miss in milliseconds is converted back to delays and added, damped to 75% inside ~10 frames so a near hit does not overshoot."
+  },
+  "clock_rule": "Set the DS clock minutes BEFORE the target minute, because the countdown spans that long. gen4.minutesBefore() is EonTimer's own figure at calibration zero; gen4.minutesSpanned() is the same off YOUR calibrated phases. They differ for about 9% of (delay, second) pairs, and where they differ the spanned figure is the one to follow.",
+  "verification": {
+    "dppt": "The Poketch Coin Toss app. Flips read the Mersenne Twister and cost no LCRNG advances, so they can be read freely. Type the flips you saw and the search says which (second, delay) you actually hit.",
+    "hgss": "Professor Elm's phone calls (E/K/P). These are LCRNG-driven and each costs one advance. The three-way pattern needs the Pokerus phone flag, which is postgame; before that it is two-way. Active roamers consume advances first, which is what the skips field is for."
+  },
+  "games": {
+    "diamond": { "name": "Pokemon Diamond", "family": "dppt", "verify": "dppt" },
+    "pearl": { "name": "Pokemon Pearl", "family": "dppt", "verify": "dppt" },
+    "platinum": { "name": "Pokemon Platinum", "family": "dppt", "verify": "dppt" },
+    "heartgold": { "name": "Pokemon HeartGold", "family": "hgss", "verify": "hgss" },
+    "soulsilver": { "name": "Pokemon SoulSilver", "family": "hgss", "verify": "hgss" }
+  },
+  "defaults": { "delay_min": 300, "delay_max": 5000, "search_limit": 20, "flip_second_radius": 3, "flip_delay_radius": 2000 },
+  "credits": [
+    { "who": "The Pokemon RNG community", "role": "methodology", "what": "the Gen 4 seed formula, the delay model and the coin-flip and Elm-call verification are the community's, not this project's." },
+    { "who": "PokeFinder (Admiral Fish)", "role": "reference implementation", "what": "Utilities4::calcSeed and SeedToTimeCalculator4, which gen4.js and seedtime4.js are transcriptions of." },
+    { "who": "EonTimer (DasAmpharos)", "role": "timer model", "what": "the two-phase Gen 4 timer and its delay calibration, ported under the MIT licence." },
+    { "who": "RNG Reporter", "role": "prior art", "what": "the tool that established the Gen 4 seed-and-delay workflow this follows." },
+    { "who": "Hackmons Hub", "role": "this port", "what": "the offline page, the cue, and the cross-checks between the two shipped implementations." }
+  ]
+}

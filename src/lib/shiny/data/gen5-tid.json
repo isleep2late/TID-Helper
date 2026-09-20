@@ -1,0 +1,53 @@
+{
+  "what_this_is": "Gen 5 Trainer ID: the DS boot seed and the boot SECOND that reaches a target Trainer ID. Like Gen 4 this ships no swept table and needs none, but unlike every other generation here it cannot be answered for a stranger's console: the seed depends on that console's MAC address and on per-console timing constants, so a profile has to be found first.",
+  "source": "gen5.js, the site's own engine, ported from PokeFinder's Gen 5 seed calculation (SHA-1 over the 16-word boot message).",
+  "generated": "2026-09-20",
+  "seed_formula": "A 16-word message is built from the game's nazo addresses, the console's MAC address, the DS type, Timer0, VCount, VFrame, GxStat, the date and time to the SECOND, and the buttons held at boot. SHA-1 over that message gives the 64-bit seed. There is no delay: Gen 5 seeds once at boot, so a target is a second and a button combination, not a frame count.",
+  "id_formula": "The 64-bit LCRNG is advanced a fixed number of times (Black/White: 2 plus three probability-table passes; Black 2/White 2: 10 plus three), then one 32-bit draw gives Trainer ID = low 16 bits, Secret ID = high 16 bits.",
+  "hardware_sample": false,
+  "status": "computed, not swept, and NOT usable without a console profile. The formulas are ports of PokeFinder's. This project has taken no hardware sample and has calibrated no real console; a profile found here is only as good as the Trainer ID the owner fed it.",
+  "validation": "STRUCTURAL: the seed, the advance counts and the ID draw are transcriptions of PokeFinder's. A fixed vector is asserted in the test suite (White, English, DS, MAC 00:09:BF:11:22:33, VFrame 5, GxStat 6, Timer0 0xBBD, VCount 0x5A, 2026-09-16 12:00:00, no buttons -> seed 0x0b5a83ce6db946ea, 29 advances, Trainer ID 32783 / Secret ID 44360). NO HARDWARE SAMPLE.",
+  "not_derived": "Nothing here is this project's own derivation. It is the community's calculation, offline, with the published-manipulation citations attached.",
+  "profile": {
+    "why": "The boot seed is a hash of console-specific values, so two people booting the same game at the same instant get different Trainer IDs. Timer0, VCount and VFrame are properties of the console and the cartridge together and cannot be looked up - they are FOUND, by telling the app a Trainer ID you actually got and when you booted.",
+    "mac": "The console's MAC address, shown on a DS under Settings - Internet - Options - System Information. It is console-identifying: it stays on the device, and this page sends nothing anywhere.",
+    "ds_type": ["ds", "dsi", "3ds"],
+    "ds_type_note": "A 3DS reuses the DSi message layout and suppresses one bit of the time word. Pick the console you actually boot on.",
+    "searched_when_calibrating": ["timer0", "vcount", "vframe"],
+    "fixed_when_calibrating": ["gxstat", "mac", "game", "language", "ds_type"],
+    "cgear": "The C-Gear must be OFF. With it on the boot path differs and none of these numbers apply."
+  },
+  "calibration_cost_note": "Calibration searches VFrame x GxStat x Timer0 x VCount x second, and every combination is a SHA-1 plus several 64-bit LCRNG steps. A wide range is millions of hashes and will take minutes on a phone, so the ranges start narrow and the page says what it is about to do before it does it.",
+  "games": {
+    "black": { "name": "Pokemon Black", "family": "bw" },
+    "white": { "name": "Pokemon White", "family": "bw" },
+    "black2": { "name": "Pokemon Black 2", "family": "bw2" },
+    "white2": { "name": "Pokemon White 2", "family": "bw2" }
+  },
+  "defaults": {
+    "language": "english",
+    "ds_type": "ds",
+    "timer0_min": 3005,
+    "timer0_max": 3005,
+    "vcount": 90,
+    "vframe": 5,
+    "gxstat": 6,
+    "search_limit": 40,
+    "max_advances": 3,
+    "cal_timer0_min": 3000,
+    "cal_timer0_max": 3100,
+    "cal_vcount_min": 80,
+    "cal_vcount_max": 112,
+    "cal_vframe_min": 0,
+    "cal_vframe_max": 9
+  },
+  "defaults_note": "The Timer0/VCount/VFrame defaults are melonDS 1.1's built-in firmware, which is a starting point for an emulator and a wrong answer for any real console. The calibration range brackets the profile default on purpose, so calibrating with the defaults finds the defaults.",
+  "row_note": "The Row column is how many extra ID draws happened before yours. Row 0 is a plain new game. Community guides tie rows 1-3 to answering Professor Juniper's question that many times; this project has not verified that and says so rather than repeating it as fact.",
+  "credits": [
+    { "who": "The Pokemon RNG community", "role": "methodology", "what": "the Gen 5 boot-seed model, the profile concept and the calibration workflow are the community's." },
+    { "who": "PokeFinder (Admiral Fish)", "role": "reference implementation", "what": "the SHA-1 boot message, the nazo tables and the ID advance counts that gen5.js transcribes." },
+    { "who": "RNG Reporter", "role": "prior art", "what": "the tool that established the Gen 5 profile-and-boot-second workflow." },
+    { "who": "EonTimer (DasAmpharos)", "role": "timer", "what": "the timer the community boots Gen 5 with; this page's cue stands in for it." },
+    { "who": "Hackmons Hub", "role": "this port", "what": "the offline page, the cue and the citation lookup." }
+  ]
+}

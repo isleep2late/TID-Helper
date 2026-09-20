@@ -77,22 +77,35 @@ test('videoIdFromUrl accepts the forms the registry actually holds, and rejects 
   assert.deepStrictEqual(bad.map((e) => e.url), [], 'cited YouTube urls whose id could not be parsed');
 });
 
-test('how many cited videos this feature can actually reach, and how many it cannot', () => {
+test('every cited manip video is now reachable from a mode', () => {
   // Honesty about the gap. The registry holds videos for Gen 4, but there is no Gen 4 MODE, so there is no
   // screen on which to type a Gen 4 Trainer ID and nothing to attach the citation to. Those 16 entries are
   // carried, not offered. This test states both numbers so neither can be quietly misreported: if a Gen 4
   // mode ever lands, the stranded count drops and this fails until the number is corrected.
-  const TYPEABLE = new Set(['red', 'blue', 'yellow', 'gold', 'silver', 'crystal',
-                            'ruby', 'sapphire', 'emerald', 'firered', 'leafgreen']);
+  // DERIVED, not listed. An earlier version hardcoded the eleven Gen 1-3 games, which meant that when the
+  // Gen 4 and Gen 5 modes landed this test kept cheerfully reporting their videos as unreachable. A ratchet
+  // that does not notice the thing it exists to notice is worse than no ratchet, so the set is now built
+  // from the same data blocks page-render.js builds the home screen from.
+  const TYPEABLE = new Set([].concat(
+    Object.keys(D.gen1.games), Object.keys(D.gen2.games), Object.keys(D.gen3rs.games),
+    Object.keys(D.gen3sid.games).filter((k) => D.gen3sid.games[k].status === 'sid'),
+    Object.keys(D.gen4.games), Object.keys(D.gen5.games)));
+  // and that really is what the home screen lists
+  const render = fs.readFileSync(path.join(src, 'page-render.js'), 'utf8');
+  for (const blk of ['gen1', 'gen2', 'gen3rs', 'gen3sid', 'gen4', 'gen5']) {
+    assert.ok(new RegExp('D\\.' + blk + '\\.games').test(render), 'page-render.js does not list ' + blk + ' games on the home screen');
+  }
   const vids = (D.sources.entries || []).filter((e) => e.tid && A.videoIdFromUrl(e.url));
   const reach = vids.filter((e) => (e.games || []).some((g) => TYPEABLE.has(g)));
   const strand = vids.filter((e) => !(e.games || []).some((g) => TYPEABLE.has(g)));
   assert.equal(vids.length, 74, 'cited manip videos');
-  assert.equal(reach.length, 58, 'videos a runner can actually be shown, because a mode exists for the game');
-  assert.equal(strand.length, 16, 'videos the registry holds for games with no mode - carried, not offered');
+  assert.equal(reach.length, 74, 'every cited video is now for a game the app has a mode for');
   const byGame = {};
   strand.forEach((e) => (e.games || []).forEach((g) => { byGame[g] = (byGame[g] || 0) + 1; }));
-  assert.deepStrictEqual(Object.keys(byGame).sort(),
-    ['diamond', 'heartgold', 'pearl', 'platinum', 'soulsilver'],
-    'the stranded ones are exactly Gen 4, which has no mode');
+  assert.deepStrictEqual(strand.map((e) => e.url), [],
+    'these cited videos name Trainer IDs for games with no mode, so nothing can show them: ' + JSON.stringify(byGame));
+  // Gen 5 has no cited manip video yet; the mode exists, so one would be reachable the day it is cited
+  for (const g of ['diamond', 'pearl', 'platinum', 'heartgold', 'soulsilver', 'black', 'white', 'black2', 'white2']) {
+    assert.ok(TYPEABLE.has(g), g + ' should be typeable now that the Gen 4 / Gen 5 modes exist');
+  }
 });

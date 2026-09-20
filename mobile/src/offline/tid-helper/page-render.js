@@ -11,6 +11,8 @@
     Object.keys(D.gen2.games).forEach(function (k) { out.push({ key: k, name: D.gen2.games[k].name, gen: 'Gen 2', status: D.gen2.games[k].status }); });
     Object.keys(D.gen3rs.games).forEach(function (k) { out.push({ key: k, name: D.gen3rs.games[k].methodology.name.split(':')[0], gen: 'Gen 3', status: D.gen3rs.games[k].status }); });
     Object.keys(D.gen3sid.games).forEach(function (k) { if (D.gen3sid.games[k].status === 'sid') out.push({ key: k, name: D.gen3sid.games[k].name, gen: 'Gen 3', status: D.gen3sid.games[k].status }); });
+    Object.keys(D.gen4.games).forEach(function (k) { out.push({ key: k, name: D.gen4.games[k].name, gen: 'Gen 4', status: D.gen4.status }); });
+    Object.keys(D.gen5.games).forEach(function (k) { out.push({ key: k, name: D.gen5.games[k].name, gen: 'Gen 5', status: D.gen5.status }); });
     return out;
   }
   function homeHtml() {
