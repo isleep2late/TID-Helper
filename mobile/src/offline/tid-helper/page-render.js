@@ -42,8 +42,27 @@
     h += '<div class="card"><h3>Data</h3><p class="small muted">gen1-tid.json, gen2-tid.json, gen3-sid.json, gen1-buffer.json, gen3-rs.json, scene-timelines.json and tid-sources.json (the published-manipulation citations and the timer credits) are embedded verbatim; the engines are the site\'s (rng.js, gen1tid.js, gen2tid.js, tid-sources.js) and RNG Solution\'s buffer-decode.js. Page ' + esc(A.version) + '.</p></div>';
     return h;
   }
+  // A RE-RENDER MUST NOT THROW THE KEYBOARD AWAY. Thirteen typed fields across six modes return 'render'
+  // from their input handler, which rebuilds the card the field lives in and then scrolls to the top. On a
+  // phone that is: type one digit, lose the keyboard, scroll back down, tap the box, type the next digit.
+  // The owner reported exactly that on 2026-09-20 ("1, then scroll down and touch the text box, 7, then
+  // scroll down and 0") and it cost him a run of attempts before it was understood.
+  //
+  // The real cure is per field - patch in place and do not re-render at all, which is what the Gen 2 psr
+  // correction now does. This is the safety net under all of them: if the re-render was triggered from a
+  // field that still exists afterwards, put the focus, the caret and the scroll position back. Restoring
+  // focus inside the input event keeps the soft keyboard up; scrollTo(0,0) is kept for every OTHER render,
+  // because navigating to a new screen should start at the top.
   function render() {
     var main = A.$('main'); if (!main) return;
+    var act = document.activeElement;
+    var keepId = act && act.id && (act.tagName === 'INPUT' || act.tagName === 'TEXTAREA') ? act.id : null;
+    var selS = null, selE = null, keepY = 0;
+    if (keepId) {
+      // a number input throws on selectionStart in some engines, so this is never allowed to break a render
+      try { selS = act.selectionStart; selE = act.selectionEnd; } catch (e) { selS = null; }
+      keepY = root.pageYOffset || (document.documentElement && document.documentElement.scrollTop) || 0;
+    }
     A.widgets.stopAll(); A.widgets.reset();
     var back = A.$('back'), title = A.$('title');
     if (A.screen === 'home' || !A.game || !A.mode || !A.modes[A.mode]) {
@@ -56,7 +75,14 @@
       try { mode.render(main, A.game); } catch (e) { main.innerHTML = '<p class="bad">' + esc('This mode could not render: ' + A.errMsg(e)) + '</p>'; A.reportError('render ' + A.mode + ': ' + A.errMsg(e), e && e.stack); }
     }
     if (A.Cue.onState) A.Cue.onState();
-    root.scrollTo(0, 0);
+    var back2 = keepId ? A.$(keepId) : null;
+    if (back2) {
+      try { back2.focus({ preventScroll: true }); } catch (e) { try { back2.focus(); } catch (e2) {} }
+      if (selS != null) { try { back2.setSelectionRange(selS, selE); } catch (e3) {} }
+      root.scrollTo(0, keepY);
+    } else {
+      root.scrollTo(0, 0);
+    }
     root.__tidHelperScreen = { screen: A.screen, game: A.game, mode: A.mode };
   }
   A.render = render;

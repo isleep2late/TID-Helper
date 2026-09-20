@@ -28,26 +28,60 @@ const path = require('path');
 const src = path.join(__dirname, '..', '..', 'src', 'offline', 'tid-helper');
 const fs = require('fs');
 
-test('no typed field in any mode returns "render" from a non-click event', () => {
-  // the re-render is what closes the phone keyboard and eats the minus sign
-  const files = fs.readdirSync(src).filter(f => /^page-.*\.js$/.test(f));
-  const offenders = [];
-  for (const f of files) {
+test('typed fields that re-render on every keystroke: the known list, which may only shrink', () => {
+  // THE BLIND SPOT. The first version of this test searched for `ev.type !== 'click'` and inspected the
+  // first return after it. page-gen1-buffer.js and five other modes branch the other way round -
+  // `if (ev.type === 'click') { ... } else { ... }` - so the regex never saw them and the test reported
+  // that no typed field re-rendered while thirteen of them did. A guard that only understands the shape
+  // its author had in mind is worse than none: it is a green light over a live defect.
+  //
+  // This walks the MARKUP for every text/number input, finds that id's handler wherever it is, and does
+  // not care how the handler is arranged. Re-rendering from a keystroke closes the phone keyboard and
+  // scrolls to the top; render() now puts focus, caret and scroll back, which makes these survivable, but
+  // the cure is to patch in place like the Gen 2 psr correction does. So they are listed, and the list may
+  // only shrink: a NEW one fails, and fixing one without removing it from the list also fails.
+  const KNOWN = [
+    // page-gen1-buffer.js's two were the first fixed, 2026-09-20: they patch #buffer-results in place.
+    'page-gen1-timed.js g1-reset-adjust', 'page-gen1-timed.js g1-reset-pairs', 'page-gen1-timed.js g1-beeps',
+    'page-gen2.js g2-beeps',
+    'page-gen3-enc.js g3e-got-level', 'page-gen3-enc.js g3e-span', 'page-gen3-enc.js g3e-from',
+    'page-gen3-rs.js rs-horizon', 'page-gen3-rs.js rs-beeps',
+    'page-gen3-sid.js sid-name', 'page-gen3-sid.js sid-margin',
+  ];
+  const found = [];
+  for (const f of fs.readdirSync(src).filter((x) => /^page-.*\.js$/.test(x))) {
     const txt = fs.readFileSync(path.join(src, f), 'utf8');
-    // For each typed-input guard, look at the FIRST return that follows it. If that return is 'render',
-    // typing re-renders. Scanning further than the first return is what made an earlier version of this
-    // test cry wolf: it reached past a correct `return null` into an unrelated click handler below.
-    const re = /ev\.type !== 'click'/g;
-    let m;
-    while ((m = re.exec(txt))) {
-      const after = txt.slice(m.index, m.index + 600);
-      const firstReturn = /return\s+('render'|null|undefined|\()/.exec(after);
-      if (firstReturn && firstReturn[1] === "'render'") {
-        offenders.push(f + ': ' + after.slice(0, firstReturn.index + 20).replace(/\s+/g, ' '));
-      }
+    const ids = new Set();
+    let m; const tags = /<input[^>]*>/g;
+    while ((m = tags.exec(txt))) {
+      if (!/type=\\?"(text|number)\\?"/.test(m[0])) continue;
+      const id = /id=\\?"([^\\"]+)\\?"/.exec(m[0]);
+      if (id && !id[1].includes('+')) ids.add(id[1]);
+    }
+    for (const id of ids) {
+      const i = txt.indexOf("t.id === '" + id + "'");
+      if (i < 0) continue;
+      const line = txt.slice(i, i + 240).split('\n')[0];
+      if (/return 'render'/.test(line)) found.push(f + ' ' + id);
     }
   }
-  assert.deepStrictEqual(offenders, [], 'a typed field re-renders and will eat the keyboard:\n' + offenders.join('\n'));
+  const added = found.filter((x) => !KNOWN.includes(x));
+  const fixed = KNOWN.filter((x) => !found.includes(x));
+  assert.deepStrictEqual(added, [], 'NEW typed fields re-render on every keystroke - patch in place instead');
+  assert.deepStrictEqual(fixed, [], 'these were fixed - delete them from KNOWN so the list keeps ratcheting');
+});
+
+test('render() puts the keyboard, the caret and the scroll position back', () => {
+  // the safety net under the list above; without it a keystroke re-render is unusable on a phone
+  const r = fs.readFileSync(path.join(src, 'page-render.js'), 'utf8');
+  const i = r.indexOf('function render()');
+  assert.ok(i > 0);
+  const body = r.slice(i, r.indexOf('A.render = render'));
+  assert.ok(/activeElement/.test(body), 'render() must notice which field had focus');
+  assert.ok(/setSelectionRange/.test(body), 'render() must restore the caret, or the cursor jumps to the start');
+  assert.ok(/\.focus\(/.test(body), 'render() must restore focus, or the soft keyboard closes');
+  assert.ok(/scrollTo\(0, keepY\)/.test(body), 'render() must restore the scroll position for a typed re-render');
+  assert.ok(/scrollTo\(0, 0\)/.test(body), 'a navigation render must still start at the top');
 });
 
 test('the Gen 2 psr correction handler patches in place and does not re-render', () => {

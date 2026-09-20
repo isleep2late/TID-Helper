@@ -408,8 +408,10 @@
       } else {
         if (t.id === 'buffer-tid') { A.setPref('buffer', { tid: t.value }); update(game); }
         else if (t.id === 'buffer-set') { A.setPref('buffer', { set: t.value }); update(game); }
-        else if (t.id === 'buffer-corr') { A.setPref('buffer', { correctionMs: Number(t.value) || 0 }); return 'render'; }
-        else if (t.id === 'buffer-beeps') { A.setPref('buffer', { beeps: Number(t.value) || 0 }); return 'render'; }
+        // patched in place, never 'render': these two live OUTSIDE #buffer-results, so rebuilding only the
+        // results leaves the field the runner is typing into alone - keyboard, caret and scroll all intact.
+        else if (t.id === 'buffer-corr') { A.setPref('buffer', { correctionMs: Number(t.value) || 0 }); update(game); }
+        else if (t.id === 'buffer-beeps') { A.setPref('buffer', { beeps: Number(t.value) || 0 }); update(game); }
         else if (t.id === 'buffer-got') { A.setPref('buffer', { got: t.value }); update(game); }
         else if (t.id === 'buffer-ran') { A.setPref('buffer', { ranIdx: Number(t.value) || 0 }); update(game); }
       }
