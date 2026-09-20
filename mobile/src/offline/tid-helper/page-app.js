@@ -173,6 +173,41 @@
   // derived) and supplies every word of the label and the text; this only lays it out. External links carry data-ext so
   // the app can hand them to the system browser (page-render.js) while the website opens them in a new tab.
   function linkHtml(url, text) { return '<a href="' + esc(url) + '" data-ext="1" target="_blank" rel="noopener noreferrer">' + esc(text) + '</a>'; }
+  // ---- known manipulation videos ---------------------------------------------------------------------
+  // 74 of the cited entries are YouTube videos naming an exact Trainer ID, across 50 IDs and 14 games -
+  // including four Gen 4 games this app has no mode for. When someone asks for one of those IDs they should
+  // be told plainly that somebody has already published a manipulation of it, and be able to watch it.
+  //
+  // CLICK TO LOAD, ALWAYS. This page is a self-contained offline bundle: it fetches nothing and embeds no
+  // third party until a person asks it to. Rendering an iframe would phone YouTube out of every result card,
+  // offline or not, and put a third-party frame in front of a runner who only wanted a route. So the button
+  // says where it is about to go, and the frame is built on the tap.
+  function videoIdFromUrl(url) {
+    if (typeof url !== 'string') return null;
+    var m = /(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})(?![A-Za-z0-9_-])/.exec(url);
+    return m ? m[1] : null;
+  }
+  function videoEmbedHtml(id) {
+    // privacy-enhanced host and rel=0, matching what the site's own EmbeddedYouTube component uses
+    return '<div class="ytbox"><iframe src="https://www.youtube-nocookie.com/embed/' + esc(id) + '?rel=0"'
+      + ' title="manipulation video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"'
+      + ' allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>';
+  }
+  function watchButtonHtml(id) {
+    return '<span class="watch" id="yt-' + esc(id) + '">'
+      + '<button type="button" class="secondary small" data-yt="' + esc(id) + '">Watch it here</button>'
+      + ' <span class="small muted">loads from YouTube; everything else on this page is offline</span></span>';
+  }
+  // called from the one delegated click handler
+  function showVideo(id) {
+    if (!/^[A-Za-z0-9_-]{11}$/.test(id || '')) return false;
+    var slot = $('yt-' + id);
+    if (!slot) return false;
+    slot.innerHTML = videoEmbedHtml(id);
+    return true;
+  }
+  A.videoIdFromUrl = videoIdFromUrl; A.videoEmbedHtml = videoEmbedHtml; A.showVideo = showVideo;
+
   function sourceEntryHtml(e) {
     var meta = e.author + (e.date ? ', ' + String(e.date).slice(0, 4) : '') + (e.kind !== 'video' ? ' (' + e.kind + ')' : '');
     var h = '<li>' + linkHtml(e.url, e.title) + ' <span class="small muted">' + esc(meta) + '</span>';
@@ -181,13 +216,25 @@
     if (e.console) h += '<span class="sm muted">Console: ' + esc(e.console) + '</span>';
     if (e.note) h += '<span class="sm muted">' + esc(e.note) + '</span>';
     if (e.route) h += '<span class="sm">Route doc: ' + linkHtml(e.route.url, e.route.title) + '</span>';
+    var vid = videoIdFromUrl(e.url);
+    if (vid) h += '<span class="sm">' + watchButtonHtml(vid) + '</span>';
     return h + '</li>';
   }
   function sourcesHtml(game, tid, provenance) {
     if (!A.TS) return '';
     var d = A.TS.describe(game, tid, provenance);
     var cls = d.kind === 'documented' ? ' ok' : d.kind === 'derived' ? ' warn' : '';
-    var h = '<div class="src"><p><span class="tag' + cls + '">' + esc(d.label) + '</span> <span class="small muted">' + esc(d.text) + '</span></p>';
+    var h = '<div class="src">';
+    if (d.kind === 'documented') {
+      // said in one sentence, above the tag: somebody has already done this exact Trainer ID, and their
+      // route is the original. Ours is a second way to the same place, not a correction of theirs.
+      var nvid = d.entries.filter(function (e) { return !!videoIdFromUrl(e.url); }).length;
+      h += '<p class="known"><b>There is already a published manipulation of ' + esc(A.fmtTid(tid)) + '.</b> '
+        + (nvid ? esc(nvid === 1 ? 'A video of it is below - it is the original source, and the route on this page is a different way to the same Trainer ID, not a correction of theirs.'
+                                 : nvid + ' videos of it are below - they are the original source, and the route on this page is a different way to the same Trainer ID, not a correction of theirs.')
+                : esc('The write-up is below; it is the original source for this ID.')) + '</p>';
+    }
+    h += '<p><span class="tag' + cls + '">' + esc(d.label) + '</span> <span class="small muted">' + esc(d.text) + '</span></p>';
     if (d.entries.length) h += '<ul class="srcs">' + d.entries.map(sourceEntryHtml).join('') + '</ul>';
     return h + '</div>';
   }

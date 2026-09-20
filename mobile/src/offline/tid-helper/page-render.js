@@ -115,6 +115,7 @@
     // handled here rather than per mode: the button belongs to whichever field names it, and flipping
     // fires the field's own 'input' event, so the mode's existing handler does the saving.
     var sf = t.closest && t.closest('[data-sign]'); if (sf) { A.flipSign(sf.getAttribute('data-sign')); return; }
+    var yt = t.closest && t.closest('[data-yt]'); if (yt) { A.showVideo(yt.getAttribute('data-yt')); return; }
     if (t.closest && t.closest('#runstop')) { A.widgets.stopAll(); return; }
     if (A.screen === 'mode' && A.modes[A.mode] && A.modes[A.mode].onEvent) {
       var r = A.modes[A.mode].onEvent(ev, A.game);

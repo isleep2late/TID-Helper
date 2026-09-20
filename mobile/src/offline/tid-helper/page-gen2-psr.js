@@ -612,7 +612,14 @@
         + '<p class="small muted">Hold window ' + r.plateau.width_frames + ' frames'
         + (extra === 0 ? ', no backouts' : ', ' + (r.pre + r.post) + ' backout' + (r.pre + r.post === 1 ? '' : 's') + (r.opt ? ' and an OPTION step' : ''))
         + ', wait ' + r.waitFrames + ' frames.</p>'
-        + '<ol class="plain">' + scriptLines(D, r).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol>';
+        + '<ol class="plain">' + scriptLines(D, r).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol>'
+        // WHERE THIS TRAINER ID COMES FROM. Every other mode that resolves a specific Trainer ID has said
+        // this since the sources registry landed; this one never did, so a runner who asked for 62471 got a
+        // route with no hint that CasualPokePlayer had published a manipulation of that exact ID in 2020 and
+        // that the app was simply showing a different way to the same place. Reported 2026-09-20.
+        // 'derived' is the honest provenance here: these routes come out of this project's own sweep, and the
+        // registry upgrades that to 'documented' by itself when it holds a source for the exact ID.
+        + A.sourcesHtml(game, tid, 'derived');
     }
     // WHY A TYPED ID CAN VANISH. This branch used to read "Type a Trainer ID above to build the cue" whatever
     // had happened, including when a Trainer ID HAD been typed and simply had no route on the chosen game or
