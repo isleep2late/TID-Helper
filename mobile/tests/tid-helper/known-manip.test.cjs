@@ -77,12 +77,22 @@ test('videoIdFromUrl accepts the forms the registry actually holds, and rejects 
   assert.deepStrictEqual(bad.map((e) => e.url), [], 'cited YouTube urls whose id could not be parsed');
 });
 
-test('the registry really does cover more than this app has modes for', () => {
+test('how many cited videos this feature can actually reach, and how many it cannot', () => {
+  // Honesty about the gap. The registry holds videos for Gen 4, but there is no Gen 4 MODE, so there is no
+  // screen on which to type a Gen 4 Trainer ID and nothing to attach the citation to. Those 16 entries are
+  // carried, not offered. This test states both numbers so neither can be quietly misreported: if a Gen 4
+  // mode ever lands, the stranded count drops and this fails until the number is corrected.
+  const TYPEABLE = new Set(['red', 'blue', 'yellow', 'gold', 'silver', 'crystal',
+                            'ruby', 'sapphire', 'emerald', 'firered', 'leafgreen']);
   const vids = (D.sources.entries || []).filter((e) => e.tid && A.videoIdFromUrl(e.url));
-  const games = new Set();
-  vids.forEach((e) => (e.games || []).forEach((g) => games.add(g)));
-  assert.ok(vids.length >= 70, 'expected ~74 cited manip videos, found ' + vids.length);
-  for (const g of ['diamond', 'pearl', 'platinum', 'heartgold', 'soulsilver']) {
-    assert.ok(games.has(g), 'Gen 4 ' + g + ' has cited manip videos and they should stay reachable');
-  }
+  const reach = vids.filter((e) => (e.games || []).some((g) => TYPEABLE.has(g)));
+  const strand = vids.filter((e) => !(e.games || []).some((g) => TYPEABLE.has(g)));
+  assert.equal(vids.length, 74, 'cited manip videos');
+  assert.equal(reach.length, 58, 'videos a runner can actually be shown, because a mode exists for the game');
+  assert.equal(strand.length, 16, 'videos the registry holds for games with no mode - carried, not offered');
+  const byGame = {};
+  strand.forEach((e) => (e.games || []).forEach((g) => { byGame[g] = (byGame[g] || 0) + 1; }));
+  assert.deepStrictEqual(Object.keys(byGame).sort(),
+    ['diamond', 'heartgold', 'pearl', 'platinum', 'soulsilver'],
+    'the stranded ones are exactly Gen 4, which has no mode');
 });
