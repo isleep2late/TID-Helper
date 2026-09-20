@@ -26,6 +26,15 @@
 })(typeof globalThis !== 'undefined' ? globalThis : (typeof self !== 'undefined' ? self : this), function (root, G5) {
   'use strict';
   function fail(msg) { throw new Error(msg); }
+  // REGISTRATION HAPPENS AT SCRIPT LOAD, BEFORE bindData(). A.D does not exist yet at that moment, so
+  // reading A.D here threw a TypeError, the module never reached registerMode(), and the Gen 5 games
+  // silently vanished from the home screen while everything else carried on. The data global IS already
+  // there - the data script is slotted above the page scripts - which is what page-gen2-psr.js reads.
+  function gen5Games() {
+    var d = root.TID_HELPER_DATA, g = d && d.gen5 && d.gen5.games;
+    return g ? Object.keys(g) : ['black', 'white', 'black2', 'white2'];
+  }
+
   function model(D) { if (!D || !D.gen5) fail('gen5-tid.json is not loaded'); return D.gen5; }
   function game(D, key) { var g = model(D).games[key]; if (!g) fail('no gen5 game ' + key); return g; }
 
@@ -299,7 +308,7 @@
     }
 
     A.registerMode({
-      id: 'gen5', title: 'DS boot seed', games: Object.keys(A.D.gen5.games),
+      id: 'gen5', title: 'DS boot seed', games: gen5Games(),
       render: render, onEvent: onEvent,
       line: function () { return model(A.D).status; },
       sub: function () { return 'needs a console profile'; }

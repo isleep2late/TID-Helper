@@ -25,6 +25,15 @@
 })(typeof globalThis !== 'undefined' ? globalThis : (typeof self !== 'undefined' ? self : this), function (root, G4, ST4) {
   'use strict';
   function fail(msg) { throw new Error(msg); }
+  // REGISTRATION HAPPENS AT SCRIPT LOAD, BEFORE bindData(). A.D does not exist yet at that moment, so
+  // reading A.D here threw a TypeError, the module never reached registerMode(), and the Gen 4 games
+  // silently vanished from the home screen while everything else carried on. The data global IS already
+  // there - the data script is slotted above the page scripts - which is what page-gen2-psr.js reads.
+  function gen4Games() {
+    var d = root.TID_HELPER_DATA, g = d && d.gen4 && d.gen4.games;
+    return g ? Object.keys(g) : ['diamond', 'pearl', 'platinum', 'heartgold', 'soulsilver'];
+  }
+
   function model(D) { if (!D || !D.gen4) fail('gen4-tid.json is not loaded'); return D.gen4; }
   function game(D, key) { var g = model(D).games[key]; if (!g) fail('no gen4 game ' + key); return g; }
   function isHgss(D, key) { return game(D, key).family === 'hgss'; }
@@ -300,7 +309,7 @@
     }
 
     A.registerMode({
-      id: 'gen4', title: 'DS clock and boot delay', games: Object.keys(A.D.gen4.games),
+      id: 'gen4', title: 'DS clock and boot delay', games: gen4Games(),
       render: render, onEvent: onEvent,
       line: function () { return model(A.D).status; },
       sub: function (g) { return isHgss(A.D, g) ? 'verify with Elm calls' : 'verify with the Poketch coin toss'; }

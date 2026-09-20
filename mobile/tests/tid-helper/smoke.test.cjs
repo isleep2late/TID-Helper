@@ -37,7 +37,16 @@ test('headless Chrome: ready, init, home, Red -> buffer guide -> 16589 -> first 
       assert.equal(await page.evalJson('TidHelperApp.pref("cue","flash",true)'), false, 'the init prefs are in force');
       // home: every game card with its methods; the status line under each method is the data's
       const home = await page.evalJson('JSON.stringify(Array.from(document.querySelectorAll(".choice.mode")).map(function(b){return [b.getAttribute("data-game"), b.getAttribute("data-mode"), b.querySelector(".clamp").textContent]}))').then(JSON.parse);
-      const want = { red: ['gen1-buffer', 'gen1-timed'], blue: ['gen1-timed'] /* no community list for Blue: no buffer guide */, yellow: ['gen1-buffer', 'gen1-timed'], gold: ['gen2'], silver: ['gen2'], crystal: ['gen2'], ruby: ['gen3-rs'], sapphire: ['gen3-rs'], emerald: ['gen3-sid'], firered: ['gen3-sid'], leafgreen: ['gen3-sid'] };
+      // Every game the home screen offers, and exactly which methods. Hand-maintained ON PURPOSE: a derived
+      // list would pass however wrong the page got. It had gone stale while this whole test sat skipped
+      // (node 18 has no global WebSocket, so it cannot drive Chrome) - it still expected Red to have two
+      // methods after sc-metronome made three, and it missed the Gen 4 and Gen 5 games entirely, which is
+      // how both of those shipped registering nothing at all. Adding a method means updating this line.
+      const want = { red: ['gen1-buffer', 'gen1-timed', 'sc-metronome'], blue: ['gen1-timed', 'sc-metronome'] /* no community list for Blue: no buffer guide */, yellow: ['gen1-buffer', 'gen1-timed', 'sc-metronome'],
+        gold: ['gen2', 'gen2-psr', 'sc-metronome'], silver: ['gen2', 'gen2-psr', 'sc-metronome'], crystal: ['gen2', 'gen2-psr', 'sc-metronome'],
+        ruby: ['gen3-rs', 'gen3-enc'], sapphire: ['gen3-rs', 'gen3-enc'], emerald: ['gen3-sid'], firered: ['gen3-sid'], leafgreen: ['gen3-sid'],
+        diamond: ['gen4'], pearl: ['gen4'], platinum: ['gen4'], heartgold: ['gen4'], soulsilver: ['gen4'],
+        black: ['gen5'], white: ['gen5'], black2: ['gen5'], white2: ['gen5'] };
       for (const [g, modes] of Object.entries(want)) assert.deepEqual(home.filter((h) => h[0] === g).map((h) => h[1]), modes, g + ' methods');
       const line = (g, m) => home.find((h) => h[0] === g && h[1] === m)[2];
       assert.equal(line('red', 'gen1-buffer'), D.buffer.platforms.gbp.status);

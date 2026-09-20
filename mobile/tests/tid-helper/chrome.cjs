@@ -16,7 +16,11 @@ const CHROME = process.env.TID_HELPER_CHROME || '/usr/bin/google-chrome';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function chromeAvailable() {
-  if (typeof WebSocket !== 'function') return { ok: false, reason: 'node ' + process.version + ' has no global WebSocket (need node 22+)' };
+  // A SKIP HERE IS NOT FREE. These are the only tests that boot the real page, and on 2026-09-20 the live
+  // site shipped broken twice in one day while the suite was green, because this skipped silently on the
+  // default node 18. The reason now says what to do about it rather than only what is wrong.
+  if (typeof WebSocket !== 'function') return { ok: false, reason: 'node ' + process.version + ' has no global WebSocket (need node 22+). '
+    + 'These are the ONLY tests that boot the real page - run them with a node 22+ on PATH (npm run test:tid-helper:browser) before trusting a green suite' };
   if (!fs.existsSync(CHROME)) return { ok: false, reason: 'no Chrome binary at ' + CHROME };
   return { ok: true, reason: '' };
 }

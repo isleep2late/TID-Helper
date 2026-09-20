@@ -140,7 +140,13 @@
   function boot() {
     try {
       A.Cue = root.TidHelperCue; A.Story = root.TidHelperStoryboard;
-      A.bindData(root.TID_HELPER_DATA, { G1: root.ShinyGen1Tid, G2: root.ShinyGen2Tid, BD: root.BufferDecode, TS: root.TidSources });
+      // EVERY engine bindData demands, from the globals the inlined scripts define. This line and
+      // bindData's checklist are one contract in two places: adding Gen 4 and Gen 5 to the checklist and
+      // not to here shipped a page that threw "ShinyGen4 engine missing" on boot and rendered nothing,
+      // while the suite stayed green because tests/tid-helper/helpers.cjs builds its OWN engines object.
+      // A test that supplies the dependencies itself cannot notice the real caller failing to.
+      A.bindData(root.TID_HELPER_DATA, { G1: root.ShinyGen1Tid, G2: root.ShinyGen2Tid, BD: root.BufferDecode,
+        TS: root.TidSources, G4: root.ShinyGen4, ST4: root.ShinySeedTime4, G5: root.ShinyGen5 });
       if (!root.TidHelperGen3Rs || !root.TidHelperGen3Rs.checkLcrng(A.D)) throw new Error('the R/S engine is missing');
       var local = A.readLocal(); if (local) A.prefs = A.mergePrefs(A.prefs, local);
       A.Cue.visualOffsetMs = Number(A.pref('cue', 'visualOffsetMs', 0)) || 0;
