@@ -219,6 +219,42 @@ function validate(raw) {
     // the phrase "Secret ID" inside the sentence saying they have none, so it cannot be substring-tested
     if (!Array.isArray(pm.rolls) || !pm.rolls.includes('tid')) fail('gen2-psr.json ' + label + ' rolls must be a list naming at least tid');
     if ((gk4(label) === 'crystal') !== pm.rolls.includes('sid')) fail('gen2-psr.json ' + label + ': only Crystal rolls a Secret ID; rolls says ' + JSON.stringify(pm.rolls));
+    // The reverse table is optional - only Crystal has been swept - but a malformed one is worse than none,
+    // because every diagnosis it hands a runner would be silently wrong. Check its shape and its honesty.
+    if (pm.reverse) {
+      const rv = pm.reverse;
+      for (const k of ['wait_step', 'wait_max', 'families', 'tids_b64', 'no_roll_idx', 'rows']) if (!(k in rv)) fail('gen2-psr.json ' + label + ' reverse lacks ' + k);
+      if (!Array.isArray(rv.families) || !rv.families.length) fail('gen2-psr.json ' + label + ' reverse ships no families');
+      const per = Math.floor(rv.wait_max / rv.wait_step) + 1;
+      if (b64len(rv.tids_b64) !== rv.families.length * per * 2)
+        fail('gen2-psr.json ' + label + ' reverse tids_b64 is ' + b64len(rv.tids_b64) + ' bytes, not ' + rv.families.length * per * 2);
+      if (rv.wait_step !== pm.poll_period_frames)
+        fail('gen2-psr.json ' + label + ' reverse steps the wait by ' + rv.wait_step + ' but the menu is polled every ' + pm.poll_period_frames + ' frames');
+      if (rv.wait_max !== pm.wait_max_frames) fail('gen2-psr.json ' + label + ' reverse wait_max disagrees with wait_max_frames');
+      if (!Array.isArray(rv.no_roll_idx)) fail('gen2-psr.json ' + label + ' reverse no_roll_idx must be a list, because FFFF is a real Trainer ID and cannot double as a sentinel');
+      if (rv.no_roll_cells !== undefined && rv.no_roll_idx.length !== rv.no_roll_cells)
+        fail('gen2-psr.json ' + label + ' reverse says ' + rv.no_roll_cells + ' empty cells but lists ' + rv.no_roll_idx.length);
+      // EVERY covered route must be answerable, or the "what did you get?" box is a trap: it would tell a
+      // runner it has nothing exactly when they missed, which is the only time they open it.
+      const rvIdx = new Set(rv.families);
+      const sc = Buffer.from(pm.script_code_b64, 'base64'), cb = Buffer.from(pm.covered_bitmap_b64, 'base64');
+      const empty = new Set(rv.no_roll_idx), tb = Buffer.from(rv.tids_b64, 'base64');
+      const famPos = new Map(rv.families.map((f, i) => [f, i]));
+      let miss = null, wrong = null, checked = 0;
+      for (let t = 0; t < 65536 && !miss && !wrong; t++) {
+        if (!((cb[t >> 3] >> (t & 7)) & 1)) continue;   // LSB-first: the order make_psr2.py writes
+        const v = (sc[3 * t] << 16) | (sc[3 * t + 1] << 8) | sc[3 * t + 2];
+        const fam = [v >> 16, (v >> 14) & 3, (v >> 13) & 1, (v >> 11) & 3].join(',');
+        if (!rvIdx.has(fam)) { miss = t + ' (family ' + fam + ')'; break; }
+        const cell = famPos.get(fam) * per + (v & 0x7ff);
+        if (empty.has(cell)) { wrong = t + ' maps to a cell the reverse table calls empty'; break; }
+        if (((tb[cell * 2] << 8) | tb[cell * 2 + 1]) !== t) { wrong = t + ' but the reverse table says ' + ((tb[cell * 2] << 8) | tb[cell * 2 + 1]); break; }
+        checked++;
+      }
+      if (miss) fail('gen2-psr.json ' + label + ' reverse has no row for covered Trainer ID ' + miss);
+      if (wrong) fail('gen2-psr.json ' + label + ' forward and reverse tables disagree: Trainer ID ' + wrong);
+      if (checked < 60000) fail('gen2-psr.json ' + label + ' reverse round-trip only checked ' + checked + ' Trainer IDs');
+    }
     // the printed backout step is the one a person follows; it must not tell them to wait for the title
     const backoutStep = (pm.steps || []).find((x) => /Back out/.test(x)) || '';
     if (/until the title/i.test(backoutStep)) fail('gen2-psr.json ' + label + ' backout step tells the runner to hold B until the title screen - the harness switches to START ' + pm.backout_b_frames + ' frames in, long before the title is visible');

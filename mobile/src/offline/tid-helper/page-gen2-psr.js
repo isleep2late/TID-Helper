@@ -161,8 +161,12 @@
   // them for the same reason: the route was RIGHT and the machine underneath it was not the one it was measured
   // on, and NOTHING on screen said so.
   //
-  //  - ROM revision. Crystal 1.0 and 1.1 differ in 584 bytes. The owner ran `crystal_11_built.gbc` (sha1
-  //    f2f52230...) against a table derived on 1.0 (f4cd194b...) and got three unrelated Trainer IDs.
+  //  - ROM revision. This was FIRST BLAMED for three of those attempts and that was WRONG, measured 2026-09-20:
+  //    the owner ran `crystal_11_built.gbc` (sha1 f2f52230...) against a table derived on 1.0 (f4cd194b...), and
+  //    replaying the same route on BOTH binaries at W=680/684/688/692/696 gave byte-identical output. The two
+  //    revisions differ in 584 bytes, none of which touch this path. The sha1 is printed because provenance
+  //    should be checkable, NOT because a revision mismatch is a known cause of a miss - it is not one. All four
+  //    of those attempts were the console, below. Do not re-derive the revision claim from the sha1 being here.
   //  - Console. This table is GBA silicon with the GBA flag set (Game Boy Player / GBA / GBA SP). A plain Game
   //    Boy Color is a DIFFERENT MACHINE for this purpose: the flag changes the initial register state, which
   //    changes the divider that seeds the Gen 2 RNG. And it is invisible - MEASURED on gambatte-core, the menu
@@ -217,9 +221,10 @@
       + 'so check the setting before you start rather than looking for a symptom. On an emulator that means the '
       + 'Game Boy Player / GBA platform mode, not Game Boy Color.');
     out.push(hw.rom
-      ? 'And for ONE ROM: sha1 ' + hw.rom + '. Run `sha1sum` on the file you are about to load and compare it. '
-        + 'Crystal 1.0 and 1.1 are different binaries, and the wrong revision is followable and wrong the same way the '
-        + 'wrong console is.' + (hw.bios ? ' The boot ROM must be sha1 ' + hw.bios + '.' : '')
+      ? 'Derived on ONE ROM: sha1 ' + hw.rom + '. Run `sha1sum` on the file you are about to load if you want to '
+        + 'check the provenance. A revision mismatch is NOT a known cause of a miss: Crystal 1.0 and 1.1 were replayed '
+        + 'side by side on this route and produced identical Trainer IDs. The console above is the one that matters.'
+        + (hw.bios ? ' The boot ROM must be sha1 ' + hw.bios + '.' : '')
       : 'THIS TABLE DOES NOT RECORD WHICH ROM IT WAS DERIVED ON. That is a gap in the data, not a sign that any copy '
         + 'will do: a different revision of ' + m.game + ' is a different binary and gives a different Trainer ID. '
         + 'Until the sha1 is recorded, treat this route as unverified for your copy.'
@@ -335,11 +340,22 @@
              + n + ' families x ' + per + ' waits)');
       var idx = {};
       for (var i = 0; i < n; i++) idx[rv.families[i]] = i;
-      Object.defineProperty(m, '__rev', { value: { by: by, idx: idx, per: per, step: rv.wait_step, fams: rv.families }, enumerable: false });
+      // A cell that produced no roll cannot be marked by a reserved Trainer ID: all 65536 of them are real,
+      // and 14 cells in the Crystal sweep roll FFFF for real. The table therefore ships the empty cells as
+      // an explicit index list, and FFFF in the blob is only filler. Reading the value instead of this list
+      // would have told 14 runners their wait produced nothing when it produced Trainer ID 65535.
+      var empty = {}, nr = rv.no_roll_idx || [];
+      for (var e = 0; e < nr.length; e++) empty[nr[e]] = 1;
+      Object.defineProperty(m, '__rev', { value: { by: by, idx: idx, per: per, step: rv.wait_step, fams: rv.families, empty: empty }, enumerable: false });
     }
     return m.__rev;
   }
-  function revTidAt(rev, fi, wi) { var o = (fi * rev.per + wi) * 2; return (rev.by[o] << 8) | rev.by[o + 1]; }
+  // -1 for a cell that rolled nothing, which is never a Trainer ID, so callers can compare without a guard.
+  function revTidAt(rev, fi, wi) {
+    var i = fi * rev.per + wi;
+    if (rev.empty[i]) return -1;
+    return (rev.by[i * 2] << 8) | rev.by[i * 2 + 1];
+  }
   // Every wait, in frames, that produces `tid` on the family the route belongs to. Empty if none does.
   function waitsFor(rev, fam, tid) {
     var fi = rev.idx[fam], out = [];
@@ -399,7 +415,7 @@
                scriptLines: scriptLines, coverage: coverage, covered: covered, tables: tables, fps: fps,
                rtcStates: rtcStates, tableSource: tableSource,
                hardware: hardware, consoleShort: consoleShort,
-               reverseTable: reverseTable, waitsFor: waitsFor, famKey: famKey,
+               reverseTable: reverseTable, waitsFor: waitsFor, famKey: famKey, revTidAt: revTidAt,
                diagnose: diagnose, recommendCorrection: recommendCorrection };
 
   // ---- UI -------------------------------------------------------------------------------------------
@@ -446,8 +462,10 @@
         + 'Game Boy Player / GBA, not Game Boy Color.</span></p>'
         + (hw.rom
             ? '<p style="margin:.35em 0"><b>ROM:</b> <code>' + esc(hw.rom) + '</code><br>'
-              + '<span class="muted">' + esc(m.game) + '. Check yours with <code>sha1sum</code>; revisions 1.0 and 1.1 are '
-              + 'different binaries and only this one matches.</span></p>'
+              + '<span class="muted">' + esc(m.game) + ' - the copy the table was measured on; check yours with '
+              + '<code>sha1sum</code> if you want to confirm provenance. Revisions 1.0 and 1.1 were replayed side by '
+              + 'side on this route and gave identical Trainer IDs, so a revision mismatch is not a known cause of a '
+              + 'miss. The console is.</span></p>'
             : '<p style="margin:.35em 0"><b>ROM:</b> <b>not recorded by this table.</b><br>'
               + '<span class="muted">A gap in the data, not permission to use any copy: another revision of '
               + esc(m.game) + ' is a different binary and gives a different Trainer ID.</span></p>')

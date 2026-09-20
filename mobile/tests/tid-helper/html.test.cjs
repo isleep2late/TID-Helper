@@ -69,10 +69,15 @@ test('tidHelperHtml.ts: engines, page scripts and the data are inlined; sha1 row
   //            can be asked for instead of only a Trainer ID - 64,742 -> 287,417 addressable pairs
   //  +0.87     Gold and Silver days512 tables: the day-carry cartridge-clock state a resetting runner
   //            can be in. Without it those runners silently get another state's Trainer ID.
-  //  = 12.13 MB, so the ceiling is 13. That is +40% on the offline download since this work started;
+  //  +1.29     Crystal REVERSE table: 252 route families x 2001 waits, the Trainer ID each wait rolls.
+  //            This is what lets the app answer "I got 42172" with "you pressed 24 frames late" instead of
+  //            "this bundle does not ship that table". Bought with 504,252 emulator boots. It is the single
+  //            largest thing here that a runner uses on a MISS, which is the only time they need help - the
+  //            forward tables only serve people who already succeeded. Earned.
+  //  = 13.44 MB, so the ceiling is 15. That is +55% on the offline download since this work started;
   //    if it needs to come back down, gen1-buffer.json is 6.48 MB of the total and is the real lever,
   //    not these tables.
-  assert.ok(Buffer.byteLength(src) < 13 * 1024 * 1024, 'module under 13 MB: ' + Buffer.byteLength(src));
+  assert.ok(Buffer.byteLength(src) < 15 * 1024 * 1024, 'module under 15 MB: ' + Buffer.byteLength(src));
 });
 
 test('gen-tid-helper-html.cjs --check: the committed module is what the sources give', () => {
