@@ -163,12 +163,11 @@ function validate(raw) {
   const rs = raw.gen3rs;
   const psr = raw.gen2psr;
   for (const k of ['games', 'fps_expression', 'frame_convention', 'buffering', 'timed_elements', 'not_derived', 'citations', 'what_this_is', 'credits', 'credit_note']) if (!(k in psr)) fail('gen2-psr.json lacks ' + k);
-  // the people this methodology is built on must stay named: a page that drops them ships uncredited work
-  if (!Array.isArray(psr.credits) || psr.credits.length < 5) fail('gen2-psr.json credits must list at least the five sources this rests on');
+  // the projects this methodology is built on must stay named: a page that drops them ships uncredited work
+  if (!Array.isArray(psr.credits) || psr.credits.length < 4) fail('gen2-psr.json credits must list at least the four sources this rests on');
   for (const c of psr.credits) for (const k of ['who', 'role', 'what']) if (!str(c[k])) fail('gen2-psr.json credit entry lacks ' + k + ': ' + JSON.stringify(c));
   // the approach is the community's, not this project's: that credit must come first and must not be droppable
   if (!/community/i.test(psr.credits[0].who)) fail('gen2-psr.json credits must lead with the Gen 2 speedrunning community, whose methodology this is');
-  if (!psr.credits.some((c) => /OceanBagel/.test(c.who))) fail('gen2-psr.json credits must thank OceanBagel, whose feedback prompted this derivation');
   // iterate EVERY game the file ships, not just crystal: a Gold or Silver table added later would
   // otherwise be published with none of the checks below ever having looked at it.
   const psrGames = [];

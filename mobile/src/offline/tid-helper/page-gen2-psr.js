@@ -71,7 +71,14 @@
   // Alternate routes reach the SAME Trainer ID with a DIFFERENT Lucky ID, so a specific (TID, LID) pair
   // can be asked for. alt_count_b64 is one byte of count per Trainer ID; alt_stream_b64 is a flat run of
   // 5-byte (LID, script code) records in the same order. Offsets are a prefix sum, computed once.
-  function altTables(m) {
+  function altTables(m, state) {
+    // DAYS0 ONLY, and this is a correctness gate rather than a tidiness one. The alternates are
+    // built from the days0 sweep, but Gold and Silver select a table by the cartridge-clock day
+    // bracket - a different bracket is a different table and a different Trainer ID for the same
+    // inputs. Offering a days0 alternate to someone booting in days512 would hand them a script
+    // that cannot produce what it promises. Crystal is not clock-dependent, so its state is always
+    // days0 and it is unaffected.
+    if (state && state !== 'days0') return null;
     if (!m.__alt) {
       var a = null;
       if (m.alt_count_b64 && m.alt_stream_b64) {
@@ -94,24 +101,100 @@
     return { plateau: pl, plateauIndex: pi, pre: pre, opt: opt === 1, post: post, waitFrames: W, methodology: m };
   }
   // every Lucky ID reachable for this Trainer ID, easiest route first, primary first
-  function lidsFor(D, tid, game, platform) {
+  function lidsFor(D, tid, game, platform, state) {
     var m = meth(D, game, platform);
-    if (!covered(m, tid)) return [];
-    var t = tables(m), out = [{ lid: (t.lid[2 * tid] << 8) | t.lid[2 * tid + 1], primary: true }];
-    var a = altTables(m);
+    if (!covered(m, tid, state)) return [];
+    var t = tables(m, state), out = [{ lid: (t.lid[2 * tid] << 8) | t.lid[2 * tid + 1], primary: true }];
+    var a = altTables(m, state);
     if (a) for (var k = a.off[tid]; k < a.off[tid + 1]; k++) {
       var b = k * 5;
       out.push({ lid: (a.st[b] << 8) | a.st[b + 1], primary: false, code: (a.st[b + 2] << 16) | (a.st[b + 3] << 8) | a.st[b + 4] });
     }
     return out;
   }
+  // The community writes Lucky IDs as five digits - 01001, Kenya's OT ID - so the page does too.
+  // Echoing "1001" back at someone who typed "01001" reads as though the tool misheard them.
+  function fmtLid(l) { return ('00000' + l).slice(-5) + ' ($' + ('000' + l.toString(16).toUpperCase()).slice(-4) + ')'; }
+
+  // ---- searching BY Lucky ID -------------------------------------------------------------------
+  // The tables are indexed by Trainer ID, so "which Trainer IDs give Lucky ID X" is a scan, not a
+  // lookup: one linear pass over the primary array (65,536) plus the alternate stream (~256,000).
+  // A few milliseconds, done on demand - a resident Lucky ID index would cost more phone memory than
+  // the scan costs time.
+  //
+  // WHY IT EXISTS. Some published manips are named by their Lucky ID, not their Trainer ID: the
+  // Gold/Silver/Crystal glitchless route wants Lucky ID 01001, which is Kenya's fixed OT ID, so the
+  // Radio Tower lottery pays the Master Ball. The Trainer ID that comes with it is incidental.
+  // Until this, the only way in was to already know a Trainer ID that happened to carry it - exactly
+  // backwards - and a runner asking for the manip by the number it is named after got "Type a
+  // Trainer ID to get its script."
+  function lidSearch(D, lid, game, platform, state, cap) {
+    if (!(Number.isInteger(lid) && lid >= 0 && lid <= 0xFFFF)) fail('Lucky ID must be 0..65535');
+    var m = meth(D, game, platform), t = tables(m, state), out = [], limit = cap || 40;
+    for (var tid = 0; tid < 65536 && out.length < limit; tid++) {
+      if (((t.bm[tid >> 3] >> (tid & 7)) & 1) !== 1) continue;
+      if (((t.lid[2 * tid] << 8) | t.lid[2 * tid + 1]) === lid) out.push({ tid: tid, fromAlternate: false });
+    }
+    var a = altTables(m, state);
+    if (a && out.length < limit) {
+      for (var k = 0; k < a.pairs && out.length < limit; k++) {
+        var b = k * 5;
+        if (((a.st[b] << 8) | a.st[b + 1]) !== lid) continue;
+        // Which Trainer ID owns record k. The stream is laid out in Trainer-ID order, so a binary
+        // search over the prefix-sum offsets finds the owner. (That ordering was broken until
+        // 2026-09-20 - see make_psr2.py - and every alternate was filed under the wrong Trainer ID.)
+        var lo = 0, hi = 65535, owner = 0;
+        while (lo <= hi) {
+          var mid = (lo + hi) >> 1;
+          if (a.off[mid] <= k) { owner = mid; lo = mid + 1; } else { hi = mid - 1; }
+        }
+        out.push({ tid: owner, fromAlternate: true });
+      }
+    }
+    out.forEach(function (o) {
+      try { o.route = o.fromAlternate ? routeForPair(D, o.tid, lid, game, platform, state) : routeFor(D, o.tid, game, platform, state); }
+      catch (e) { o.route = null; }
+    });
+    return out.filter(function (o) { return o.route; }).sort(function (x, y) {
+      var ax = x.route.pre + (x.route.opt ? 1 : 0) + x.route.post, ay = y.route.pre + (y.route.opt ? 1 : 0) + y.route.post;
+      return ax - ay || x.route.waitFrames - y.route.waitFrames || x.tid - y.tid;
+    });
+  }
+
+  // ---- published targets, by name ----------------------------------------------------------------
+  // gen2-tid.json carries the community's named manips (target_sets), each stated in whatever terms
+  // the community states it in - some a Trainer ID, some a Lucky ID, some an exact pair - along with
+  // the games it applies to and how it was established. Matching what was typed against them turns
+  // "no route" from a dead end into "this is a real target, and here is what it needs".
+  function knownTargets(D, tid, lid, game) {
+    var sets = D.gen2 && D.gen2.target_sets;
+    if (!sets) return [];
+    function hx(v) { return ('000' + (v >>> 0).toString(16).toUpperCase()).slice(-4); }
+    var wantT = Number.isInteger(tid) ? hx(tid) : null, wantL = Number.isInteger(lid) ? hx(lid) : null, out = [];
+    Object.keys(sets).forEach(function (id) {
+      var s = sets[id], hit = false;
+      if (s.kind === 'tid-list') hit = wantT !== null && (s.tids || []).indexOf(wantT) !== -1;
+      else if (s.kind === 'lid-list') hit = (wantL !== null && (s.lids || []).indexOf(wantL) !== -1)
+        // published_pair is the Trainer ID the community quotes ALONGSIDE the Lucky ID - for the
+        // glitchless target that is 28489, and someone who types it is asking about this manip even
+        // though the target itself is keyed by the Lucky ID. Saying nothing here is how 28489 got
+        // mistaken for the manip when it is only the Trainer ID one published script happens to land.
+        || (wantT !== null && s.published_pair && s.published_pair[0] === wantT);
+      else if (s.kind === 'pair-list') hit = (s.pairs || []).some(function (pr) {
+        return (wantT !== null && pr[0] === wantT) || (wantL !== null && pr[1] === wantL);
+      });
+      if (hit) out.push({ id: id, set: s, appliesHere: (s.games || []).indexOf(game) !== -1 });
+    });
+    return out;
+  }
+
   // a route for an exact (Trainer ID, Lucky ID) pair, or null
-  function routeForPair(D, tid, lid, game, platform) {
+  function routeForPair(D, tid, lid, game, platform, state) {
     var m = meth(D, game, platform);
-    var primary = routeFor(D, tid, game, platform);
+    var primary = routeFor(D, tid, game, platform, state);
     if (!primary) return null;
     if (primary.lid === lid) { primary.fromAlternate = false; return primary; }
-    var a = altTables(m);
+    var a = altTables(m, state);
     if (!a) return null;
     for (var k = a.off[tid]; k < a.off[tid + 1]; k++) {
       var b = k * 5;
@@ -422,6 +505,7 @@
   }
   function coverage(D, game, platform) { var m = meth(D, game, platform); return m.coverage; }
   var pure = { meth: meth, routeFor: routeFor, routeForPair: routeForPair, lidsFor: lidsFor, altTables: altTables,
+               lidSearch: lidSearch, knownTargets: knownTargets,
                WAIT_WINDOW: WAIT_WINDOW, waitEndButton: waitEndButton, waitEndWhat: waitEndWhat,
                waitPressSeconds: waitPressSeconds, cueProgram: cueProgram,
                scriptLines: scriptLines, coverage: coverage, covered: covered, tables: tables, fps: fps,
@@ -565,37 +649,108 @@
       return ms ? ' (with your ' + (ms > 0 ? '+' : '') + ms.toFixed(0) + ' ms correction)' : '';
     }
     function setCorrNote(ms) { var n = A.$('g2psr-corrnote'); if (n) n.textContent = corrNote(ms); }
+    // What the community calls this number, when it calls it anything. Rendered above the result so a
+    // runner who typed a published target sees it named back to them even when this game cannot route
+    // it - the case that used to read as a flat "not found".
+    function knownTargetHtml(game, tid, lid) {
+      var hits;
+      try { hits = knownTargets(A.D, tid, lid, game); } catch (e) { return ''; }
+      if (!hits.length) return '';
+      return hits.map(function (k) {
+        var s = k.set;
+        var body = '<p><b>' + esc(s.name) + '</b></p>';
+        if (s.route) body += '<p class="small">' + esc(s.route) + '</p>';
+        if (!k.appliesHere) {
+          body += '<p class="small warn">Published for ' + esc((s.games || []).join(', '))
+                + ' - you are on ' + esc(game) + '.</p>';
+        }
+        if (s.protocol === 'community-script') {
+          body += '<p class="small muted">The published version of this uses a community input script that this '
+                + 'tool does not carry. Any route below was found by this tool\u2019s own sweep and reaches the '
+                + 'same value by a different sequence, so follow the steps shown here, not the published ones.</p>';
+        }
+        return A.card ? '<div class="card sub">' + body + '</div>' : body;
+      }).join('');
+    }
+
+    function lidOnlyHtml(game, lid, st) {
+      var hits, m;
+      try { m = meth(A.D, game); hits = lidSearch(A.D, lid, game, PLATFORM, st); }
+      catch (e) { return '<p class="muted">' + esc(A.errMsg ? A.errMsg(e) : String(e.message || e)) + '</p>'; }
+      var head = knownTargetHtml(game, null, lid);
+      if (!hits.length) {
+        return head + '<p>No route on <b>' + esc(m.game) + '</b> produces Lucky ID ' + esc(fmtLid(lid))
+          + (st !== 'days0' ? ' in cartridge-clock state ' + esc(st) : '') + '.</p>'
+          + '<p class="small">This sweep reached ' + m.coverage.tids_covered.toLocaleString() + ' of the 65,536 Trainer IDs, '
+          + 'and the Lucky ID is a separate roll - so a Lucky ID being absent here does not mean it is unreachable on the '
+          + 'cartridge, only that no sequence in this family produced it.</p>';
+      }
+      var rows = hits.map(function (x) {
+        var r = x.route, extra = r.pre + (r.opt ? 1 : 0) + r.post;
+        return '<tr><td class="mono">' + esc(A.fmtTid(x.tid)) + '</td>'
+          + '<td>' + r.plateau.hold_lo_frame + '-' + r.plateau.hold_hi_frame + '</td>'
+          + '<td>' + extra + '</td>'
+          + '<td>' + A.fmtS(r.waitFrames / fps(A.D), 1) + '</td>'
+          + '<td>' + (x.fromAlternate ? '<span class="warn">alternate</span>' : 'primary') + '</td>'
+          + '<td><button type="button" class="secondary small" data-g2psr-uselid="' + x.tid + '">use</button></td></tr>';
+      }).join('');
+      return head
+        + '<p><b>' + hits.length + '</b> Trainer ID' + (hits.length === 1 ? '' : 's') + ' on <b>' + esc(m.game)
+        + '</b> can be reached with Lucky ID ' + esc(fmtLid(lid)) + ', easiest first.</p>'
+        + '<p class="small muted">Pick any of them: the Lucky ID is the same in every row, so if the Lucky ID is what '
+        + 'you are manipulating, the Trainer ID beside it is just what you end up with.</p>'
+        + '<table class="tbl"><tr><th>Trainer ID</th><th>hold window</th><th>extra actions</th><th>wait</th><th>route</th><th></th></tr>'
+        + rows + '</table>';
+    }
+
     function resultHtml(game) {
       var D = A.D, tid = parseTid(p('tid', game, '')), st = stateOf(game);
-      if (tid === null) return '<p class="muted">Type a Trainer ID to get its script.</p>';
+      var lidTyped = parseTid(p('lid', game, ''));
+      // Lucky ID alone is a legitimate question. Several published manips are named by their Lucky ID
+      // and the Trainer ID that comes with one is incidental, so asking for one without the other has
+      // to search rather than refuse.
+      if (tid === null && Number.isInteger(lidTyped)) return lidOnlyHtml(game, lidTyped, st);
+      if (tid === null) return '<p class="muted">Type a Trainer ID to get its script \u2014 or a Lucky ID on its own to find the Trainer IDs that carry it.</p>';
       if (!Number.isInteger(tid)) return '<p class="muted">That is not a Trainer ID: give a number 0-65535, or hex like $6F49.</p>';
       var m, r, lidWanted = parseTid(p('lid', game, ''));
       try {
         m = meth(D, game);
-        r = Number.isInteger(lidWanted) ? routeForPair(D, tid, lidWanted, game) : routeFor(D, tid, game, PLATFORM, st);
+        r = Number.isInteger(lidWanted) ? routeForPair(D, tid, lidWanted, game, PLATFORM, st) : routeFor(D, tid, game, PLATFORM, st);
       } catch (e) { return '<p class="muted">' + esc(A.errMsg ? A.errMsg(e) : String(e.message || e)) + '</p>'; }
       // a Lucky ID was asked for and this Trainer ID cannot reach it: say which ones it can
       if (Number.isInteger(lidWanted) && !r && covered(m, tid, st)) {
-        var avail = lidsFor(D, tid, game);
+        var avail = lidsFor(D, tid, game, PLATFORM, st);
         // scoped to THIS game. It used to read "by any script in this sweep", which is a claim about all three
         // games and is usually false: 28489 with Lucky ID 56870 has no route on Crystal and a perfectly good one
         // on Gold. A runner told the pair was impossible, who then found it on another game, has every reason to
         // believe the route will work on the cartridge they already had in.
-        return '<p>' + esc(A.fmtTid(tid)) + ' cannot be paired with Lucky ID ' + esc(A.fmtTid(lidWanted))
+        return knownTargetHtml(game, tid, lidWanted) + '<p>' + esc(A.fmtTid(tid)) + ' cannot be paired with Lucky ID ' + esc(fmtLid(lidWanted))
           + ' on <b>' + esc(m.game) + '</b> (cartridge clock ' + esc(st) + ').</p><p class="small">On this game it reaches ' + avail.length + ' Lucky ID'
-          + (avail.length === 1 ? '' : 's') + ': ' + avail.slice(0, 24).map(function (x) { return esc(A.fmtTid(x.lid)); }).join(', ')
+          + (avail.length === 1 ? '' : 's') + ': ' + avail.slice(0, 24).map(function (x) { return esc(fmtLid(x.lid)); }).join(', ')
           + (avail.length > 24 ? ', and more' : '') + '.</p>'
+          // The question behind the question. Someone who typed a Trainer ID AND a Lucky ID that do
+          // not go together is usually chasing the Lucky ID - it is the half that published targets
+          // are named after - so say how many Trainer IDs do carry it rather than stopping at "no".
+          + (function () {
+              var alt;
+              try { alt = lidSearch(D, lidWanted, game, PLATFORM, st); } catch (e) { return ''; }
+              if (!alt.length) return '';
+              return '<p class="small">If the <b>Lucky ID</b> is what you are after, clear the Trainer ID box and leave '
+                + esc(fmtLid(lidWanted)) + ' in: <b>' + alt.length + '</b> Trainer ID' + (alt.length === 1 ? '' : 's')
+                + ' on this game reach it, the easiest being ' + esc(A.fmtTid(alt[0].tid)) + '.</p>';
+            })()
           + carriedByHtml(carriedBy(D, tid, lidWanted, game, st));
       }
       if (!r) {
         var cv = tableSource(m, st).coverage;
-        return '<p>' + esc(A.fmtTid(tid)) + ' is one of the ' + (65536 - cv.tids_covered)
+        return knownTargetHtml(game, tid, Number.isInteger(lidWanted) ? lidWanted : null) + '<p>' + esc(A.fmtTid(tid)) + ' is one of the ' + (65536 - cv.tids_covered)
           + ' Trainer IDs (' + (100 - cv.percent).toFixed(2) + '%) the ' + esc(m.game) + ' sweep never produced'
           + (st !== 'days0' ? ' in cartridge-clock state ' + esc(st) : '') + '. '
           + 'Try the timed tap method for it, or pick another ID.</p>'
           + carriedByHtml(carriedBy(D, tid, null, game, st));
       }
       var extra = r.pre + (r.opt ? 1 : 0) + r.post;
+      var known = knownTargetHtml(game, tid, Number.isInteger(lidWanted) ? lidWanted : r.lid);
       // an alternate carries less evidence than a primary, and the page says which one this is
       var altWarn = r.fromAlternate
         ? '<p class="small warn"><b>This is an alternate route.</b> The cross-check that validates this table - '
@@ -606,7 +761,7 @@
           + 'an exact (Trainer ID, Lucky ID) pair as unverified until the sweep harness is re-run over them; the '
           + 'route you get by leaving the Lucky ID box empty is the validated one.</p>'
         : '';
-      return hardwareHtml(m) + altWarn + '<p><b>' + esc(A.fmtTid(tid)) + '</b> - Lucky ID ' + esc(A.fmtTid(r.lid))
+      return known + hardwareHtml(m) + altWarn + '<p><b>' + esc(A.fmtTid(tid)) + '</b> - Lucky ID ' + esc(fmtLid(r.lid))
         + (rollsSid(m) ? ', Secret ID ' + esc(A.fmtTid(r.sid)) : '')
         + (rtcStates(m).length > 1 ? ' <span class="muted">(cartridge clock: ' + esc(r.rtcState) + ')</span>' : '') + '.</p>'
         + '<p class="small muted">Hold window ' + r.plateau.width_frames + ' frames'
@@ -615,8 +770,8 @@
         + '<ol class="plain">' + scriptLines(D, r).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol>'
         // WHERE THIS TRAINER ID COMES FROM. Every other mode that resolves a specific Trainer ID has said
         // this since the sources registry landed; this one never did, so a runner who asked for 62471 got a
-        // route with no hint that CasualPokePlayer had published a manipulation of that exact ID in 2020 and
-        // that the app was simply showing a different way to the same place. Reported 2026-09-20.
+        // route with no hint that a manipulation of that exact ID had been published in 2020 and that the
+        // app was simply showing a different way to the same place. Reported 2026-09-20.
         // 'derived' is the honest provenance here: these routes come out of this project's own sweep, and the
         // registry upgrades that to 'documented' by itself when it holds a source for the exact ID.
         + A.sourcesHtml(game, tid, 'derived');
@@ -638,7 +793,7 @@
         try { mg = meth(D, g); } catch (e) { return; }
         if (askedPair) {
           var rp = null;
-          try { rp = routeForPair(D, tid, lid, g); } catch (e) { rp = null; }
+          try { rp = routeForPair(D, tid, lid, g, PLATFORM, 'days0'); } catch (e) { rp = null; }
           if (rp) out.push({ game: g, name: mg.game, state: rp.rtcState });
           return;
         }
@@ -671,6 +826,12 @@
         return;
       }
       c = m.coverage;
+      // ONE clock state for the whole render. This used to be read from a variable declared inside
+      // the `if (rtcStates(m).length > 1)` block below, so it did not exist on Crystal - which has a
+      // single state and never renders that card. The Trainer ID card added on 2026-09-20 asks the
+      // state (the alternates are days0-only) and referenced it from outside that block, which threw
+      // a ReferenceError before a single byte of the page was written, on every game.
+      var st = stateOf(game);
       // THE GAME, FIRST. This heading used to be m.name - the methodology's description, which is byte-identical
       // on Gold, Silver and Crystal - so the page looked exactly the same whichever game you had chosen, and the
       // only text identifying it was the methodology id most of the way down the status card at the bottom.
@@ -696,13 +857,12 @@
         + te.map(esc).join('; and ') + '.</p>'
         + (D.gen2psr.timed_elements_note ? '<p class="small warn">' + esc(D.gen2psr.timed_elements_note) + '</p>' : ''));
       if (rtcStates(m).length > 1) {
-        var st0 = stateOf(game);
         h += A.card('<h3>Cartridge clock</h3>'
           + A.choices('g2psr-rtc', rtcStates(m).map(function (k) {
               var src = tableSource(m, k);
               return { id: k, title: k === 'days0' ? 'Fresh clock (days0)' : (src.label || k),
                        sub: src.coverage.tids_covered.toLocaleString() + ' Trainer IDs (' + src.coverage.percent + '%)' };
-            }), st0)
+            }), st)
           // The owner of this tool asked what a clock state was, which is as good a sign as one gets that the
           // term needed explaining before it was used. It was named in the picker, in the status block and, as
           // of today, in the first line of every printed script, and defined nowhere.
@@ -722,18 +882,31 @@
       }
       h += A.card('<h3>Trainer ID</h3>'
         + '<div class="row"><label class="field">Trainer ID<input type="text" id="g2psr-tid" value="' + esc(p('tid', game, '')) + '" placeholder="28489 or $6F49"></label>'
-        + (altTables(m) ? '<label class="field">Lucky ID (optional)<input type="text" id="g2psr-lid" value="' + esc(p('lid', game, '')) + '" placeholder="any"></label>' : '') + '</div>'
-        + (altTables(m)
-            ? '<p class="small muted">Leave the Lucky ID blank for the easiest route to that Trainer ID. Fill it in to ask for an exact pair: '
-              + altTables(m).pairs.toLocaleString() + ' alternate routes are stored, so '
-              + (altTables(m).pairs + m.coverage.tids_covered).toLocaleString() + ' (Trainer ID, Lucky ID) pairs can be asked for.</p>'
-            : '<p class="small muted">' + esc(m.alt_note) + '</p>')
+        + '<label class="field">Lucky ID<input type="text" id="g2psr-lid" value="' + esc(p('lid', game, '')) + '" placeholder="01001, or blank"></label></div>'
+        // THE BOX STAYS IN EVERY CLOCK STATE. It was first drawn only where alternates existed, which
+        // on Gold and Silver meant it vanished the moment a runner picked days512 - and the search
+        // still ran off the remembered value, so the page showed a Lucky ID answer with no Lucky ID
+        // field to change it. Every stored route carries a Lucky ID, alternates or not, so searching
+        // by one is always meaningful; what changes between states is how MANY pairs are reachable,
+        // and that is what the sentence below says.
+        + (altTables(m, st)
+            ? '<p class="small muted">Leave the Lucky ID blank for the easiest route to that Trainer ID; fill in both to ask for an exact pair; '
+              + 'or give a <b>Lucky ID on its own</b> to find every Trainer ID that carries it \u2014 which is how the published '
+              + 'targets named after a Lucky ID, like 01001, are asked for. '
+              + altTables(m, st).pairs.toLocaleString() + ' alternate routes are stored, so '
+              + (altTables(m, st).pairs + tableSource(m, st).coverage.tids_covered).toLocaleString() + ' (Trainer ID, Lucky ID) pairs can be asked for.</p>'
+            : '<p class="small muted">Leave the Lucky ID blank for the easiest route to that Trainer ID, or give a <b>Lucky ID on its own</b> '
+              + 'to find every Trainer ID that carries it. <b>This clock state stores one route per Trainer ID</b>, so only '
+              + tableSource(m, st).coverage.tids_covered.toLocaleString() + ' (Trainer ID, Lucky ID) pairs can be asked for here, against '
+              + (altTables(m, 'days0') ? (altTables(m, 'days0').pairs + m.coverage.tids_covered).toLocaleString() : 'more')
+              + ' on a fresh clock. The alternate routes were swept in the fresh-clock state only, and a route from that sweep '
+              + 'produces a different Trainer ID in this one \u2014 so they are not offered here rather than offered with a warning.</p>')
         + '<div id="g2psr-result">' + resultHtml(game) + '</div>');
       // the cue: the one thing that makes any of this performable
       var rCur = null, tidCur = parseTid(p('tid', game, ''));
       if (Number.isInteger(tidCur)) {
         var lidCur = parseTid(p('lid', game, ''));
-        try { rCur = Number.isInteger(lidCur) ? routeForPair(D, tidCur, lidCur, game) : routeFor(D, tidCur, game, PLATFORM, stateOf(game)); } catch (e) { rCur = null; }
+        try { rCur = Number.isInteger(lidCur) ? routeForPair(D, tidCur, lidCur, game, PLATFORM, stateOf(game)) : routeFor(D, tidCur, game, PLATFORM, stateOf(game)); } catch (e) { rCur = null; }
       }
       var corrMs = Number(p('corr', game, 0)) || 0;
       var frameMs = 1000 / fps(D);
@@ -791,7 +964,7 @@
         var t = parseTid(p('tid', game, ''));
         if (!Number.isInteger(t)) return null;
         var l = parseTid(p('lid', game, ''));
-        try { return Number.isInteger(l) ? routeForPair(A.D, t, l, game) : routeFor(A.D, t, game, PLATFORM, stateOf(game)); }
+        try { return Number.isInteger(l) ? routeForPair(A.D, t, l, game, PLATFORM, stateOf(game)) : routeFor(A.D, t, game, PLATFORM, stateOf(game)); }
         catch (e) { return null; }
       }
       if (ev.type === 'click' && ev.target && ev.target.id === 'g2psr-add') {
@@ -855,6 +1028,12 @@
       if (ev.type === 'click' && ev.target) {
         var c = ev.target.closest('[data-choice="g2psr-rtc"]');
         if (c) { var o2 = {}; o2['rtc.' + game] = c.getAttribute('data-id'); A.setPref(SEC, o2); return 'render'; }
+      }
+      var useLid = ev.type === 'click' && ev.target && ev.target.closest && ev.target.closest('[data-g2psr-uselid]');
+      if (useLid) {
+        var o3 = {}; o3['tid.' + game] = useLid.getAttribute('data-g2psr-uselid');
+        A.setPref(SEC, o3);
+        return 'render';   // a full render is right here: the cue card below depends on the Trainer ID
       }
       if (ev.type !== 'click' && ev.target && (ev.target.id === 'g2psr-tid' || ev.target.id === 'g2psr-lid')) {
         var o = {}; o[(ev.target.id === 'g2psr-lid' ? 'lid.' : 'tid.') + game] = ev.target.value; A.setPref(SEC, o);

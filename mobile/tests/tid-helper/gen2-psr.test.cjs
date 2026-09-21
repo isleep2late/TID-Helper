@@ -227,7 +227,7 @@ test('the recorded cross-check is sane: every bin compared, and no disagreement 
 });
 
 // ---- (Trainer ID, Lucky ID) pair targeting -----------------------------------------------------------
-// OceanBagel's first complaint was that the helper could not find a manip for specific TID/LID values.
+// The first complaint reported was that the helper could not find a manip for specific TID/LID values.
 // One route per Trainer ID answers only 22.5% of the pairs the sweep actually reaches, so Crystal ships
 // an index of the alternates. These tests pin that it is complete and internally consistent.
 

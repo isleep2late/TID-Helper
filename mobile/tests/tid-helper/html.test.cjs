@@ -74,10 +74,18 @@ test('tidHelperHtml.ts: engines, page scripts and the data are inlined; sha1 row
   //            "this bundle does not ship that table". Bought with 504,252 emulator boots. It is the single
   //            largest thing here that a runner uses on a MISS, which is the only time they need help - the
   //            forward tables only serve people who already succeeded. Earned.
-  //  = 13.44 MB, so the ceiling is 15. That is +55% on the offline download since this work started;
-  //    if it needs to come back down, gen1-buffer.json is 6.48 MB of the total and is the real lever,
-  //    not these tables.
-  assert.ok(Buffer.byteLength(src) < 15 * 1024 * 1024, 'module under 15 MB: ' + Buffer.byteLength(src));
+  //  +1.60     Gold and Silver (Trainer ID, Lucky ID) pair index: 112,458 + 112,354 = 224,812 alternate
+  //            routes, capped at 2 per Trainer ID rather than Crystal's 4 because these two sweeps are
+  //            per-clock-bracket and the file was already the largest thing in the bundle. This is what
+  //            gives Gold and Silver a Lucky ID box at all: before 2026-09-20 only Crystal had one, so
+  //            a manip NAMED after its Lucky ID - 01001, Kenya's OT ID, which makes the Radio Tower
+  //            lottery pay the Master Ball - could not be asked for on two of the three games it exists
+  //            on. Gold reaches it at Trainer ID 28349 and Silver at 28553, both harness-confirmed.
+  //            Days0 only, and the page refuses to serve them to a days512 boot.
+  //  = 15.87 MB measured (16,642,370 bytes), so the ceiling is 17. That is +83% on the offline download
+  //    since this work started; if it needs to come back down, gen1-buffer.json is 6.48 MB of the total
+  //    and is the real lever, not these tables.
+  assert.ok(Buffer.byteLength(src) < 17 * 1024 * 1024, 'module under 17 MB: ' + Buffer.byteLength(src));
 });
 
 test('gen-tid-helper-html.cjs --check: the committed module is what the sources give', () => {

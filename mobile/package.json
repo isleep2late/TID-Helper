@@ -7,7 +7,7 @@
   "scripts": {
     "build": "node scripts/gen-tid-helper-data.cjs && node scripts/gen-tid-helper-html.cjs",
     "check": "node scripts/gen-tid-helper-data.cjs --check && node scripts/gen-tid-helper-html.cjs --check",
-    "test": "node --test tests/tid-helper/"
+    "test": "node --test tests/tid-helper/*.test.cjs"
   },
   "devDependencies": {
     "typescript": "^5.0.0"

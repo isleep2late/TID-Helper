@@ -15,8 +15,27 @@
     Object.keys(D.gen5.games).forEach(function (k) { out.push({ key: k, name: D.gen5.games[k].name, gen: 'Gen 5', status: D.gen5.status }); });
     return out;
   }
+  // WHY THE FIRST THING ON THIS PAGE IS A DISCLAIMER. This tool answers "a route to this Trainer ID".
+  // A run needs "the FASTEST route to this Trainer ID", and the speedrunning community already has
+  // tools that answer that one. Measured over the shipped Crystal routes the median is 85.4 s against
+  // 46.2 s for the best route to the same ID, so following a route from here is usually a net loss to
+  // whoever follows it. The tool still does what it does and is kept for that, but nobody should adopt
+  // it for a run without meeting this first - which is why it is above the intro and not in a footer.
+  var DISCORDS = [
+    ['Gen 1-3 Pokemon Speedrunning', 'https://discord.gg/NjQFEkc'],
+    ['DS Pokemon Speedrunning', 'https://discord.gg/HqRC6ZU'],
+    ['3DS Pokemon Speedrunning', 'https://discord.gg/suBPHnw'],
+    ['Switch Pokemon Speedrunning', 'https://discord.gg/2Sfc3r9']
+  ];
+  function archivalHtml() {
+    return '<div class="card archival"><h3>Archival</h3>' +
+      '<p class="small">This tool is not optimized for speedrunners: it finds <i>a</i> route to a Trainer ID, not the fastest one, and the speedrunning community already has tools that find the fastest. It is kept on the app and the website for archival purposes. It can still be used to obtain a Trainer ID.</p>' +
+      '<p class="small muted">Helpful community resources are on the speedrunning discords:</p>' +
+      '<ul class="plain small">' + DISCORDS.map(function (d) { return '<li>' + A.linkHtml(d[1], d[0]) + '</li>'; }).join('') + '</ul>' +
+      '</div>';
+  }
   function homeHtml() {
-    var h = '<h1>Get a TID</h1><p class="note">Pick the game, then the method. Every method states its platform and its verification status in the data\'s own words; predictions hold only under the methodology shown. Everything on this page is embedded - the routes, the engines, the cues and the sources - so it works with no connection, and every Trainer ID result names its original source or says that none is on record.</p>' +
+    var h = '<h1>Get a TID</h1>' + archivalHtml() + '<p class="note">Pick the game, then the method. Every method states its platform and its verification status in the data\'s own words; predictions hold only under the methodology shown. Everything on this page is embedded - the routes, the engines, the cues and the sources - so it works with no connection, and every Trainer ID result names its original source or says that none is on record.</p>' +
       A.toolsHtml(['flowtimer', 'eontimer'], 'The cues stand in for the community\'s timers, FlowTimer for the Gen 1-2 speedrun manips and EonTimer for Gen 3-5:');
     games().forEach(function (g) {
       var modes = A.modesFor(g.key);

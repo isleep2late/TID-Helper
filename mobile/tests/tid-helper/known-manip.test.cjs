@@ -1,8 +1,8 @@
 // known-manip.test.cjs - "somebody has already published a manipulation of this exact Trainer ID".
 //
-// WHY. The owner asked the app for Crystal 62471 and got a prescribed-sequence route with no hint that
-// CasualPokePlayer published a manipulation of that exact ID in 2020 - a video the registry has cited all
-// along (entry: 0xF407, flowtimer offset 27680). The registry and the lookup both existed; the prescribed
+// WHY. The owner asked the app for Crystal 62471 and got a prescribed-sequence route with no hint that a
+// manipulation of that exact ID had been published in 2020 - a video the registry has cited all along
+// (entry: 0xF407, flowtimer offset 27680). The registry and the lookup both existed; the prescribed
 // sequence mode was simply the one mode that never called them, so its answers looked like the only answer.
 //
 // 74 cited entries are videos naming an exact Trainer ID, over 50 IDs and 14 games - four of them Gen 4

@@ -90,10 +90,10 @@ test('the dead-battery seed is what the citation derives, and the same table com
 });
 
 test('prior work is credited and the missing piece is stated, not implied', () => {
-  assert.ok(d.credits.length >= 5, 'five credits at least');
+  assert.ok(d.credits.length >= 3, 'three credits at least');
   for (const c of d.credits) for (const k of ['who', 'role', 'what']) assert.ok(c[k] && c[k].length, 'credit has ' + k);
   const who = d.credits.map((c) => c.who).join(' | ');
-  for (const name of ['pret', 'PokeFinder', 'PKHeX', 'ConstructiveCynicism', 'CasualPokePlayer']) {
+  for (const name of ['pret', 'PokeFinder', 'PKHeX']) {
     assert.ok(who.includes(name), 'credits name ' + name + ': ' + who);
   }
   assert.match(d.credit_note, /None of them endorse/);
